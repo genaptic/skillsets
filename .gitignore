@@ -1,0 +1,63 @@
+# Operating system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDEs and editors
+.idea/
+.vscode/
+*.code-workspace
+*.iml
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+.tmp/
+tmp/
+temp/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Dependencies and virtual environments
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+
+# Generated output and caches
+build/
+dist/
+out/
+coverage/
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+
+# Tool-specific local state
+.history/
+.sass-cache/
+.eslintcache
+.parcel-cache/
+.turbo/
