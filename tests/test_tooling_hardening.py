@@ -78,15 +78,11 @@ def _write_fake_gh(directory: Path) -> Path:
         executable.write_text(
             """@echo off
 >>"%GH_FAKE_LOG%" echo %GH_TELEMETRY%^|%GH_PROMPT_DISABLED%^|%GH_NO_UPDATE_NOTIFIER%^|%*
-if "%1:%2"=="skill:--help" (
-  if "%GH_FAKE_MODE%"=="group-unsupported" exit /b 1
-  exit /b 0
-)
-if "%1:%2:%3"=="skill:install:--help" (
-  if "%GH_FAKE_MODE%"=="install-unsupported" exit /b 1
-  exit /b 0
-)
-if "%1:%2"=="skill:install" exit /b 0
+if /I "%GH_FAKE_MODE%"=="group-unsupported" if /I "%~1:%~2"=="skill:--help" exit /b 1
+if /I "%~1:%~2"=="skill:--help" exit /b 0
+if /I "%GH_FAKE_MODE%"=="install-unsupported" if /I "%~1:%~2:%~3"=="skill:install:--help" exit /b 1
+if /I "%~1:%~2:%~3"=="skill:install:--help" exit /b 0
+if /I "%~1:%~2"=="skill:install" exit /b 0
 exit /b 64
 """,
             encoding="utf-8",
