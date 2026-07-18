@@ -2,18 +2,6 @@ name: Structural client compatibility
 
 on:
   pull_request:
-    paths:
-      - "packs/**"
-      - "dist/**"
-      - ".claude-plugin/**"
-      - ".agents/**"
-      - "catalog.json"
-      - "schemas/**"
-      - "src/skillpack_tools/**"
-      - "tools/**"
-      - ".github/workflows/compatibility.yml"
-      - "tests/test_path_safety.py"
-      - "tests/test_tooling_hardening.py"
   push:
     branches:
       - "main"

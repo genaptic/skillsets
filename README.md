@@ -6,8 +6,10 @@ The canonical repository identity is `genaptic/skillsets` and the marketplace na
 `genaptic-skillsets`.
 
 > **Release-candidate status:** the six initial packs are locally testable but unpublished.
-> No tag, release, public installer, Pages catalog, or native-client compatibility claim exists
-> yet. Publication remains gated on dated Claude Code, Codex, and OpenCode reports for the exact
+> No pack tag, release, supported public install source, or native-client compatibility claim
+> exists yet. The Pages site may expose generated metadata, installer adapters, and OpenCode
+> indexes for these unpublished candidates; hosting alone is not publication evidence.
+> Publication remains gated on dated Claude Code, Codex, and OpenCode reports for the exact
 > release commit.
 
 ## Packs
@@ -36,8 +38,8 @@ The initial inventory contains 26 substantive skills:
 
 [`catalog.json`](catalog.json) is the machine-readable inventory. With no `source-sha` in a pack
 manifest, its publication state is `unpublished` and its marketplace source is repository-local.
-A future publication plan will record the exact released SHA and regenerate pinned `git-subdir`
-sources.
+A protected pack release records the exact released SHA and regenerates pinned `git-subdir`
+sources only after publication succeeds.
 
 ## Architecture
 
@@ -52,6 +54,7 @@ packs/<language>/<subject>/
                    ├── Claude plugin manifests and marketplace
                    ├── Codex plugin manifests and marketplace
                    ├── OpenCode/direct installers and HTTP catalogs
+                   ├── deterministic GitHub Pages landing page
                    ├── repository and pack README sections
                    └── byte hashes in dist/generated-files.json
 ```
@@ -161,7 +164,10 @@ The main references are:
 - [`docs/authoring.md`](docs/authoring.md)
 - [`docs/evals.md`](docs/evals.md)
 - [`docs/distribution.md`](docs/distribution.md)
+- [`docs/github-pages.md`](docs/github-pages.md)
+- [`docs/maintainer-signing.md`](docs/maintainer-signing.md)
 - [`docs/release-process.md`](docs/release-process.md)
+- [`docs/solo-maintainer-governance.md`](docs/solo-maintainer-governance.md)
 - [`docs/threat-model.md`](docs/threat-model.md)
 - [`AGENTS.md`](AGENTS.md)
 
@@ -171,8 +177,8 @@ The main references are:
 security-channel, branch, and license identity contract. Pack identity and compatibility live in
 each `skillpack.yaml`; generated surfaces must never be hand-edited.
 
-Security reports belong in GitHub private vulnerability reporting after that feature is enabled
-during publication. Do not disclose vulnerabilities in public issues; see
+Security reports belong exclusively in GitHub private vulnerability reporting. Do not disclose
+vulnerabilities in public issues or Discussions; see
 [`SECURITY.md`](SECURITY.md).
 
 Licensed under Apache-2.0. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE), and

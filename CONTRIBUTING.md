@@ -142,16 +142,31 @@ security policy require a maintainer review.
 ## Developer certificate of origin
 
 By contributing, you certify that you have the right to submit the contribution under the
-project license. Sign off commits with:
+project license. Each commit must end in a terminal `Signed-off-by` trailer whose name and email
+match that commit's author. Sign off commits with:
 
 ```bash
 git commit --signoff
 ```
 
+If a commit is already present, amend it rather than placing signoff-looking text in the message
+body. Before pushing, check the complete pull-request range with:
+
+```bash
+tools/check-dco BASE_SHA HEAD_SHA
+```
+
+The check reports every missing, malformed, spoofed, or mismatched trailer in one run, including
+merge commits. Its Dependabot exemption is reserved for the verified bot identity and does not
+apply to human commits added to a Dependabot branch.
+
 The sign-off records the Developer Certificate of Origin statement:
 
 > I certify that I have the right to submit this contribution under the open-source license
 > indicated in the repository.
+
+DCO signoff is not a cryptographic signature. Maintainer-authored local commits additionally use
+the repository-specific SSH signing policy in `docs/maintainer-signing.md`.
 
 ## Review criteria
 

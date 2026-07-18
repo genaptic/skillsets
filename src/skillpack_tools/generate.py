@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from html import escape
 from pathlib import Path
 
 from .models import Pack, RepositoryConfig, discover_packs, load_repository
@@ -194,6 +195,94 @@ def _catalog(config: RepositoryConfig, packs: list[Pack]) -> dict:
             for pack in packs
         ],
     }
+
+
+def _pages_index(config: RepositoryConfig, catalog: dict) -> str:
+    """Render the static Pages landing page from the generated catalog model."""
+
+    pack_cards: list[str] = []
+    for pack in catalog["packs"]:
+        targets = [str(target) for target in pack["targets"]]
+        target_items = "\n".join(
+            f"              <li><code>{escape(target)}</code></li>" for target in targets
+        )
+        index_link = ""
+        if "opencode" in targets:
+            index_path = f"opencode/{pack['language']}/{pack['subject']}/index.json"
+            index_link = (
+                "\n"
+                f'            <p><a href="{escape(index_path, quote=True)}">'
+                "OpenCode index</a></p>"
+            )
+        publication = escape(str(pack["publication"]["state"]))
+        pack_cards.append(
+            "\n".join(
+                [
+                    '        <article class="pack">',
+                    f"          <h3>{escape(str(pack['displayName']))}</h3>",
+                    "          <dl>",
+                    "            <div>",
+                    "              <dt>ID</dt>",
+                    f"              <dd><code>{escape(str(pack['id']))}</code></dd>",
+                    "            </div>",
+                    "            <div>",
+                    "              <dt>Version</dt>",
+                    f"              <dd><code>{escape(str(pack['version']))}</code></dd>",
+                    "            </div>",
+                    "            <div>",
+                    "              <dt>Publication</dt>",
+                    f"              <dd><code>{publication}</code></dd>",
+                    "            </div>",
+                    "          </dl>",
+                    f"          <p>{escape(str(pack['description']))}</p>",
+                    "          <h4>Supported targets</h4>",
+                    '          <ul class="targets">',
+                    target_items,
+                    "          </ul>" + index_link,
+                    "        </article>",
+                ]
+            )
+        )
+
+    return (
+        "<!doctype html>\n"
+        '<html lang="en">\n'
+        "  <head>\n"
+        '    <meta charset="utf-8">\n'
+        '    <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        f"    <title>{escape(str(catalog['project']))}</title>\n"
+        "    <style>\n"
+        "      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }\n"
+        "      body { margin: 0; }\n"
+        "      main { margin: 0 auto; max-width: 72rem; padding: 2rem 1rem 4rem; }\n"
+        "      header { border-bottom: 1px solid currentColor; margin-bottom: 2rem; }\n"
+        "      .repository { font-family: ui-monospace, monospace; }\n"
+        "      .packs { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, "
+        "minmax(18rem, 1fr)); }\n"
+        "      .pack { border: 1px solid currentColor; border-radius: .5rem; padding: 1rem; }\n"
+        "      .pack h3 { margin-top: 0; }\n"
+        "      dl div { display: grid; grid-template-columns: 7rem 1fr; }\n"
+        "      dd { margin: 0; }\n"
+        "      .targets { display: flex; flex-wrap: wrap; gap: .75rem; padding-left: 1.25rem; }\n"
+        "    </style>\n"
+        "  </head>\n"
+        "  <body>\n"
+        "    <main>\n"
+        "      <header>\n"
+        f'        <p class="repository">{escape(str(catalog["repository"]))}</p>\n'
+        f"        <h1>{escape(str(catalog['project']))}</h1>\n"
+        f"        <p>{escape(config.project_description)}</p>\n"
+        f"        <p>Marketplace: <code>{escape(str(catalog['marketplace']))}</code></p>\n"
+        "      </header>\n"
+        '      <section aria-labelledby="skillpacks-heading">\n'
+        '        <h2 id="skillpacks-heading">Skillpacks</h2>\n'
+        '        <div class="packs">\n' + "\n".join(pack_cards) + "\n"
+        "        </div>\n"
+        "      </section>\n"
+        "    </main>\n"
+        "  </body>\n"
+        "</html>\n"
+    )
 
 
 def _pack_is_stable(pack: Pack) -> bool:
@@ -801,7 +890,9 @@ def build_generated_files(root: Path) -> GeneratedFiles:
 
     files.add(".claude-plugin/marketplace.json", json_text(_claude_marketplace(config, packs)))
     files.add(".agents/plugins/marketplace.json", json_text(_codex_marketplace(config, packs)))
-    files.add("catalog.json", json_text(_catalog(config, packs)))
+    catalog = _catalog(config, packs)
+    files.add("catalog.json", json_text(catalog))
+    files.add("dist/index.html", _pages_index(config, catalog))
 
     root_readme = read_regular_text(root / "README.md", root)
     files.add(

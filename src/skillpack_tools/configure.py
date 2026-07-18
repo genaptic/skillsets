@@ -27,11 +27,15 @@ IDENTITY_TEXT_SURFACES = (
     "CONTRIBUTING.md",
     "GOVERNANCE.md",
     "REPOSITORY_SETUP.md",
+    ".github/ISSUE_TEMPLATE/config.yml",
     "docs/architecture.md",
     "docs/authoring.md",
     "docs/distribution.md",
     "docs/evals.md",
+    "docs/github-pages.md",
+    "docs/maintainer-signing.md",
     "docs/release-process.md",
+    "docs/solo-maintainer-governance.md",
     "docs/threat-model.md",
     "schemas/repository.schema.json",
     "schemas/skillpack.schema.json",
@@ -230,6 +234,10 @@ def configure_repository(
 
     replacements = [
         (
+            f"https://{old_owner}.github.io/{old_repository}",
+            f"https://{owner}.github.io/{repository}",
+        ),
+        (
             f"https://raw.githubusercontent.com/{old_slug}/{old_branch}",
             f"https://raw.githubusercontent.com/{owner}/{repository}/{default_branch}",
         ),
@@ -280,6 +288,7 @@ def configure_repository(
         ".github/workflows/codeql.yml",
         ".github/workflows/compatibility.yml",
         ".github/workflows/eval.yml",
+        ".github/workflows/pages.yml",
         ".github/workflows/validate.yml",
         ".github/workflows/native-compatibility.yml",
         ".github/workflows/release.yml",
@@ -293,6 +302,14 @@ def configure_repository(
         (
             f"        default: {old_branch_yaml}\n",
             f"        default: {default_branch_yaml}\n",
+        ),
+        (
+            f"          DEFAULT_BRANCH: {old_branch}\n",
+            f"          DEFAULT_BRANCH: {default_branch_yaml}\n",
+        ),
+        (
+            f"          DEFAULT_BRANCH: {old_branch_yaml}\n",
+            f"          DEFAULT_BRANCH: {default_branch_yaml}\n",
         ),
         (
             f"success\\tworkflow_dispatch\\t{old_branch}\\t",

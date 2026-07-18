@@ -118,9 +118,10 @@ dist/opencode/<language>/<subject>/
 The named Markdown file is a generated copy of canonical `SKILL.md`. Evals are not shipped in
 the runtime catalog. Bump the pack version whenever shipped files change.
 
-A static host such as GitHub Pages can expose the pack directory as the catalog base URL.
-Hosting and URL activation are deferred to the remote-publication plan. After deployment,
-the intended canonical shape is:
+The `pages.yml` workflow publishes the complete generated `dist/` tree from `main` through the
+secret-free `github-pages` environment. Its generated landing page discovers packs from the same
+catalog model, and each OpenCode directory remains available at a repository-relative path.
+After a successful deployment and HTTP verification, the canonical shape is:
 
 ```jsonc
 {
@@ -131,8 +132,12 @@ the intended canonical shape is:
 }
 ```
 
-Do not use or advertise this URL until it resolves to a directory containing `index.json`
-and the hosted paths pass native OpenCode validation.
+The current six catalogs are hosted under the two Python paths, two Rust paths,
+`opencode/shared/postgres-databases/`, and
+`opencode/shared/repository-development/`. Hosting an unpublished catalog does not publish its
+pack or prove OpenCode compatibility. Do not present any catalog as a validated public install
+source until its `index.json` resolves and the exact candidate has a passing native OpenCode
+report. See `docs/github-pages.md` for deployment and verification details.
 
 ## Local development
 

@@ -9,6 +9,7 @@ import subprocess
 import tomllib
 import zipfile
 from copy import deepcopy
+from html import escape as html_escape
 from pathlib import Path
 
 import pytest
@@ -19,7 +20,7 @@ from skillpack_tools import release as release_module
 from skillpack_tools.configure import configure_repository
 from skillpack_tools.evals import eval_report, run_structural_evals
 from skillpack_tools.generate import apply_generated_files, build_generated_files
-from skillpack_tools.models import get_pack, load_repository
+from skillpack_tools.models import discover_packs, get_pack, load_repository
 from skillpack_tools.release import build_release
 from skillpack_tools.util import SkillpackError, dump_yaml, load_yaml
 from skillpack_tools.validate import (
@@ -282,6 +283,90 @@ def test_generated_manifest_and_generalized_pack_schemas(repo_copy: Path) -> Non
     assert list(Draft202012Validator(eval_schema).iter_errors(report))
 
 
+def test_pages_index_is_deterministic_relative_and_manifested(repo_copy: Path) -> None:
+    generated = build_generated_files(repo_copy)
+    repeated = build_generated_files(repo_copy)
+    page = generated["dist/index.html"]
+
+    assert isinstance(page, str)
+    assert page == repeated["dist/index.html"]
+    assert re.search(r"<(?:script|link)\b", page, re.IGNORECASE) is None
+    assert (
+        re.search(
+            r"\b(?:src|href)\s*=\s*[\"'](?:https?:)?//",
+            page,
+            re.IGNORECASE,
+        )
+        is None
+    )
+
+    config = load_repository(repo_copy)
+    assert html_escape(config.project_name) in page
+    assert html_escape(config.project_description) in page
+    assert html_escape(config.slug) in page
+    assert html_escape(config.marketplace_name) in page
+
+    packs = discover_packs(repo_copy)
+    assert len(packs) == 6
+    assert page.count('<article class="pack">') == len(packs)
+    for pack in packs:
+        assert html_escape(pack.display_name) in page
+        assert html_escape(pack.id) in page
+        assert html_escape(pack.version) in page
+        assert html_escape(pack.description) in page
+        assert html_escape(pack.publication_state) in page
+        assert all(html_escape(target) in page for target in pack.targets)
+        if "opencode" in pack.targets:
+            index_path = f"opencode/{pack.language}/{pack.subject}/index.json"
+            assert f'href="{index_path}"' in page
+
+    manifest = json.loads(generated["dist/generated-files.json"])
+    entry = next(item for item in manifest["files"] if item["path"] == "dist/index.html")
+    page_bytes = page.encode("utf-8")
+    assert entry == {
+        "path": "dist/index.html",
+        "sha256": hashlib.sha256(page_bytes).hexdigest(),
+        "size": len(page_bytes),
+        "mode": "0644",
+    }
+
+
+def test_pages_index_escapes_repository_and_pack_metadata(repo_copy: Path) -> None:
+    repository_path = repo_copy / "repository.yaml"
+    repository = load_yaml(repository_path)
+    repository["project"]["name"] = 'Skillsets <script>alert("project")</script> & more'
+    repository["project"]["description"] = '<img src="x" onerror="project"> & safe'
+    repository["repository"]["owner"] = "genaptic&friends"
+    repository["marketplace"]["name"] = 'market<place>&"safe"'
+    repository_path.write_text(dump_yaml(repository), encoding="utf-8")
+
+    display_name = '<img src="x" onerror="pack">'
+    description = 'Use <strong>care</strong> & "quotes".'
+    target = 'target<script>alert("target")</script>'
+
+    def inject_markup(data: dict) -> None:
+        data["display-name"] = display_name
+        data["description"] = description
+        data["targets"].append(target)
+
+    _write_manifest(repo_copy, "python-best-practices", inject_markup)
+    page = build_generated_files(repo_copy)["dist/index.html"]
+
+    for value in (
+        repository["project"]["name"],
+        repository["project"]["description"],
+        "genaptic&friends/skillsets",
+        repository["marketplace"]["name"],
+        display_name,
+        description,
+        target,
+    ):
+        assert html_escape(value) in page
+    assert "<script>" not in page
+    assert "<img " not in page
+    assert '<a href="opencode/python/best-practices/index.json">' in page
+
+
 def test_eval_export_contains_complete_prompts_and_expectations() -> None:
     report = eval_report(run_structural_evals(ROOT, skill_filter="python-project-layout"))
     skill = report["skills"][0]
@@ -454,7 +539,8 @@ def test_release_workflow_protects_and_binds_the_exact_rust_tested_tag(repo_copy
     rust_job = workflow.split("  rust-assets:\n", 1)[1].split("\n  release:\n", 1)[0]
     release_job = workflow.split("\n  release:\n", 1)[1]
 
-    assert "    environment: release\n" in rust_job
+    assert "    environment: release\n" not in rust_job
+    assert "    environment: release\n" in release_job
     assert "      source_sha: ${{ steps.tested-source.outputs.sha }}\n" in rust_job
     attestation = (
         "      - name: Verify GitHub's signed-tag attestation before running repository code"

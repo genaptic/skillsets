@@ -65,7 +65,8 @@ tag and does not contact GitHub.
 ## Tag and final local build
 
 After exact-SHA compatibility evidence passes, create the signed annotated tag locally and
-run the evidence-gated build:
+run the evidence-gated build. Repository-specific SSH signing must already be configured as
+described in `docs/maintainer-signing.md`:
 
 ```bash
 git tag -s PACK_ID-vX.Y.Z -m "PACK_ID vX.Y.Z"
@@ -84,22 +85,32 @@ tag remains the primary source reference in the tagged release.
 
 ## Publish
 
-The protected manual release workflow verifies the tag signature, derives and validates any
-pack ID rather than using a hard-coded allowlist, requires exact-SHA compatibility evidence,
-runs all checks, rebuilds the archive, and creates a GitHub release using the repository
-token with contents write permission. It never publishes from a pull request.
+Dispatch the protected manual workflow only from `main`. The candidate SHA referenced by its
+signed tag may legitimately predate the current `main`, but the workflow definition and dispatch
+must come from the protected default branch. The workflow derives and validates the pack ID,
+verifies both GitHub and local tag signatures, requires exact-SHA compatibility evidence, runs
+all checks, and rebuilds the allowlisted archive. The five-minute `release` environment applies
+only to the publication job; exact-tag Rust validation does not consume a second wait.
 
-Attach:
+Publication is fail-closed and ordered:
 
-- Pack ZIP.
-- `.sha256` checksum.
-- Release notes.
-- Exact-SHA compatibility reports.
+1. Refuse to continue if any release already exists for the tag.
+2. Create an asset-free draft with tag verification enabled.
+3. Upload the pack ZIP, `.sha256` checksum, and exact Claude Code, Codex, and OpenCode reports
+   without overwriting an existing asset.
+4. Verify that the draft contains exactly the expected assets, then publish it.
+5. Retry for bounded immutable-release attestation availability.
+6. Verify the immutable release, every uploaded asset, and the ZIP provenance attestation.
+
+The publication job alone receives `contents: write`, `id-token: write`, and
+`attestations: write`. The ZIP attestation must bind the repository, signer workflow, and a
+GitHub-hosted runner. A failure after draft creation deliberately leaves an unpublished draft
+for manual inspection; automation must not overwrite or silently delete it. Immutable releases
+must be enabled before the first pack publication.
 
 ## Verify after publication
 
-Remote publication, Pages activation, tag push, release creation, and repository protection
-changes are deferred to the next plan. When that plan runs, verify from a clean environment:
+After publication, verify from a clean environment:
 
 - Add the Claude marketplace and install the pack.
 - Add the Codex marketplace and install the pack.
@@ -111,6 +122,11 @@ changes are deferred to the next plan. When that plan runs, verify from a clean 
 - Exercise at least one positive and one negative routing case.
 - Confirm update and uninstall instructions.
 - Verify the downloaded archive checksum.
+- Run `gh release verify`, `gh release verify-asset` for every asset, and
+  `gh attestation verify` for the ZIP.
 
 If verification fails, do not move or overwrite the tag. Correct the issue in a new patch
 release. Revoke or mark a compromised release clearly and follow `SECURITY.md`.
+
+Repository infrastructure setup does not publish a pack. All six `1.0.0` packs remain
+unpublished release candidates until the complete exact-SHA evidence gate above passes.

@@ -15,14 +15,20 @@
     },
     {
       "path": "README.md",
-      "sha256": "936d5a326b0990c330e583707a14aba99405361a90b74093d0896ad592f4f901",
-      "size": 9546,
+      "sha256": "9baaecb51877437b741982e43d6f100050e77fa672596ec96477eb1a00ddd9c6",
+      "size": 9981,
       "mode": "0644"
     },
     {
       "path": "catalog.json",
       "sha256": "52e52e36cdb182b7505302062b47848dc484e6678bc66a747ee05198663edcc2",
       "size": 9214,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/index.html",
+      "sha256": "d88bcc321aaf5aac91aa91dd7d296dede2617809f86406a440354dac359f8c96",
+      "size": 6918,
       "mode": "0644"
     },
     {

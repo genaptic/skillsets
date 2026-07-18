@@ -2,9 +2,6 @@ name: CodeQL
 
 on:
   pull_request:
-    paths:
-      - "**/*.py"
-      - ".github/workflows/**"
   push:
     branches:
       - "main"

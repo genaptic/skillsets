@@ -12,6 +12,7 @@ into the isolated `.venv` with `--no-deps`.
 | `generate-installers` | Compatibility alias for atomic generation |
 | `generate-readme` | Compatibility alias for atomic generation |
 | `validate-repository` | Validate schemas, skills, links, scripts, evals, and generated files |
+| `check-dco` | Validate terminal DCO signoffs for every commit in a Git range |
 | `check-rust-assets` | Format-check, compile, and behavior-test classified Rust assets |
 | `run-evals` | Validate routing and behavior eval specifications |
 | `release-pack` | Rehearse a draft or build an evidence-gated deterministic pack release |

@@ -56,6 +56,7 @@ line-length = 100
 extend-exclude = ["dist"]
 extend-include = [
   "tools/check-dependency-lock",
+  "tools/check-dco",
   "tools/check-rust-assets",
   "tools/configure-repository",
   "tools/generate-all",

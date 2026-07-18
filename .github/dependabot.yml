@@ -13,6 +13,11 @@ updates:
       - python
     commit-message:
       prefix: deps
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
@@ -27,3 +32,8 @@ updates:
       - github-actions
     commit-message:
       prefix: ci
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
