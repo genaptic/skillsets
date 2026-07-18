@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-abstraction-design",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-abstraction-design to choose among concrete code, generics, traits, trait objects, and a closed enum, including lifetimes and typed error boundaries.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly names the skill and its abstraction-selection outcome."
+    },
+    {
+      "id": "implicit-positive-runtime-family",
+      "kind": "implicit-positive",
+      "prompt": "We have three runtime-selected Rust backends. Decide whether the family should be open or closed, design the smallest shared contract, and keep variant failures actionable.",
+      "shouldTrigger": true,
+      "reason": "Runtime polymorphism, contract size, and error design are abstraction concerns."
+    },
+    {
+      "id": "implicit-positive-lifetime-error",
+      "kind": "implicit-positive",
+      "prompt": "This reusable Rust API has tangled explicit lifetimes, erased string errors, and a broad unsafe block. Simplify it without losing borrow relationships or safety invariants.",
+      "shouldTrigger": true,
+      "reason": "Lifetimes, typed errors, and safe abstraction over unsafe behavior are central to this skill."
+    },
+    {
+      "id": "contextual-positive-duplicate-impls",
+      "kind": "contextual-positive",
+      "prompt": "The attached diff shows two concrete implementations with stable shared behavior, a third planned implementation, and callers that need substitution in tests. Propose the least powerful durable abstraction.",
+      "shouldTrigger": true,
+      "reason": "The artifact supplies demonstrated reuse and substitution pressure for abstraction design."
+    },
+    {
+      "id": "negative-project-architecture",
+      "kind": "negative",
+      "prompt": "Keep APIs and implementations unchanged; reorganize these Rust crates, modules, binaries, workspace dependencies, and integration-test locations.",
+      "shouldTrigger": false,
+      "reason": "Project layout and dependency boundaries belong to rust-project-architecture."
+    },
+    {
+      "id": "negative-async-runtime",
+      "kind": "negative",
+      "prompt": "Design cancellation, bounded fan-out, task ownership, graceful shutdown, and blocking-work isolation for this existing Tokio service.",
+      "shouldTrigger": false,
+      "reason": "Async task lifecycle and concurrency behavior belong to rust-async-concurrency."
+    },
+    {
+      "id": "overlap-code-structure",
+      "kind": "overlap",
+      "prompt": "Keep polymorphism and public errors unchanged; replace this string tag and optional-field struct with data-carrying enums, group repeated parameters, and place behavior on natural owners.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-code-structure",
+      "reason": "Internal type/state/function organization dominates, so rust-code-structure is the narrower owner."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-mechanism-choice",
+      "kind": "focused",
+      "prompt": "Choose and implement the least powerful abstraction for a closed runtime-selected Rust implementation family with shared operations and typed failures.",
+      "assertions": [
+        "Inventories concrete callers, implementations, runtime selection, extension expectations, ownership, performance constraints, and failure modes",
+        "Compares concrete code, generics, traits, trait objects, and enums against open or closed and compile-time or runtime requirements",
+        "Keeps the shared contract consumer-driven and narrow and uses exhaustive enum dispatch when the family is intentionally closed",
+        "Documents object safety, allocation, Send and Sync, lifetime, error, public API, and semver consequences",
+        "Tests every implementation and dispatch path and runs repository-derived feature, MSRV, lint, doctest, and platform checks"
+      ],
+      "forbidden": [
+        "Introduces speculative traits, generics, macros, or code generation without demonstrated pressure",
+        "Applies one repository's private enum-dispatch syntax as a universal Rust rule",
+        "Installs dependencies, publishes, or performs remote Git operations",
+        "Hides skipped configurations or fabricates compatibility evidence"
+      ]
+    },
+    {
+      "id": "end-to-end-safe-api",
+      "kind": "end-to-end",
+      "prompt": "Refactor a public Rust library boundary involving generics, borrowed views, typed numeric parsing errors, panic behavior, and an unsafe wrapper while preserving compatibility.",
+      "assertions": [
+        "Keeps code concrete until stable reuse pressure justifies each abstraction and records rejected alternatives",
+        "Uses explicit lifetimes only for real borrow relationships and owned data for independent long-lived work",
+        "Rejects non-finite numbers where finite values are required, avoids floating-point money, and preserves actionable source errors",
+        "Reserves panic for bugs or proven invariants and documents and tests every safe-wrapper precondition around minimal unsafe operations",
+        "Reviews public traits, bounds, associated types, errors, auto traits, downstream implementors, and semver impact before verification"
+      ],
+      "forbidden": [
+        "Erases recoverable failures into strings or panic without an explicit application-boundary reason",
+        "Spreads unsafe operations across broad regions or omits safety invariants",
+        "Bans contextually valid free functions or type aliases",
+        "Silently breaks downstream implementations or claims compatibility from compilation alone"
+      ]
+    }
+  ]
+}

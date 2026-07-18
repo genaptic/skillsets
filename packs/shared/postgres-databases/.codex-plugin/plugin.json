@@ -1,0 +1,36 @@
+{
+  "name": "postgres-databases",
+  "version": "1.0.0",
+  "description": "Schema, query, index, migration, and recovery workflows for safe, evidence-based PostgreSQL engineering.",
+  "author": {
+    "name": "Genaptic",
+    "url": "https://github.com/genaptic/skillsets"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/shared/postgres-databases",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "postgresql",
+    "schema",
+    "performance",
+    "migrations",
+    "recovery"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "PostgreSQL Databases",
+    "shortDescription": "Schema, query, index, migration, and recovery workflows for safe, evidence-based PostgreSQL engineering.",
+    "longDescription": "Schema, query, index, migration, and recovery workflows for safe, evidence-based PostgreSQL engineering.",
+    "developerName": "Genaptic",
+    "category": "Data & Databases",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/genaptic/skillsets/tree/main/packs/shared/postgres-databases",
+    "defaultPrompt": [
+      "Use PostgreSQL Databases to review the relevant files and propose a verified plan."
+    ]
+  }
+}

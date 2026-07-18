@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "python-cli-apps",
+  "displayName": "Python CLI Applications",
+  "version": "1.0.0",
+  "description": "Design, failure-contract, and test workflows for reliable Python command-line applications.",
+  "author": {
+    "name": "Genaptic"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/python/cli-apps",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "python",
+    "cli",
+    "testing",
+    "ux"
+  ]
+}

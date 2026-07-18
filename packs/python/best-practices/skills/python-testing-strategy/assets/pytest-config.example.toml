@@ -1,0 +1,16 @@
+# Example fragment for pyproject.toml; adapt markers and paths to the repository.
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = [
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+]
+markers = [
+  "integration: uses a real local or test service boundary",
+  "slow: exceeds the normal pull-request runtime budget",
+]
+filterwarnings = [
+  "error",
+]

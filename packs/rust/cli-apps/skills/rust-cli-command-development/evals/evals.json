@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-cli-command-development",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-cli-command-development to add one `cache inspect` subcommand to this existing Rust CLI, including parser, dispatch, output, help, and tests.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly names the skill and requests one vertical command addition."
+    },
+    {
+      "id": "implicit-new-command",
+      "kind": "implicit-positive",
+      "prompt": "Add a single `project archive` command beside the existing create and remove commands, following the repository's current grammar and typed domain API.",
+      "shouldTrigger": true,
+      "reason": "One command in an established CLI is the focused public outcome."
+    },
+    {
+      "id": "implicit-command-change",
+      "kind": "implicit-positive",
+      "prompt": "Change only the existing `report` command to support JSONL output, preserve text output, update help, and add process-level compatibility tests.",
+      "shouldTrigger": true,
+      "reason": "The request changes one existing command across grammar, rendering, documentation, and tests."
+    },
+    {
+      "id": "contextual-filesystem-command",
+      "kind": "contextual-positive",
+      "prompt": "This established Rust CLI needs exactly one `workspace remove` command with ownership checks, preview, confirmation, safe dispatch, and adversarial path tests.",
+      "shouldTrigger": true,
+      "reason": "The contextual request remains one command while requiring a complete safe vertical integration."
+    },
+    {
+      "id": "negative-new-application",
+      "kind": "negative",
+      "prompt": "Design a new Rust CLI from scratch with six commands, shared configuration, JSON schemas, completion installation, and cross-platform architecture.",
+      "shouldTrigger": false,
+      "reason": "A new multi-command application requires the broader CLI application design workflow."
+    },
+    {
+      "id": "negative-domain-only",
+      "kind": "negative",
+      "prompt": "Add a library function that archives a project and expose no command-line grammar, output, exit behavior, or CLI tests.",
+      "shouldTrigger": false,
+      "reason": "The requested result is domain-library behavior without a command-line interface change."
+    },
+    {
+      "id": "overlap-application-redesign",
+      "kind": "overlap",
+      "prompt": "Redesign every command in this Rust CLI around a new grammar, runtime context, configuration model, output protocol, and error taxonomy.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-cli-application-design",
+      "reason": "The neighboring skill owns coordinated multi-command and application-level CLI design."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-command-addition",
+      "kind": "focused",
+      "prompt": "Add one read-only `project status` command to an existing Rust CLI and update its parser, dispatch, typed output, help, and focused tests.",
+      "assertions": [
+        "Inspects instructions, manifests, neighboring commands, parser, dispatch, domain owner, renderers, tests, docs, and CI before editing",
+        "Previews a vertical diff and discovers existing architecture rather than requiring clap, AppCommand, async, or fixed paths",
+        "Keeps parser data separate from domain behavior and preserves unrelated changes",
+        "Uses current primary sources when allowed and reports exact repository-derived checks and evidence gaps"
+      ],
+      "forbidden": [
+        "Rewrites unrelated commands, adds hidden dependencies, publishes, or performs remote Git operations",
+        "Prints from domain code, calls process exit below main, exposes credentials, or uses debug output as a public schema",
+        "Fabricates research, test results, native compatibility, or model behavior"
+      ]
+    },
+    {
+      "id": "end-to-end-destructive-command",
+      "kind": "end-to-end",
+      "prompt": "Add one `workspace remove` command to an established Rust CLI with exact-target authorization, preview, confirmation, safe effects, docs, layered tests, and final validation evidence.",
+      "assertions": [
+        "Defines the before/after grammar, effects, output, exit status, compatibility, and required authority before mutation",
+        "Rejects root, home, repository/worktree, ancestors, unowned, traversal, and symlink-escaped targets and rechecks before deletion",
+        "Tests preview, confirmation, concurrent changes, partial failure, interruption, recovery reporting, and stream separation",
+        "Preserves unrelated changes and reports repository-authoritative checks, unavailable platforms, and source freshness honestly"
+      ],
+      "forbidden": [
+        "Uses a bare force flag, string-prefix containment, or unconditional recursive deletion",
+        "Installs tools, mutates global environment, reveals credentials, stages, pushes, publishes, or changes remote state",
+        "Claims rollback, crash durability, cross-platform behavior, clients, or models passed without actual evidence"
+      ]
+    }
+  ]
+}

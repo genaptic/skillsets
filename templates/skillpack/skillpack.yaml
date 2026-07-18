@@ -1,0 +1,32 @@
+schema-version: 1
+id: language-subject
+display-name: Language Subject
+description: >
+  Describe the coherent pack boundary and outcomes in one concise paragraph.
+language: language
+subject: subject
+version: "0.1.0"
+license: Apache-2.0
+maintainers:
+  - github: jecsand838
+skills:
+  - globally-unique-skill-one
+targets:
+  - claude-code
+  - codex
+  - opencode
+category: Developer Tools
+keywords:
+  - agent-skills
+  - language
+  - subject
+compatibility:
+  runtimes:
+    language-runtime: ">=replace-with-supported-version"
+  notes: >
+    State client, language, platform, and optional-tool constraints.
+operations:
+  network: optional
+  filesystem: explicit-output
+  command-execution: optional-explicit
+  external-writes: none

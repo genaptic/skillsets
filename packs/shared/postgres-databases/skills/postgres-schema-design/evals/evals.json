@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "postgres-schema-design",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the postgres-schema-design skill to design tables, constraints, tenant isolation, and evolution rules for this new service.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the complete schema-design workflow."
+    },
+    {
+      "id": "implicit-positive-domain-model",
+      "kind": "implicit-positive",
+      "prompt": "We are starting a multi-tenant billing system. Turn these entities, invariants, retention rules, and read paths into PostgreSQL DDL.",
+      "shouldTrigger": true,
+      "reason": "A new relational model, constraints, tenancy, and workload intent are the controlling concerns."
+    },
+    {
+      "id": "implicit-positive-key-types",
+      "kind": "implicit-positive",
+      "prompt": "Should orders use UUIDs or identity keys, which fields should be nullable, and how should we enforce one active subscription per account?",
+      "shouldTrigger": true,
+      "reason": "Key strategy, nullability, and enforceable invariants are schema-design decisions."
+    },
+    {
+      "id": "contextual-positive-ddl-proposal",
+      "kind": "contextual-positive",
+      "prompt": "Here is a domain brief and representative workload. Produce a PostgreSQL 18 schema proposal with roles, RLS, and partitioning only if justified.",
+      "shouldTrigger": true,
+      "reason": "The supplied domain and workload context calls for a complete design rather than a narrow DDL review."
+    },
+    {
+      "id": "negative-existing-review",
+      "kind": "negative",
+      "prompt": "Audit this already deployed PostgreSQL schema for privilege, constraint, and RLS defects without redesigning the domain.",
+      "shouldTrigger": false,
+      "reason": "The task is an evidence-based review of existing objects, not greenfield schema design."
+    },
+    {
+      "id": "negative-slow-query",
+      "kind": "negative",
+      "prompt": "This SELECT became slow after data growth. Interpret the EXPLAIN ANALYZE JSON and identify the bottleneck.",
+      "shouldTrigger": false,
+      "reason": "Plan interpretation and runtime evidence belong to query performance review."
+    },
+    {
+      "id": "overlap-schema-review",
+      "kind": "overlap",
+      "prompt": "Review these existing CREATE TABLE statements and catalog snapshots, rank defects, and propose minimal corrections.",
+      "shouldTrigger": false,
+      "reason": "An existing-schema audit has the narrower contract and should trigger instead.",
+      "preferredSkill": "postgres-schema-review"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-tenant-design",
+      "kind": "focused",
+      "prompt": "Design the core PostgreSQL schema for tenants, projects, and memberships with tenant-scoped uniqueness and optional row-level security.",
+      "assertions": [
+        "Separates business keys from generated row keys",
+        "Encodes tenant scope in uniqueness and relationship rules",
+        "Explains RLS role and session-context assumptions",
+        "Provides verification cases for cross-tenant writes"
+      ],
+      "forbidden": [
+        "Relies on application filtering as the only tenant boundary",
+        "Claims performance without representative plans or data"
+      ]
+    },
+    {
+      "id": "end-to-end-schema-brief",
+      "kind": "end-to-end",
+      "prompt": "Turn a supplied domain brief, retention policy, roles, and representative read/write paths into a PostgreSQL 18 schema and verification plan.",
+      "assertions": [
+        "Covers types, nullability, constraints, relationships, ownership, grants, and evolution",
+        "Justifies or rejects partitioning using operational requirements",
+        "Connects candidate indexes to named workloads without pretending they are proven",
+        "Labels assumptions and distinguishes proposed from executed verification"
+      ],
+      "forbidden": [
+        "Uses JSON columns for stable relational attributes without rationale",
+        "Runs or applies DDL against a database without explicit approval"
+      ]
+    }
+  ]
+}

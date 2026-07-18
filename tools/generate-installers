@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Repository-local entry point; works before an editable install."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from skillpack_tools.cli import main
+
+# Generation is intentionally atomic across all derived adapters.
+raise SystemExit(main(["--root", str(ROOT), "generate", *sys.argv[1:]]))

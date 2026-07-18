@@ -1,0 +1,36 @@
+{
+  "name": "rust-cli-apps",
+  "version": "1.0.0",
+  "description": "Portable workflows for designing stable Rust CLI applications and safely developing commands in existing CLIs.",
+  "author": {
+    "name": "Genaptic",
+    "url": "https://github.com/genaptic/skillsets"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/rust/cli-apps",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "rust",
+    "cli",
+    "clap",
+    "command-line",
+    "cross-platform"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Rust CLI Applications",
+    "shortDescription": "Portable workflows for designing stable Rust CLI applications and safely developing commands in existing CLIs.",
+    "longDescription": "Portable workflows for designing stable Rust CLI applications and safely developing commands in existing CLIs.",
+    "developerName": "Genaptic",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/genaptic/skillsets/tree/main/packs/rust/cli-apps",
+    "defaultPrompt": [
+      "Use Rust CLI Applications to review the relevant files and propose a verified plan."
+    ]
+  }
+}

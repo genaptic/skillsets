@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "pack": "python-cli-apps",
+  "version": "1.0.0",
+  "skills": [
+    "python-cli-command-design",
+    "python-cli-error-output",
+    "python-cli-testing"
+  ]
+}

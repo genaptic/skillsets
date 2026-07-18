@@ -1,0 +1,23 @@
+schema-version: 1
+project:
+  name: Genaptic Skillsets
+  description: Portable, versioned Agent Skill packs for Claude Code, Codex, and OpenCode.
+repository:
+  owner: genaptic
+  name: skillsets
+  default-branch: main
+publisher:
+  name: Genaptic
+  copyright-owner: Genaptic
+maintainer:
+  name: Connor Sanders
+  github: jecsand838
+security:
+  channel: github-private-vulnerability-reporting
+marketplace:
+  name: genaptic-skillsets
+  display-name: Genaptic Skillsets
+  description: Portable, versioned Agent Skill packs for Claude Code, Codex, and OpenCode.
+release:
+  license: Apache-2.0
+  initial-year: 2026

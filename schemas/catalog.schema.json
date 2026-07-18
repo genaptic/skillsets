@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/genaptic/skillsets/main/schemas/catalog.schema.json",
+  "title": "Genaptic Skillsets catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "project", "repository", "marketplace", "packs"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "project": {"type": "string", "minLength": 3},
+    "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "marketplace": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "packs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "displayName", "description", "language", "subject", "version", "tag", "path", "license", "skills", "targets", "category", "keywords", "compatibility", "operations", "publication"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "displayName": {"type": "string", "minLength": 3},
+          "description": {"type": "string", "minLength": 40},
+          "language": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "subject": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "version": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
+          "tag": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
+          "path": {"type": "string", "pattern": "^packs/[a-z0-9-]+/[a-z0-9-]+$"},
+          "license": {"type": "string", "minLength": 3},
+          "skills": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}},
+          "targets": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["claude-code", "codex", "opencode"]}},
+          "category": {"type": "string", "minLength": 3},
+          "keywords": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "compatibility": {"type": "object"},
+          "operations": {"type": "object"},
+          "publication": {
+            "oneOf": [
+              {"type": "object", "additionalProperties": false, "required": ["state", "sourceType"], "properties": {"state": {"const": "unpublished"}, "sourceType": {"const": "repo-local"}}},
+              {"type": "object", "additionalProperties": false, "required": ["state", "sourceType", "sourceSha"], "properties": {"state": {"const": "published"}, "sourceType": {"const": "git-subdir"}, "sourceSha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}}
+            ]
+          }
+        }
+      }
+    }
+  }
+}

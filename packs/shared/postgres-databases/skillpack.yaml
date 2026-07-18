@@ -1,0 +1,39 @@
+schema-version: 1
+id: postgres-databases
+display-name: PostgreSQL Databases
+description: Schema, query, index, migration, and recovery workflows for safe, evidence-based PostgreSQL engineering.
+language: shared
+subject: postgres-databases
+version: 1.0.0
+license: Apache-2.0
+maintainers:
+- github: jecsand838
+skills:
+- postgres-schema-design
+- postgres-schema-review
+- postgres-query-performance-review
+- postgres-index-design
+- postgres-migration-safety
+- postgres-backup-recovery
+targets:
+- claude-code
+- codex
+- opencode
+category: Data & Databases
+keywords:
+- agent-skills
+- postgresql
+- schema
+- performance
+- migrations
+- recovery
+compatibility:
+  runtimes:
+    python: '>=3.11 for optional helpers'
+    postgresql: "12\u201318; references target 18"
+  notes: Confirm syntax, lock behavior, extensions, and managed-service restrictions against the deployed PostgreSQL major version and provider.
+operations:
+  network: optional
+  filesystem: explicit-output
+  command-execution: optional-explicit
+  external-writes: optional-explicit

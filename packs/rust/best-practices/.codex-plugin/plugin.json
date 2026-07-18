@@ -1,0 +1,38 @@
+{
+  "name": "rust-best-practices",
+  "version": "1.0.0",
+  "description": "Repository-aware workflows for designing, reviewing, testing, documenting, and maintaining production Rust systems.",
+  "author": {
+    "name": "Genaptic",
+    "url": "https://github.com/genaptic/skillsets"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/rust/best-practices",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "rust",
+    "cargo",
+    "architecture",
+    "async",
+    "testing",
+    "networking",
+    "portability"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Rust Best Practices",
+    "shortDescription": "Repository-aware workflows for designing, reviewing, testing, documenting, and maintaining production Rust systems.",
+    "longDescription": "Repository-aware workflows for designing, reviewing, testing, documenting, and maintaining production Rust systems.",
+    "developerName": "Genaptic",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/genaptic/skillsets/tree/main/packs/rust/best-practices",
+    "defaultPrompt": [
+      "Use Rust Best Practices to review the relevant files and propose a verified plan."
+    ]
+  }
+}

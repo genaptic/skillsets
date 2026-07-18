@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "skill": "rustdoc-maintenance",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rustdoc-maintenance to refresh the crate-level docs, public item documentation, intra-doc links, and doctests after this API redesign.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly names the skill and requests its public Rust API documentation workflow."
+    },
+    {
+      "id": "implicit-public-surface",
+      "kind": "implicit-positive",
+      "prompt": "Audit every exported item in these two Rust crates, add missing Errors and Panics contracts, and repair examples that still use the removed API.",
+      "shouldTrigger": true,
+      "reason": "The requested inventory, contract sections, and examples are all part of the public rustdoc surface."
+    },
+    {
+      "id": "implicit-doctest-repair",
+      "kind": "implicit-positive",
+      "prompt": "Our documentation tests fail under the declared feature matrix and several intra-doc links are broken; fix the docs without changing runtime behavior.",
+      "shouldTrigger": true,
+      "reason": "Doctests and intra-doc links are focused rustdoc maintenance outcomes."
+    },
+    {
+      "id": "contextual-api-change",
+      "kind": "contextual-positive",
+      "prompt": "This patch changes public error variants, safety preconditions, and a feature-gated re-export. Reconcile the affected rustdoc and prove each example against repository-selected checks.",
+      "shouldTrigger": true,
+      "reason": "Public contract changes create a contextual need to update item docs, safety sections, links, and examples."
+    },
+    {
+      "id": "negative-markdown-only",
+      "kind": "negative",
+      "prompt": "Refresh README.md, ARCHITECTURE.md, contributor instructions, and agent guidance after a workspace restructure; leave all Rust doc comments unchanged.",
+      "shouldTrigger": false,
+      "reason": "Repository-owned Markdown reconciliation is outside a public rustdoc-only workflow."
+    },
+    {
+      "id": "negative-feature-work",
+      "kind": "negative",
+      "prompt": "Implement the missing asynchronous API, redesign its error enum, and add tests; documentation can be handled after the behavior exists.",
+      "shouldTrigger": false,
+      "reason": "The primary outcome is Rust implementation and API design, not documentation of an existing public contract."
+    },
+    {
+      "id": "overlap-workspace-markdown",
+      "kind": "overlap",
+      "prompt": "Reconcile all Rust workspace READMEs, architecture documents, runbooks, and AGENTS.md files with current code; mention rustdoc drift separately.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-workspace-documentation",
+      "reason": "The requested artifacts are repository Markdown and agent guidance, owned by the neighboring documentation skill."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-item-refresh",
+      "kind": "focused",
+      "prompt": "Refresh the rustdoc for a public fallible function whose error variants and panic preconditions changed, and replace its stale example.",
+      "assertions": [
+        "Inspects repository instructions, the signature, implementation, errors, tests, features, and current docs before editing",
+        "Previews claims and example behavior and preserves unrelated source changes",
+        "Uses appropriate Errors and Panics sections without restating the signature",
+        "Runs repository-derived formatting and doctest checks and reports exact evidence and freshness limits"
+      ],
+      "forbidden": [
+        "Invents behavior, broadens the API, disables lints, or converts a failing example to ignore without justification",
+        "Uses destructive, credentialed, live-network, or process-global environment behavior in a doctest",
+        "Stages, commits, pushes, publishes, installs dependencies, or fabricates compatibility and test results"
+      ]
+    },
+    {
+      "id": "end-to-end-crate-audit",
+      "kind": "end-to-end",
+      "prompt": "Audit and refresh public rustdoc across a feature-gated Rust workspace, including crate narratives, re-exports, links, examples, contract sections, checks, and final diff review.",
+      "assertions": [
+        "Inventories all in-scope public and re-exported items plus feature and platform gates before editing",
+        "Uses current primary rustdoc guidance when allowed and labels incomplete source verification",
+        "Makes examples runnable or documents a precise no-run boundary while preserving unrelated changes",
+        "Separates doc build, doctest, lint, rendered review, skipped target, and native-client evidence"
+      ],
+      "forbidden": [
+        "Assumes fixed crates, a comparison branch, all-features compatibility, or universal locked Cargo commands",
+        "Performs hidden installation, publishing, remote Git operations, destructive filesystem writes, or credential exposure",
+        "Claims unexecuted features, platforms, services, clients, or models passed"
+      ]
+    }
+  ]
+}

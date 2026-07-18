@@ -1,0 +1,68 @@
+name: Client compatibility report
+description: Report installation, discovery, invocation, or runtime differences in Claude Code, Codex, or OpenCode.
+title: "[compatibility]: "
+labels:
+  - compatibility
+  - bug
+body:
+  - type: dropdown
+    id: client
+    attributes:
+      label: Client
+      options:
+        - Claude Code
+        - Codex
+        - OpenCode
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Exact client version
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system and shell
+    validations:
+      required: true
+  - type: input
+    id: pack
+    attributes:
+      label: Pack ID, release tag, and full source SHA
+    validations:
+      required: true
+  - type: textarea
+    id: installation
+    attributes:
+      label: Redacted installation/update command and result
+    validations:
+      required: true
+  - type: textarea
+    id: discovery
+    attributes:
+      label: Expected and discovered skills
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Minimal reproduction and observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs or diagnostics
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I tested a pinned release rather than an unrecorded mutable branch.
+          required: true
+        - label: I removed credentials, private paths, and sensitive content.
+          required: true
+        - label: I checked `COMPATIBILITY.md` for known limitations.
+          required: true

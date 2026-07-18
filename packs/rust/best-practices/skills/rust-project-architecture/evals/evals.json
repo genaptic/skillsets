@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-project-architecture",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-project-architecture to design the crate, module, library/binary, dependency, and test boundaries for this growing Rust application.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly names the skill and its owned architectural boundaries."
+    },
+    {
+      "id": "implicit-positive-workspace",
+      "kind": "implicit-positive",
+      "prompt": "Should this new Rust capability extend the existing crate, live under src/bin, or become another workspace package? Inspect consumers and release boundaries before deciding.",
+      "shouldTrigger": true,
+      "reason": "Choosing among an existing crate, an extra target, and a package is a core architecture decision."
+    },
+    {
+      "id": "implicit-positive-thin-binary",
+      "kind": "implicit-positive",
+      "prompt": "Two Rust binaries duplicate parsing-independent domain logic and their integration tests are hard to place. Refactor the layout without creating needless crates.",
+      "shouldTrigger": true,
+      "reason": "Binary/library separation, shared ownership, and test placement are architecture outcomes."
+    },
+    {
+      "id": "contextual-positive-cycle",
+      "kind": "contextual-positive",
+      "prompt": "The attached Cargo metadata shows a proposed dependency cycle, platform-specific native dependencies, and a virtual workspace. Produce a safe boundary and migration plan.",
+      "shouldTrigger": true,
+      "reason": "The dependency graph and virtual-workspace context strongly require architectural analysis."
+    },
+    {
+      "id": "negative-function-structure",
+      "kind": "negative",
+      "prompt": "Keep all modules and crates fixed; refactor this one Rust type to replace boolean mode flags with an enum and move receiver-owned behavior into methods.",
+      "shouldTrigger": false,
+      "reason": "Internal type and behavior organization belongs to rust-code-structure, not project architecture."
+    },
+    {
+      "id": "negative-cli-command",
+      "kind": "negative",
+      "prompt": "Add one subcommand to an existing Rust CLI using its established parser, dispatch, output, and test conventions; do not change package boundaries.",
+      "shouldTrigger": false,
+      "reason": "Adding one command to an existing CLI belongs to rust-cli-command-development."
+    },
+    {
+      "id": "overlap-abstraction-design",
+      "kind": "overlap",
+      "prompt": "Within the existing module tree, choose between a generic, trait object, and closed enum for three runtime-selectable implementations and design their error contract.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-abstraction-design",
+      "reason": "Polymorphism and API failure contracts dominate while project layout remains fixed."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-boundary-decision",
+      "kind": "focused",
+      "prompt": "Decide whether a second Rust executable should use src/bin or a new workspace package, then provide a reviewable layout and verification plan.",
+      "assertions": [
+        "Inventories current packages, targets, dependencies, consumers, deployment, platforms, ownership, tests, CI, and release boundaries",
+        "Selects the smallest viable boundary and justifies a package only through real reuse, dependency, deployment, platform, ownership, or release evidence",
+        "Keeps executable setup and ExitCode mapping thin while reusable parsing-independent behavior remains directly testable",
+        "Plans public-path, feature, package, test, and semver migration effects before moving files",
+        "Derives Cargo verification from repository policy and reports unavailable configurations honestly"
+      ],
+      "forbidden": [
+        "Creates pseudo-layer packages solely for conceptual symmetry",
+        "Duplicates domain logic across binaries or calls process::exit from domain layers",
+        "Installs tools, publishes packages, or performs remote Git operations",
+        "Claims compilation on one host proves every platform or target"
+      ]
+    },
+    {
+      "id": "end-to-end-workspace-restructure",
+      "kind": "end-to-end",
+      "prompt": "Restructure a multi-package Rust repository to remove a dependency cycle, isolate a native backend, preserve public paths where promised, and place tests at appropriate boundaries.",
+      "assertions": [
+        "Maps the current and proposed dependency graphs and assigns one coherent responsibility to every changed crate and module",
+        "Uses workspace inheritance, resolver, default members, targets, and feature selection only as supported by the target Cargo policy",
+        "Borrows through internal processing and moves or clones only at explicit independent-ownership seams",
+        "Previews manifest and file moves, preserves unrelated edits, and implements the migration incrementally",
+        "Runs repository-derived metadata, format, check, lint, test, docs, feature, target, and MSRV checks and reviews the final diff"
+      ],
+      "forbidden": [
+        "Silently breaks package names, public paths, feature semantics, serialization, or release boundaries",
+        "Centralizes concrete integration dependencies in a provider-neutral domain contract",
+        "Exposes private internals solely to make integration tests easier",
+        "Fabricates downstream compatibility, command results, or migration evidence"
+      ]
+    }
+  ]
+}

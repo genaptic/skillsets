@@ -1,0 +1,35 @@
+{
+  "name": "python-cli-apps",
+  "version": "1.0.0",
+  "description": "Design, failure-contract, and test workflows for reliable Python command-line applications.",
+  "author": {
+    "name": "Genaptic",
+    "url": "https://github.com/genaptic/skillsets"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/python/cli-apps",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "python",
+    "cli",
+    "testing",
+    "ux"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Python CLI Applications",
+    "shortDescription": "Design, failure-contract, and test workflows for reliable Python command-line applications.",
+    "longDescription": "Design, failure-contract, and test workflows for reliable Python command-line applications.",
+    "developerName": "Genaptic",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/genaptic/skillsets/tree/main/packs/python/cli-apps",
+    "defaultPrompt": [
+      "Use Python CLI Applications to review the relevant files and propose a verified plan."
+    ]
+  }
+}

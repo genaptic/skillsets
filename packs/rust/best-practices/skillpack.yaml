@@ -1,0 +1,45 @@
+schema-version: 1
+id: "rust-best-practices"
+display-name: "Rust Best Practices"
+description: "Repository-aware workflows for designing, reviewing, testing, documenting, and maintaining production Rust systems."
+language: "rust"
+subject: "best-practices"
+version: "1.0.0"
+license: Apache-2.0
+maintainers:
+- github: "jecsand838"
+skills:
+- "rust-core-best-practices"
+- "rust-project-architecture"
+- "rust-code-structure"
+- "rust-abstraction-design"
+- "rust-async-concurrency"
+- "rust-networking"
+- "rust-testing-strategy"
+- "rust-dependency-portability"
+- "rust-workspace-documentation"
+- "rustdoc-maintenance"
+targets:
+- "claude-code"
+- "codex"
+- "opencode"
+category: "Developer Tools"
+keywords:
+- "agent-skills"
+- "rust"
+- "cargo"
+- "architecture"
+- "async"
+- "testing"
+- "networking"
+- "portability"
+compatibility:
+  runtimes:
+    cargo: "bundled with the target repository's selected Rust toolchain"
+    rust: "target repository toolchain and MSRV; Edition 2024 examples require >=1.85"
+  notes: "Guidance honors repository-declared editions, features, lockfiles, targets, and CI. Crate-specific APIs must be checked against locked versions."
+operations:
+  network: "optional"
+  filesystem: "project-write"
+  command-execution: "optional-explicit"
+  external-writes: "none"

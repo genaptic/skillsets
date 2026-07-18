@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "skillName": "python-api-client-boundary-review",
+  "packId": "python-best-practices",
+  "expectedPackVersion": "1.0.0",
+  "details": "Review a Python API client's public boundary, dependency direction, transport abstraction, error translation, configuration seams, and testability. Produce prioritized findings, a minimal proposed boundary, and concrete verification steps without implementing live service calls.",
+  "scope": {
+    "useWhen": [
+      "A Python repository needs an architectural review of an API client boundary.",
+      "A proposed client mixes transport, mapping, retries, and configuration and needs focused decomposition."
+    ],
+    "doNotUseWhen": [
+      "The task is general package layout without an API-client boundary decision.",
+      "The task is to execute live requests, handle credentials, or benchmark a remote service."
+    ],
+    "supportedEnvironments": [
+      "Python 3.11 or newer with an existing source tree or proposed module design"
+    ]
+  },
+  "expectedOutput": "A source-backed boundary review with assumptions, prioritized findings, recommended interfaces, a smallest safe patch or design, and verification evidence.",
+  "successCriteria": [
+    "The skill has one observable review outcome and a clear boundary against project-layout and live-debugging workflows.",
+    "Every canonical file, eval, manifest registration, generated artifact, and required repository check is complete and reported accurately."
+  ],
+  "examples": {
+    "shouldTrigger": [
+      "Create one skill for reviewing whether transport concerns leak into a Python SDK's public API.",
+      "Add an API client boundary review capability to the existing Python best-practices pack."
+    ],
+    "shouldNotTrigger": [
+      "Set up the entire Python package layout and build backend for this repository.",
+      "Debug these failing authenticated HTTP requests against the production API."
+    ]
+  },
+  "nearestNeighbor": "python-project-layout",
+  "constraints": [
+    "Prefer standard typing and protocol boundaries unless the repository standardizes another abstraction.",
+    "Do not execute live network requests during review."
+  ],
+  "operations": {
+    "network": "none",
+    "filesystem": "project-write",
+    "commandExecution": "optional-explicit",
+    "externalWrites": "none"
+  },
+  "sourceRequirements": {
+    "freshness": "Use current supported-Python and client-library guidance and record access dates during authoring.",
+    "requiredAuthorities": [
+      "Python documentation",
+      "Agent Skills specification",
+      "Official supported-client skill documentation"
+    ]
+  },
+  "openai": {
+    "displayName": "Python API Client Boundary Review",
+    "shortDescription": "Review Python API client boundaries safely",
+    "defaultPrompt": "Use $python-api-client-boundary-review to review this Python client's public and transport boundaries."
+  },
+  "userSources": []
+}

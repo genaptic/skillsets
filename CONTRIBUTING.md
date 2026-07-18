@@ -1,0 +1,161 @@
+# Contributing
+
+Contributions are welcome when they keep skills portable, narrowly routed, verifiable, and
+unsurprising.
+
+## Start here
+
+1. Read `CODE_OF_CONDUCT.md`, `docs/architecture.md`, `docs/authoring.md`, and
+   `docs/threat-model.md`.
+2. Search existing issues and skills for overlap.
+3. Use `$create-new-skill` for one new skill in an existing pack. Use
+   `$create-new-skillset` for a new independently installable pack, several coordinated
+   skills, or a capability with no coherent existing owner.
+4. Validate the selected workflow's normalized request, review its scaffold preview, and
+   apply only the unchanged plan digest. For a new pack or broad behavioral change, open a
+   proposal issue before a large pull request.
+5. Run `make bootstrap` to create an isolated Python 3.11-or-newer `.venv`, install the fully
+   pinned and hashed development lock, install this project with `--no-deps`, and explicitly
+   fetch the locked Rust behavior-harness dependency graph into the repository-local Cargo
+   cache. This step uses an already-installed Rust toolchain; it never installs or upgrades one.
+6. Run `make generate` after source changes, then run the non-mutating `make check` before
+   opening the pull request. Its `rust-check` prerequisite uses the locked graph and populated
+   Cargo cache offline.
+
+## Naming
+
+Use lowercase kebab-case.
+
+- Pack: `<language-or-domain>-<subject>`, such as `python-cli-apps`.
+- Skill: globally unique, outcome-oriented, and specific, such as
+  `postgres-query-performance-review`.
+- Directory name: exactly equal to the skill's frontmatter `name`.
+- Public names are API. Do not rename them for style alone.
+
+Avoid vague names such as `testing`, `docs`, `review`, or `best-practices`.
+
+## Skill requirements
+
+Every skill must include:
+
+```text
+SKILL.md
+agents/openai.yaml
+references/guide.md
+references/checklist.md
+references/sources.md
+evals/evals.json
+```
+
+Add `assets/` only for reusable templates or examples and `scripts/` only for deterministic,
+documented helpers. Do not add empty directories or placeholder README files.
+
+`SKILL.md` must:
+
+- Use only the portable frontmatter fields `name`, `description`, `license`, and
+  string-valued `metadata`.
+- Define what it does, when it should activate, and when it should not activate.
+- Identify necessary inputs and state assumptions.
+- Prefer inspection and reversible steps before mutation.
+- Distinguish recommendations from verified facts.
+- Define an output contract and verification procedure.
+- Link to focused references rather than becoming a long handbook.
+- Avoid hidden downloads, package installation, credential requests, and implicit
+  destructive actions.
+- Put detailed runtime/client requirements in a concise `Compatibility` section and the
+  pack manifest, not in vendor-specific frontmatter.
+
+`agents/openai.yaml` must provide a human-readable display name, a 25–64 character short
+description, and a concise default prompt that explicitly invokes `$<skill-name>`. Do not
+invent icons, brand colors, MCP dependencies, or invocation restrictions.
+
+## Eval requirements
+
+Every new skill needs at least:
+
+- One explicit positive routing prompt.
+- Two implicit positive prompts.
+- One contextual positive prompt.
+- Two negative controls.
+- One overlap case naming the more appropriate neighboring skill.
+- Two behavior cases, including one end-to-end case.
+- Assertions for verification and prohibited side effects.
+
+Evals are test specifications, not claims that every model/client has passed. Structural CI
+checks their completeness and exports the full prompts, assertions, forbidden behaviors,
+and overlap expectations. Native-client and model-backed runs must record client, model,
+version, exact source SHA, case outcomes, side effects, and reviewer in a schema-valid report
+without secrets.
+
+## Scripts and assets
+
+Scripts must be deterministic, narrowly scoped, and safe by default.
+
+- Read-only is preferred.
+- Writes require an explicit output path.
+- Refuse overwrite unless `--force` is supplied.
+- External execution requires an explicit confirmation flag.
+- Network access must be documented and off by default.
+- Do not install dependencies.
+- Use environment variables, service files, or standard credential helpers rather than
+  command-line secrets.
+- Print actionable errors and return nonzero on failure.
+- Include `--help` and tests for important behavior.
+
+Assets are templates or examples. They must not contain secrets, production identifiers, or
+commands that appear safe while omitting necessary warnings.
+
+Rust contributions must derive Cargo commands from the target repository's toolchain, MSRV,
+workspace, lockfile, feature, target, and CI policies. Label each Rust asset as a complete
+copy-ready project or an adaptable snippet. Complete projects must compile with their documented
+toolchain; snippets must state their dependencies and surrounding assumptions. Destructive
+filesystem examples require exact-target authorization, protected-path refusal, containment,
+ownership, symlink, preview, confirmation, and adversarial-test contracts.
+
+## Generated files
+
+Do not hand-edit files marked as generated. Change `repository.yaml`, `skillpack.yaml`, or
+canonical skill content, then run:
+
+```bash
+python3 tools/generate-all
+```
+
+`make check` and CI verify generated state without rewriting it. Generation drift is a
+failure; run `make generate` explicitly and review every generated change.
+
+## Commit and pull-request scope
+
+Keep each pull request reviewable. Separate mechanical regeneration from unrelated content
+changes when possible. Explain:
+
+- The routing change.
+- Permissions, commands, network access, and file writes.
+- Database or external-system effects.
+- Compatibility impact.
+- Eval evidence.
+- Version and changelog impact.
+
+Changes to `.github/workflows/`, installers, marketplaces, schemas, release tooling, or
+security policy require a maintainer review.
+
+## Developer certificate of origin
+
+By contributing, you certify that you have the right to submit the contribution under the
+project license. Sign off commits with:
+
+```bash
+git commit --signoff
+```
+
+The sign-off records the Developer Certificate of Origin statement:
+
+> I certify that I have the right to submit this contribution under the open-source license
+> indicated in the repository.
+
+## Review criteria
+
+Maintainers review correctness, scope, activation boundaries, portability, operational
+safety, quality of sources, testability, and maintenance cost. A technically valid
+contribution may be declined when it duplicates an existing skill or creates a broad,
+fragile abstraction.

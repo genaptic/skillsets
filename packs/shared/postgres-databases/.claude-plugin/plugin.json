@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "postgres-databases",
+  "displayName": "PostgreSQL Databases",
+  "version": "1.0.0",
+  "description": "Schema, query, index, migration, and recovery workflows for safe, evidence-based PostgreSQL engineering.",
+  "author": {
+    "name": "Genaptic"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/shared/postgres-databases",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "postgresql",
+    "schema",
+    "performance",
+    "migrations",
+    "recovery"
+  ]
+}

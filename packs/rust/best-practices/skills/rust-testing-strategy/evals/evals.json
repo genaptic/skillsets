@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-testing-strategy",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-testing-strategy to plan unit, integration, doctest, binary-smoke, and end-to-end coverage for this Rust change.",
+      "shouldTrigger": true,
+      "reason": "The named skill owns Rust test-level selection and evidence design."
+    },
+    {
+      "id": "implicit-positive-placement",
+      "kind": "implicit-positive",
+      "prompt": "These tests add cfg(test) constructors to production modules and mock a database crate we do not own; move them to trustworthy boundaries.",
+      "shouldTrigger": true,
+      "reason": "The request requires test placement, seam, and live-dependency strategy."
+    },
+    {
+      "id": "implicit-positive-determinism",
+      "kind": "implicit-positive",
+      "prompt": "Our Tokio tests sleep for a second, bind port 3000, mutate environment variables, and intermittently hang; make the suite deterministic.",
+      "shouldTrigger": true,
+      "reason": "Async timing, port, environment, and readiness controls are test reliability concerns."
+    },
+    {
+      "id": "contextual-positive",
+      "kind": "contextual-positive",
+      "prompt": "Review this CI diff: the integration job silently skips when Docker is missing but the release report records the client as passing.",
+      "shouldTrigger": true,
+      "reason": "The artifact exposes invalid evidence and unavailable-infrastructure handling."
+    },
+    {
+      "id": "negative-rustdoc",
+      "kind": "negative",
+      "prompt": "Rewrite this library's public API documentation, repair intra-doc links, and add clear examples and safety sections.",
+      "shouldTrigger": false,
+      "preferredSkill": "rustdoc-maintenance",
+      "reason": "Public API documentation is the rustdoc skill's primary deliverable."
+    },
+    {
+      "id": "negative-async-design",
+      "kind": "negative",
+      "prompt": "Redesign production task ownership, bounded queues, cancellation propagation, and graceful shutdown in this Tokio service.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-async-concurrency",
+      "reason": "Production concurrency design is narrower than test strategy for this request."
+    },
+    {
+      "id": "overlap-doctest",
+      "kind": "overlap",
+      "prompt": "Refresh the public API prose, repair intra-doc links, and rewrite its examples so readers understand safety, errors, and platform behavior.",
+      "shouldTrigger": false,
+      "preferredSkill": "rustdoc-maintenance",
+      "reason": "Although examples may become doctests, the primary outcome is public API documentation."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-behavior",
+      "kind": "focused",
+      "prompt": "Replace a flaky Tokio test that uses wall-clock sleep for server readiness and process-global environment mutation.",
+      "assertions": [
+        "Inspects repository test commands, runtime features, CI behavior, and the production contract before editing",
+        "Uses explicit readiness and a bounded wait, and avoids process-global environment mutation",
+        "Uses paused time only for hermetic timer behavior and accounts for Tokio auto-advance",
+        "Reports the exact tests executed and preserves unrelated worktree changes"
+      ],
+      "forbidden": [
+        "Installs dependencies, starts containers, or accesses a network without explicit authority",
+        "Uses arbitrary sleep, a fixed shared port, or detached server tasks as the replacement",
+        "Claims an unavailable or unexecuted test passed"
+      ]
+    },
+    {
+      "id": "end-to-end-behavior",
+      "kind": "end-to-end",
+      "prompt": "Design and implement coverage for a Rust workspace change spanning a library API, CLI binary, database adapter, and async retry loop.",
+      "assertions": [
+        "Builds a behavior-to-level matrix and selects unit, integration, doctest, binary, and e2e coverage deliberately",
+        "Keeps fakes at owned boundaries and uses isolated authorized infrastructure only where protocol compatibility matters",
+        "Tests numeric boundaries, timeouts, retries, cleanup, platforms, and claimed feature combinations",
+        "Records commands, versions, permissions, effects, results, unavailable prerequisites, and cleanup honestly"
+      ],
+      "forbidden": [
+        "Uses production endpoints or credentials, performs unsafe broad cleanup, or hides external effects",
+        "Adds production cfg(test) shims or imposes a universal unsupported Cargo flag matrix",
+        "Commits, pushes, publishes, fabricates evidence, or expands scope without approval"
+      ]
+    }
+  ]
+}

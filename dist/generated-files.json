@@ -1,0 +1,1469 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "sha256": "1fd2a3bdb853d5435d867414191f5d98bd0fdc4b508c140e4d2a146cd782eca7",
+      "size": 1535,
+      "mode": "0644"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "sha256": "1076d7066946a87f710c05fd9bcb0e339dc2a22019db28a36a67a8a4f52466ae",
+      "size": 3331,
+      "mode": "0644"
+    },
+    {
+      "path": "README.md",
+      "sha256": "936d5a326b0990c330e583707a14aba99405361a90b74093d0896ad592f4f901",
+      "size": 9546,
+      "mode": "0644"
+    },
+    {
+      "path": "catalog.json",
+      "sha256": "52e52e36cdb182b7505302062b47848dc484e6678bc66a747ee05198663edcc2",
+      "size": 9214,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/README.md",
+      "sha256": "a6812835deb134a565b37602cf0f7d9d795423d57922638896b84462ec7953a3",
+      "size": 1691,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/postgres-databases.ps1",
+      "sha256": "c176877620c4940f46225c603213b0f6d2aadd969ea7eaa9b9f0dc59c174c60b",
+      "size": 4099,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/postgres-databases.sh",
+      "sha256": "6ce3fd873c9648846073ca8888360de6e8240b23f79d94d6d02084dee3e43d96",
+      "size": 3815,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/install/python-best-practices.ps1",
+      "sha256": "e6e1ea1d50533b9080d3d83441b4ee4d7dbbe90e6b12119fcd8f5554ff7228b1",
+      "size": 3989,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/python-best-practices.sh",
+      "sha256": "a7dd4bce9d74ea1b61a6d2ac20470280cadfda92f9e16f9306e029ce22882303",
+      "size": 3718,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/install/python-cli-apps.ps1",
+      "sha256": "57bb4461bbcf296c786606b5b5da5a6984ec56d62c360fc68899770f80a5f737",
+      "size": 3984,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/python-cli-apps.sh",
+      "sha256": "7b12a09285cdebe8df98f676b5f13e1282d94fe530ef0c42f7cec1441b7fa31e",
+      "size": 3709,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/install/repository-development.ps1",
+      "sha256": "90e7ff7c08cf74888e8a6e11d3a6e8446022c2288a1c288146852d213314cfb5",
+      "size": 3959,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/repository-development.sh",
+      "sha256": "95126a92c4652b61543fd2eb8e4522e3c481913e9f9a6864563ee68340f55522",
+      "size": 3693,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/install/rust-best-practices.ps1",
+      "sha256": "d3e055f38fb3d74e08ae93a5a0a61f59fdeba34e24d5e1fd64adcf8a65d2886b",
+      "size": 4201,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/rust-best-practices.sh",
+      "sha256": "77f92634cd05c758de45f3b652da59e18d8d66e494d412344d865a03a75cbbc5",
+      "size": 3905,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/install/rust-cli-apps.ps1",
+      "sha256": "0a1b8ec97c42811d7ee6c113480f4b35d34246550851dcbbba856969859cac32",
+      "size": 3963,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/install/rust-cli-apps.sh",
+      "sha256": "5129a4088c1fe4f3c923e3b6e2dff3b15d7b6cedfb11201d9166556a17483337",
+      "size": 3687,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/README.md",
+      "sha256": "eb9af1ab88e40ee402f6a1dafbda879c8b4b49cda272e9274f0cb70a7b9b59f6",
+      "size": 779,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/index.json",
+      "sha256": "b2fb403197311eef877a72d1730a0d5eabf813b4bc9f28a05708f55e89779469",
+      "size": 1139,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-error-handling/assets/exception-hierarchy.example.py",
+      "sha256": "8a31770691d95140f17efb02efe29191ec921feb6b8901a1ce50bdd34fd9d2f3",
+      "size": 703,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-error-handling/assets/exception-policy-template.md",
+      "sha256": "055199d3d1b40510e6e571869a7d6a18740cf6dc333a9d3a0d14bee35ffa309e",
+      "size": 1234,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-error-handling/python-error-handling.md",
+      "sha256": "719629b1e7fbd73a2cb2b69d75a31168ce1a8daf5b91f99f5c9bebd87520a744",
+      "size": 6349,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-error-handling/references/checklist.md",
+      "sha256": "0cc9dd237e8423493b654259bcf46b03a48ba8d26e2baa05073cf12d65fc6588",
+      "size": 2107,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-error-handling/references/guide.md",
+      "sha256": "4998166cf6256166642d9c96f09e32a4cb1fa087bc6f61cea3e1a727f5ed282b",
+      "size": 5057,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-error-handling/references/sources.md",
+      "sha256": "fc42cc54c0856f74fbee1189ceed958caea6872eed09d00a401549b621421aa0",
+      "size": 545,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-error-handling/scripts/audit_exception_handlers.py",
+      "sha256": "ed95f141bc3662508e460d448321b65c70d8c4b2ffd8332d92ede3ce3cb885af",
+      "size": 6444,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-project-layout/assets/layout-review-template.md",
+      "sha256": "76c79f9dce14a65c5bcc1231815a3820a946207754b6a7d3b530ede1fe6f44d1",
+      "size": 923,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-project-layout/assets/pyproject-src-layout.example.toml",
+      "sha256": "d3bf101bf6e3ea7533e2474460b0c9807a94e4a98869fe3b76c75b1ee010e27b",
+      "size": 742,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-project-layout/python-project-layout.md",
+      "sha256": "a8dab0616bc563973f81f44f8959211862098c857f3cbe49096ea1e0723782b7",
+      "size": 6408,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-project-layout/references/checklist.md",
+      "sha256": "49692244af4b8406434c59e619c0017720187f13b9e6f3119748a1ba9078ff76",
+      "size": 1756,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-project-layout/references/guide.md",
+      "sha256": "8e5e7cd32dca5ee5ba1eaa8be23e023a4434465bdad87124629e236db1f384f2",
+      "size": 4842,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-project-layout/references/sources.md",
+      "sha256": "64096e72eacf5d99409404f41674ac2de7fba382b3cc9427f026545971db28d7",
+      "size": 680,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-project-layout/scripts/inspect_layout.py",
+      "sha256": "8ac73b6ea07672c5fd3133a3dedd08fd7e12460fc7b58419a2d759d3c369cd95",
+      "size": 6902,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-testing-strategy/assets/pytest-config.example.toml",
+      "sha256": "3bcc6ff13eea0e7031372dc985560dd37d2aff021c9abb22ef8190b6a958abd3",
+      "size": 380,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-testing-strategy/assets/test-strategy-template.md",
+      "sha256": "ccb0a134abca7ca62495762ce5f9a4b7789912fcbf479d3a9890077c9378d17f",
+      "size": 1289,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-testing-strategy/python-testing-strategy.md",
+      "sha256": "0989360463dd33d03c9ba72a7dd182c0418a855520e47e2cd1ed3f345b6daa84",
+      "size": 6142,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-testing-strategy/references/checklist.md",
+      "sha256": "26a615753fdfe866f337494f2b816c308100523a5b431ea62aca2ad9b87b6961",
+      "size": 2113,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-testing-strategy/references/guide.md",
+      "sha256": "298a74a8ac561f31e7d4c9ec136ad7e55562f7a8e6bd1509abb640dfb83af3ad",
+      "size": 4731,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-testing-strategy/references/sources.md",
+      "sha256": "27079829faac7502837ddd16153061b45222c7d3de877bf34b5e9e68b087d458",
+      "size": 600,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/best-practices/python-testing-strategy/scripts/inventory_tests.py",
+      "sha256": "ece5ba4762aab6c5cea504052364ec849e73f9bad11c366f04cfabd557998d30",
+      "size": 5573,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/index.json",
+      "sha256": "7d35a7bc341d2cf4beb43ea5d7426193ba13fd633f0c90518f67196cdbf28c86",
+      "size": 1165,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-command-design/assets/cli-design-review-template.md",
+      "sha256": "62f94075996f49b05134e4e23a2e581a9269d4deccfdaa7952f68f8e394b8cf4",
+      "size": 1386,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-command-design/assets/command-spec.example.json",
+      "sha256": "0aaa914e906e0a023208d5af2b01f4d20d83ff2f031798eefcd8306ceddc6afc",
+      "size": 1462,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-command-design/python-cli-command-design.md",
+      "sha256": "24eccb8d0b0eb87a3fed7f9573cf99725e0e30263f91e05f066290d9d643dfbc",
+      "size": 6401,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-command-design/references/checklist.md",
+      "sha256": "eaa1c6dbe81c683f7fd31357c0d9d5835df0fecad4ee521b552a4d7a834837c9",
+      "size": 2244,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-command-design/references/guide.md",
+      "sha256": "289a0a5b72f7df7da46bbed83dec5e17ca2a0cd62335fc8b44efe1f3b444fb0b",
+      "size": 4668,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-command-design/references/sources.md",
+      "sha256": "fa187cf4b304f42098d885b2a5820b3003a8ca83ca40182e3c30d2453c12af89",
+      "size": 630,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-command-design/scripts/validate_command_spec.py",
+      "sha256": "82d0fc9c19d36210d9b2439b8ced9b3e1ac6b08ffac8324dfb2927b1a57dac89",
+      "size": 8229,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-error-output/assets/cli-error-contract.example.json",
+      "sha256": "232491ba0eeaa62e5263a8f36e182d2e8eccb6c00079756ddd658e79d1413244",
+      "size": 774,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-error-output/assets/cli-failure-contract-template.md",
+      "sha256": "b349697e0f5388d3ba7216c03923a383b491d828abf6bc7fbf2f7b6fc11fd7e8",
+      "size": 1275,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-error-output/python-cli-error-output.md",
+      "sha256": "6ef5bd1614ebd499c42b6d9ede25d509cb22287abc05b7ae55ecc41b07563909",
+      "size": 6378,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-error-output/references/checklist.md",
+      "sha256": "d3f273016e22a19ea4125342d2b660cf13a994d397a10e1fe25b6a259c17a26a",
+      "size": 2097,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-error-output/references/guide.md",
+      "sha256": "2cba8242f83558e4e5ca2407d49b6b51a1a30a696cdacbf2d4712b6fdda19fb0",
+      "size": 5165,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-error-output/references/sources.md",
+      "sha256": "fe5cc75e7a79797df8c99b4db01f15f6fe7f3b69d88fce6c1b2370ed86827a65",
+      "size": 523,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-error-output/scripts/check_cli_contract.py",
+      "sha256": "5b89091e0c24e161ada1f961300e983ac2a7665af058cac40a1d340984786580",
+      "size": 8604,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-testing/assets/cli-test-surface.example.json",
+      "sha256": "a334a5d41b94a643a7ca98a0524ec5956ccdfdf15d0755e049c7991a570964ea",
+      "size": 1322,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-testing/assets/subprocess-test-skeleton.example.py",
+      "sha256": "6e0455cfc56d2a90cbc49acfdd5daa9286b1e418e9133da41fada779badd8c75",
+      "size": 805,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-testing/python-cli-testing.md",
+      "sha256": "8dfd798e3bf6bb5c80d6b899a67e998d4dc92fc983659db8447a06eb87d26292",
+      "size": 6370,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-testing/references/checklist.md",
+      "sha256": "5dd81ba75609cb8293b41faa558c6ba6d5a3a84c3ac8c10fd483a9d2c760f358",
+      "size": 2300,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-testing/references/guide.md",
+      "sha256": "7506771a3a37158e13a0752117bbd860f49491a2a128970d4aeab32fd373e42b",
+      "size": 4904,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-testing/references/sources.md",
+      "sha256": "8766c92e4f5cd362794d97810ccfacf9587cc662eab2ef13274e39a1741ffa20",
+      "size": 535,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/python/cli-apps/python-cli-testing/scripts/generate_cli_test_matrix.py",
+      "sha256": "f919109db2605066c56f79ddd45104525f270b20d8c59fe31d70f5e704ef41e9",
+      "size": 6568,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/index.json",
+      "sha256": "5d7bf8c17cac4d42cabf1c608d370be675f4e8a2070bf0a673322dafcb635efd",
+      "size": 4309,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-abstraction-design/assets/templates/enum_dispatch.rs",
+      "sha256": "270d1493b34fb598d1d84fe5ba4c2449f9ea871f17045996ae9aa343e2d0ca96",
+      "size": 1062,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-abstraction-design/assets/templates/typed_error.rs",
+      "sha256": "d2cbbb48927041dcde89d52a3912b7610de163b2e409ab8d809db33e914b4ab9",
+      "size": 885,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-abstraction-design/references/checklist.md",
+      "sha256": "a7dda1575d957295b3f0f57462f88a4543ad16c3f655a14422d93b73e13b0a6c",
+      "size": 1571,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-abstraction-design/references/enum-dispatch.md",
+      "sha256": "573c12388d8f81b74a8dd85b47d6221f4267edf7865a45a01bc52ca0f81f7f87",
+      "size": 6079,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-abstraction-design/references/guide.md",
+      "sha256": "f55bfc5d3c358ec5da6c61261eded39b5684cae1111b904db8ea97705601b448",
+      "size": 9644,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-abstraction-design/references/sources.md",
+      "sha256": "42d8bb42741842b5918194527dc7e38550001884256a3e18cb1fb885233ba36e",
+      "size": 2045,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-abstraction-design/rust-abstraction-design.md",
+      "sha256": "3aa034b425e855469ab4ea63b089a5ab3d4fba4e63992262c3e4e574e0778166",
+      "size": 5699,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/assets/templates/bounded_fanout.rs",
+      "sha256": "ee81bd14d608c48e0b285c3957b89bb63fe51780b2629f71fd40ae528835ab86",
+      "size": 1842,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/assets/templates/graceful_shutdown.rs",
+      "sha256": "8efa392caa2d7b4a93635d5c4a9a8a634ac07c2464a96e30db2a1144fe9cced5",
+      "size": 2034,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/assets/templates/localset_spawn_local.rs",
+      "sha256": "c01f3ef12fe5dc9cd0bc7c310f66890744f6e9d2a63c9803eb95d6ef2d89eec0",
+      "size": 592,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/assets/templates/sync_worker_bridge.rs",
+      "sha256": "9dcc20f54cfb958ad4babf6d8bbf7a1ac074cbc7f60f4cce24f0b09348dbabd0",
+      "size": 3901,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/references/checklist.md",
+      "sha256": "d97e045c7bfa0c9003abc2d57cda2a890d7c770ff43123b181cdc58edb6bcf68",
+      "size": 1805,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/references/guide.md",
+      "sha256": "5076fb8a799d622f94e67a9738bcc84858cf5cd7f7b89c96ec15b3ea9ac2705b",
+      "size": 9871,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/references/sources.md",
+      "sha256": "13c4bb0a025fe5af65eb11a7f8ee894e744cdb158d53ed2ea1eeea3447870c36",
+      "size": 2465,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/references/sync-worker-bridge.md",
+      "sha256": "82ff41c721fa5b1e1388abeef703d601e041dfab7167dcd8f6d188997b585946",
+      "size": 1911,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/references/tokio-patterns.md",
+      "sha256": "6b95e430a8118130500f86c87e2df583d83b131a06a6bc4d7815ca98aa4a441e",
+      "size": 4593,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-async-concurrency/rust-async-concurrency.md",
+      "sha256": "6e1140a53668ec67ef9d9fe757979166ecf435392efa8b97563bda27ddb30778",
+      "size": 7721,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-code-structure/references/checklist.md",
+      "sha256": "a5aca96e21b6d47f9ca6e8ac46c10cddfe67b72f8f5948cf52a95c567016723e",
+      "size": 1483,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-code-structure/references/guide.md",
+      "sha256": "5cfac5f98d4ed61e9d740078605d1c50745453651029a4bfbd210f2455469053",
+      "size": 8068,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-code-structure/references/sources.md",
+      "sha256": "decdd2e75a46092d3cffeb7665925222e19b172e9fe70f40795f0fe309fc694c",
+      "size": 1842,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-code-structure/references/type-model-examples.md",
+      "sha256": "bdf16f9024142d94b9c17996de8b8d1fc0417bc751601c06082b7dfdeeab4c53",
+      "size": 4598,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-code-structure/rust-code-structure.md",
+      "sha256": "844509b840ac3cdb442ade8c03d8789df3a3e5c4799a34e7ddda74d8b7bc1d74",
+      "size": 5527,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-core-best-practices/assets/templates/baseline-package/Cargo.toml",
+      "sha256": "f4804dfc2d678f4de01a2c334a15d7c932d5d9b6f4411324f6c1efab0602ea21",
+      "size": 213,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-core-best-practices/assets/templates/baseline-package/src/lib.rs",
+      "sha256": "20ca25c752fbe325dc10dabc5a09d0ed7e64497b2f69ac1f7967784fbe9ddf3c",
+      "size": 1034,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-core-best-practices/assets/templates/member-Cargo.toml",
+      "sha256": "a0cc8a2ad128e90ed1b215c67ebc4051749117b5571b6a4dfd57c03525e1331e",
+      "size": 228,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-core-best-practices/references/checklist.md",
+      "sha256": "6c1ed3fcbccedf1f5145fe1a936c584a211d53fe1d760500644d6e2eca1988b9",
+      "size": 1634,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-core-best-practices/references/guide.md",
+      "sha256": "02973f0f1935891848bc244edaf95a1b11efa3dc3b5f485ffa31894112eacaee",
+      "size": 9027,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-core-best-practices/references/sources.md",
+      "sha256": "8143e949f05233bec17a84f15aa0da9fba210f6801fa932728d1c1094b4429e1",
+      "size": 2070,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-core-best-practices/rust-core-best-practices.md",
+      "sha256": "7f500b0735f2540ea84c648ce99e3ecd95be7220662c21e4098e9ea89a4cddd5",
+      "size": 5886,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/assets/templates/member_with_workspace_lints.toml",
+      "sha256": "49feff245e4577261ebcdc4d2b43d6a8c0aa5bbba415b2093847327e0a027662",
+      "size": 332,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/assets/templates/project_dirs.rs",
+      "sha256": "f4a66c377c8318f61b4055d2dc16a472982edca00bba02ccf09e4429d87ef628",
+      "size": 948,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/assets/templates/target_specific_deps.toml",
+      "sha256": "f341fd84dac8f01f0a8ecad989ea2d9c9e59cb0411e74dbabe1896b9d1c9df85",
+      "size": 255,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/references/cargo-policy.md",
+      "sha256": "8cbc44bf3515d583a67faa111adf5fddf374b1db2405f84bd56bbc7774cabf79",
+      "size": 1611,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/references/checklist.md",
+      "sha256": "e60c1c8d307bca2255a9f9c6c3c01bde09ae34888ab5b9d5e2d7eca134b837e1",
+      "size": 1243,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/references/guide.md",
+      "sha256": "14a4ab84229b9ffeb53d392ff4a5f2692914525e4325072c70eb702172590342",
+      "size": 8415,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/references/platform-portability.md",
+      "sha256": "daa126aad30b077a745f5e2d05065dbd8f12a305bd9300449fb8b5dd31f4c87e",
+      "size": 1523,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/references/sources.md",
+      "sha256": "729de77349c9faf01d58cb70a965e37518df131882ce853c9ac976df53dbca5e",
+      "size": 2614,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-dependency-portability/rust-dependency-portability.md",
+      "sha256": "9e9dd6efc0e31a06d10454e3d1575d4163607085209001b8eaac4c7d8e594d8d",
+      "size": 7193,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/assets/templates/grpc_client.rs",
+      "sha256": "3b1c391816a35b914d3c7f4c725ca9e0b429d8cb95cdc7b208a5296c81c1177e",
+      "size": 1417,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/assets/templates/sqlx_pool.rs",
+      "sha256": "139c62037a373b8020f5a65fdca62dadd11ba87b43e7f602bda9f22dc73614a5",
+      "size": 1227,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/assets/templates/typed_http_client.rs",
+      "sha256": "cacb9e9bc0aa0bddbd10b1afac6a4961b8e093564adb3fba0e8473371af5b46c",
+      "size": 5961,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/references/checklist.md",
+      "sha256": "55d8e4adcafcc430a7c3f296040481420cba78fbbc1f0fc2c1e370dcbb4064ae",
+      "size": 1588,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/references/grpc-database.md",
+      "sha256": "483c99521986456b37973b745cdd63cc96eae9a58a9733c7cee442c0980aec12",
+      "size": 1400,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/references/guide.md",
+      "sha256": "4d3caa3ddba8c37f94660971f620f32554c45b441d76b6946b23ca8bd87f89b3",
+      "size": 9744,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/references/http-reliability.md",
+      "sha256": "660317a1ecc9966b94ccbcf3ee8f792d31a4308433f41f9295a3a1aa833c35c2",
+      "size": 2230,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/references/sources.md",
+      "sha256": "084bdec559de8da02d55792622643719f08e5b1bbe83bc98cb0aac6312e48aa5",
+      "size": 2846,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-networking/rust-networking.md",
+      "sha256": "899c3169fee4ce6eeb2d853e4848cdd4cc0305a891117bd53352d16f04ba1367",
+      "size": 7724,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/thin-lib-bin/Cargo.toml",
+      "sha256": "bcb639a47f29bd4b09a39a0728938b24cd0d0c3107f81898b2598a5c41404118",
+      "size": 174,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/thin-lib-bin/src/lib.rs",
+      "sha256": "069c7d23c2f47ec86eaa196df0b6f9353d612c50fb9ce4bcffee152fcedb02ed",
+      "size": 804,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/thin-lib-bin/src/main.rs",
+      "sha256": "2cd0fb5d75d121999af958452b0afa15dfd2a7eff92a053e6a4110a034585d3f",
+      "size": 325,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/workspace-root/Cargo.toml",
+      "sha256": "376c3361bd5db3cfb489dfe5f041459bb6189758b485efc31168b4186a6b14a4",
+      "size": 259,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/workspace-root/apps/tool/Cargo.toml",
+      "sha256": "e9a8d7a76227c81c83ac4b9b4c56026ce372a7c63c127350f9bf43951f354936",
+      "size": 233,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/workspace-root/apps/tool/src/main.rs",
+      "sha256": "11fdd7c33843bc231dfb43fb282a0db54cc3c62d03bacdc5716d55e9a53842e3",
+      "size": 475,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/workspace-root/crates/app-core/Cargo.toml",
+      "sha256": "7e657a5a6262be928b0359e5baeafce55e2a808ce2ca71ca3b8807e1e904fc22",
+      "size": 175,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/assets/templates/workspace-root/crates/app-core/src/lib.rs",
+      "sha256": "4ff7f3175ed477b718b3cb4c4399447cbd2c2b74ea45c83325bd0196934e7174",
+      "size": 272,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/references/checklist.md",
+      "sha256": "80c2937e0a116ae186a12ca035ccaa1e721abf19009e12c885618998a52c6cd2",
+      "size": 1578,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/references/guide.md",
+      "sha256": "eeda2568b35459d61932fbcbc83e6934dd2c3b52b243833fe72275577bcd6752",
+      "size": 9363,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/references/sources.md",
+      "sha256": "bcd9c2ba327732e03ba09917875e45d5bee3c6f372e5042f9f2d30d37ce06711",
+      "size": 1867,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-project-architecture/rust-project-architecture.md",
+      "sha256": "3dcf3803429b7028c3ebac5a9809e76c872022942a21baea6419e311e1788ec7",
+      "size": 5445,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/assets/templates/bin_smoke_test.rs",
+      "sha256": "2a047bed71306c5a623e8e349469a12fa030ea7ea1574fb860a576d9ffc6067a",
+      "size": 843,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/assets/templates/doctest_examples.rs",
+      "sha256": "0f5163c4994dacd4a2680068ec4a0dad2a9a5c2417e26d8409ac8ee0823194ab",
+      "size": 623,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/assets/templates/unit_test_with_fake.rs",
+      "sha256": "9da99ed555a1432a1b1606904dffb52f01d232ee22eda7ff294decfb2d1d1152",
+      "size": 1021,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/references/async-live-tests.md",
+      "sha256": "c1f11d40e4bff9f05da773605001b10a8a714386cd7ee6da1f90b4902b896dbc",
+      "size": 1526,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/references/checklist.md",
+      "sha256": "f01a939359c2b3fbeecbca749116566913490635672a5c90a5bc4f76cb35ccc5",
+      "size": 1321,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/references/guide.md",
+      "sha256": "1e17c66d9762512f9c342123834efe776db7a3a3a9ae7e976fdcf4146ce50705",
+      "size": 8550,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/references/sources.md",
+      "sha256": "8e268b05b1329b8dbcce409957d60a89aec39eee37a876c3effb93527a9e1737",
+      "size": 2090,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-testing-strategy/rust-testing-strategy.md",
+      "sha256": "9f0b59c9cf6010e2806a53ca00c3ac8f493ce3f818194c459c78f5b3d02d7d98",
+      "size": 7111,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-workspace-documentation/references/checklist.md",
+      "sha256": "a790aaf962a85721757ba62e2d4478be0038458cef3a8f80000cb427d5ab26dd",
+      "size": 1867,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-workspace-documentation/references/document-roles.md",
+      "sha256": "311d67259f59d9b313381d831d568d4864aae660461db75be42fde99554e1263",
+      "size": 2355,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-workspace-documentation/references/examples.md",
+      "sha256": "2152a4e6d92fff74f725f4b020c8feae4ee8106c09eb07627030fe0dadd667b5",
+      "size": 1980,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-workspace-documentation/references/guide.md",
+      "sha256": "2355e79d67c300f51253277e5d453c2633c4e68fdd8bf6b594bbf8ab6e3151fa",
+      "size": 5846,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-workspace-documentation/references/sources.md",
+      "sha256": "24d94bf04284c654eeda0c2a913cb6f4b6f076b45e405d10e5b46349a6cd01ed",
+      "size": 1405,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rust-workspace-documentation/rust-workspace-documentation.md",
+      "sha256": "69e9fdff19615ee00272db10a89a64cfeee475cb7b60c84a5fcd62af78c35859",
+      "size": 5740,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rustdoc-maintenance/references/checklist.md",
+      "sha256": "fbcd33f82298f08271d9610c80274cda12901944efecd3c6dc2725017df717d7",
+      "size": 1787,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rustdoc-maintenance/references/documentation-contracts.md",
+      "sha256": "66984c4c66ab50bfc28e90dd53014937ed9df6e9d16ccf75279b801485251ead",
+      "size": 2612,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rustdoc-maintenance/references/examples.md",
+      "sha256": "8d6ab52632421034ea47f42f9df5dfbdb517b718755ad601e86c2f2fadd58e83",
+      "size": 1914,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rustdoc-maintenance/references/guide.md",
+      "sha256": "5a6d210ab4ca8a5d8bc8751224f0124f5fafd3f72c22760f897f06e127d75638",
+      "size": 5892,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rustdoc-maintenance/references/sources.md",
+      "sha256": "80f34f7b5cd32bcac0237ab34af5807fb575012326aa6cfa6e5e1d80955cd20a",
+      "size": 1889,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/best-practices/rustdoc-maintenance/rustdoc-maintenance.md",
+      "sha256": "df6e15be87c7f98fa077f1cff8ddc649aab1c0cc9f13868d6212d97294558e5b",
+      "size": 5878,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/index.json",
+      "sha256": "0558cb51ca04aea938c4e076d0698ec632cb11fd9f86aee97200a992de62b309",
+      "size": 987,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/assets/templates/finite_bounded_number.rs",
+      "sha256": "d50e546f86ddfbcb4af087cea92db5dc32ea546fab8669859b4916226daba5bf",
+      "size": 1059,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/assets/templates/removal_preview.rs",
+      "sha256": "906727cda46130b341d0fbad61c5f971cb4af9d2a13deee19341fe2113f4fab9",
+      "size": 6698,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/architecture.md",
+      "sha256": "a57b23eb9e7745a4b2218104a1e6103c0b16e4a9e9e59d6735f9108dbddd05b9",
+      "size": 5110,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/checklist.md",
+      "sha256": "8af0562144dc637f44ee790df1aad33edac76d432b90be60bb3f772482694a93",
+      "size": 2451,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/end-to-end-example.md",
+      "sha256": "c36fcaa653b13f52d2c4dbd61ed686593e1e28216f302d001b66dc961c23a17e",
+      "size": 6505,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/filesystem-output-safety.md",
+      "sha256": "a09d503a989d9bff38c6271e47e54e18f80f669a5128d57ca037cbb2aa78ba95",
+      "size": 9675,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/grammar.md",
+      "sha256": "df7518323ab297ff9a73bcee8fbc0e23e54877528b6cfae5082f21110affbca8",
+      "size": 4889,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/guide.md",
+      "sha256": "0325f7695064e646a975e3adecdf82b4c059eb495c5d382f37f16adade1c622f",
+      "size": 6218,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/sources.md",
+      "sha256": "6f9858a1cf9693943b87645a555cccff80d971933e2a8860c9997b198cc568cd",
+      "size": 2023,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/references/testing.md",
+      "sha256": "f9cdb8346e47bc47b0c969a6f60a2e3adf2801ab44cf9509583acbe3dc6eb75c",
+      "size": 4923,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-application-design/rust-cli-application-design.md",
+      "sha256": "f1918b4aecc150bf2d891f2f971253a9a78ce47b28d02c6ada9626fbca80db5d",
+      "size": 7146,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/references/checklist.md",
+      "sha256": "6f58c4f119ac99636c68fd864d2fe6658789d5ae42ac9bbded97fed8042f0977",
+      "size": 2370,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/references/command-diff-shapes.md",
+      "sha256": "f7a17dbcea686b7847518465d09ef95bc7f751b4d5f90fb32bfcc3c4ff162b05",
+      "size": 4375,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/references/filesystem-transactions.md",
+      "sha256": "fcbab3d12716ee18bd8c660c9fe32e17c0af22e821c71db4140161d52d398e0b",
+      "size": 5460,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/references/guide.md",
+      "sha256": "b427f5301d0221d15d987e59e3929c73baedf8b246db6b0f8ebbe3cef26fa6d5",
+      "size": 5460,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/references/parser-dispatch.md",
+      "sha256": "6562307ad0959cbb6ce827e0ab3fb0f8471b65ea4b4b75cd3644b51793b73fc6",
+      "size": 4446,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/references/sources.md",
+      "sha256": "06d46a02bf1133307f1b91d095e3658c9a16991982e76875f9bd9fb9dfddcb5c",
+      "size": 1935,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/references/testing.md",
+      "sha256": "d078644816ed45edb13f549652cad88c4066a3328137d992731b0da16d4cad0e",
+      "size": 4001,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/rust/cli-apps/rust-cli-command-development/rust-cli-command-development.md",
+      "sha256": "0bda06f82b99eb6d7a32ce9bc10e75bcbe912b8507dcdd7fc3ad2d743decbfcd",
+      "size": 6364,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/index.json",
+      "sha256": "fbf9c8ba71c458db00182366e651f7df150dc7ea505e6a74850b74bb3a339645",
+      "size": 2317,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-backup-recovery/assets/recovery-drill-report-template.md",
+      "sha256": "da3a15a0ffab7793c39e838963d7e54fcaeddfa2556a2c0041a38eabdedcf752",
+      "size": 2032,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-backup-recovery/assets/recovery-profile.example.json",
+      "sha256": "264641b72a355e2507095f911b29839b1efe1f02687a9a90d1bd3953dff7d2c5",
+      "size": 2747,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-backup-recovery/postgres-backup-recovery.md",
+      "sha256": "b9cc3bdac6b97513ab22f0f2da9cb97c9a47592f8f1f0a1a82f5bda05f5657f9",
+      "size": 7214,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-backup-recovery/references/checklist.md",
+      "sha256": "60bd6ac7cae84d62facefc530e1151b6c575e511c0ce8e4943573763b0b69a6e",
+      "size": 3593,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-backup-recovery/references/guide.md",
+      "sha256": "7d5803d9d95f13e6544e669553f92100c441314cc95dbd54bb0643bc81bddc3c",
+      "size": 11294,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-backup-recovery/references/sources.md",
+      "sha256": "e47dfbd87509f986cafd965f14e96666ba8b2ea2207e16e6ee0a7b511bc45c13",
+      "size": 1087,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-backup-recovery/scripts/build_recovery_drill.py",
+      "sha256": "eb71d1cd086fafb9ef7436da6a2b952f2f58a64f29366dd724c37043f2659fa0",
+      "size": 7281,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-index-design/assets/index-inventory.example.json",
+      "sha256": "e75903da0065810ca9798ac8644b6f793de6137bf9223894fb9c56b9f1c82f26",
+      "size": 1348,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-index-design/assets/index-proposal-template.md",
+      "sha256": "603660465e525d2462bfe413ef7550109b744df8f5d8999eb1eca36acdb14172",
+      "size": 1409,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-index-design/postgres-index-design.md",
+      "sha256": "7ca7f9049da137c1732e54d5f75f7e5907726c132298827d9348e6d2eee3aa21",
+      "size": 6750,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-index-design/references/checklist.md",
+      "sha256": "8472b4a4eae9327423514a2368f1d5570dbec656b1aec5046a6a686247fba54d",
+      "size": 2542,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-index-design/references/guide.md",
+      "sha256": "aa2ac1cabd216ff1ea01b753bb6561a5a6a948167af7b78795673e818875dba3",
+      "size": 9005,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-index-design/references/sources.md",
+      "sha256": "2826c2663a47c2716202388331c95490b067a8f3a01452f9d231c57e5b4b8441",
+      "size": 1004,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-index-design/scripts/review_index_inventory.py",
+      "sha256": "94454211b4527d6c110b269bb0cada6049caa895ba0b5a52f9dc88cf9538fb0b",
+      "size": 8114,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-migration-safety/assets/migration-plan-template.md",
+      "sha256": "42152fae1591e5d815cfe66c2ddc79ebd88b19fe5e06e00c5d57f1258863d488",
+      "size": 1667,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-migration-safety/assets/phased-migration.example.sql",
+      "sha256": "9891439f882c489a8c9331169726b782d304c965ef2e7a9c41dd8ea961242465",
+      "size": 1522,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-migration-safety/postgres-migration-safety.md",
+      "sha256": "25e06dc66570d2dc6839d3a1235aeb3d74db2a57da7d5478279cc0ffec61413a",
+      "size": 7051,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-migration-safety/references/checklist.md",
+      "sha256": "38b33d6646ef578e3e47bd79ec74ecdde8c42f9c382d4d21fa2adc902241fbc3",
+      "size": 2929,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-migration-safety/references/guide.md",
+      "sha256": "c8ccb792fbb1b83d07ed28e57cb34e2a10873d5f4babf3ad26e7fc5a3a1e060a",
+      "size": 10336,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-migration-safety/references/sources.md",
+      "sha256": "810876c6e35a2e3fa99e126236b277d099228ee101518cdd971c9e0da5fc1216",
+      "size": 917,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-migration-safety/scripts/audit_migration_sql.py",
+      "sha256": "feb50ee766f582d434950ad6995243476a34286c81be2cd8c147359c0a16f70e",
+      "size": 7970,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-query-performance-review/assets/explain-plan.example.json",
+      "sha256": "f004d919ac4985df42e67dbe37f1b9a9dbf127a41572016ab6dea85f62cb9b66",
+      "size": 1393,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-query-performance-review/assets/query-performance-review-template.md",
+      "sha256": "8a966c6b3ed73713cd2b4806969e7a1564b103938871aa6346ffbe6930177eee",
+      "size": 1107,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-query-performance-review/postgres-query-performance-review.md",
+      "sha256": "29a3104c4c71e4747034a17a30ae5fb9e694f2a8106d20fdae7663d7f41b3620",
+      "size": 6653,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-query-performance-review/references/checklist.md",
+      "sha256": "b18fb8a55846ad22744be12038b2c3fcd852c407952ae51a713986ab2bd51395",
+      "size": 2737,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-query-performance-review/references/guide.md",
+      "sha256": "69d26829a24e52108caa642524680dc535b1c9b6d6e6401e0d3b086ece888854",
+      "size": 8823,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-query-performance-review/references/sources.md",
+      "sha256": "17c61e614e971bd77fcacca1e2bce47ad0b28dbaf18b7cabc4426d308ee79601",
+      "size": 803,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-query-performance-review/scripts/summarize_explain_json.py",
+      "sha256": "2f366e2e24d816adb597887e6bcb051bca5c71057c9c67d17bf74f1beb92b177",
+      "size": 7448,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-design/assets/schema-design-brief-template.md",
+      "sha256": "02ab3051a140fec687745b8e37a34de79737845afb3e5dba24756bedc33d2c00",
+      "size": 1632,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-design/assets/schema.example.sql",
+      "sha256": "d0f4b062dfaffd53c19fa2a00fc9d68edd5992dec388a8447e7f4a52b15faf16",
+      "size": 2769,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-design/postgres-schema-design.md",
+      "sha256": "7f22d98cde5a3f4ab57926ff4e455632fd77cfc5764f7269af6fe9ca76b1a39c",
+      "size": 6488,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-design/references/checklist.md",
+      "sha256": "e0233f93959d3c99dd5e26a2af989792fc2c1fd4b176c284c8981835d9b7e813",
+      "size": 2764,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-design/references/guide.md",
+      "sha256": "f9cadf64b20f92d881675d3e42b8df4aacb75bd55c3cea22ba6c0f071c7e97e7",
+      "size": 8393,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-design/references/sources.md",
+      "sha256": "2c1a6c75c0df70eb6b4f977f79cd68c11aeef62439db31f1009bfaa891819c0c",
+      "size": 585,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-design/scripts/audit_schema_sql.py",
+      "sha256": "684acafe867e25bf3050d1858cfb94dd023e1897fd584b67bed217d3a5018f79",
+      "size": 5202,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-review/assets/catalog-review-queries.example.sql",
+      "sha256": "825825c91076f17d95b092e8b230560f0b75653497f94cf89e37627193ed9562",
+      "size": 2161,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-review/assets/schema-review-report-template.md",
+      "sha256": "440c533460ea4b6fe0be47f9e4c88565263b6cee527ef8bc4ca113632faf0a5f",
+      "size": 1139,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-review/postgres-schema-review.md",
+      "sha256": "ba6a30e9a83f768475105ef74a3dab8a20be257db4cbc3c50e1ddd451b887374",
+      "size": 6566,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-review/references/checklist.md",
+      "sha256": "5f620a64c94fbdb22c4a5975434abfea0f774ec2e63eaaf0c0f870bc2b88902b",
+      "size": 3010,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-review/references/guide.md",
+      "sha256": "e7b5a467ba414ea1f53644914287b4ffb92325f23a0207ab15ac85255bed043d",
+      "size": 7586,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-review/references/sources.md",
+      "sha256": "342d90f221bb61f5cd5af3016a5e78256c4b816c895b905480a9aa36cbc4b1fc",
+      "size": 867,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/postgres-databases/postgres-schema-review/scripts/render_review_queries.py",
+      "sha256": "28aeb0c28c0a6d522ccc8d8fe7c79ae79231f15387cf756ccf7da6bf779af450",
+      "size": 7815,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/assets/skill-completion-report.template.md",
+      "sha256": "0648fd2d8b132d0f11f01d60104314d4bcc194ea53f0d6181c80ecfe7a52ee9e",
+      "size": 969,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/assets/skill-design-record.template.md",
+      "sha256": "36cfcce6bd8d4ecd1e4321b8b931f58fa0ed1f6c25c7f16c2fef594e5ddd6235",
+      "size": 1504,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/assets/skill-request.example.json",
+      "sha256": "c79649a213b1011884b5d798a9acc709de8e5cdb7b6fa9785016dd758921e295",
+      "size": 2938,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/assets/skill-request.schema.json",
+      "sha256": "f1bfbc246ecf22fdeef391237d6255100d7eb103be9b85e5202948c850ef4a20",
+      "size": 5794,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/assets/skill-request.template.json",
+      "sha256": "8f8862e9db3f9adef51ab072478a77445af52881ac6862843bd7825048fcec94",
+      "size": 2366,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/create-new-skill.md",
+      "sha256": "6c51a6905a6e3004707cf512bac99469b8b4383d93e1e90c9b9aff56bc25e38a",
+      "size": 14090,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/references/checklist.md",
+      "sha256": "64b8d8f181b47c84869801a5386e54fe0eaa069e45e8baffc0ef482530b8d7e0",
+      "size": 4199,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/references/guide.md",
+      "sha256": "b612e19498e7937edf4e3f5816183466a7e0e00b229af60c99783857f53f46fb",
+      "size": 9596,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/references/sources.md",
+      "sha256": "0376a5292e94130c549b49ba488c48b8fcc79171d3d28f5a1decbe19eb979c2e",
+      "size": 2126,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skill/scripts/scaffold_skill.py",
+      "sha256": "76fc2fce94008c504278286a15b89b508126a085da077ff72ed8bd02ac557361",
+      "size": 32600,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/assets/skill-boundary-matrix.template.md",
+      "sha256": "f2c9a82698683ca31b57cc4a4e88658af9e9f8245590b18e2795df20ab03ef0c",
+      "size": 1149,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/assets/skillset-design-record.template.md",
+      "sha256": "d599f7e2aeabf1d89f9f237ce0919836e2e01a2eb2c277ee966873f34b1441a4",
+      "size": 1378,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/assets/skillset-request.example.json",
+      "sha256": "589a79cf24aa58a00ceab6541ec4bcfc8695077a4c484d7e8e68ad67e7fdc890",
+      "size": 7405,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/assets/skillset-request.schema.json",
+      "sha256": "2892a8b37a059207871e3b1dcc92c1e54754922f8783ff93d92c13315180c075",
+      "size": 8805,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/assets/skillset-request.template.json",
+      "sha256": "510a4bf76ac31520cf5b41704e53a68d5a45f048f9ccc7253bd0e9d50f09be5d",
+      "size": 6323,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/create-new-skillset.md",
+      "sha256": "b6117df570036e52df4b836417741d0e083703d3a133545355d52faabc5a7a4f",
+      "size": 15717,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/references/checklist.md",
+      "sha256": "9381f5251973393c1d16b693c027453454b58c7e30b5bc768da08383fbb8834d",
+      "size": 5734,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/references/guide.md",
+      "sha256": "1b0286e5e4d106d5c60563f91f46a12d77a10fb85084eebb49a5b07abc889498",
+      "size": 10283,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/references/sources.md",
+      "sha256": "3dc29006b8223b0426868729c35ba20befc4c55424e2134fdc63a30c073d44d3",
+      "size": 2249,
+      "mode": "0644"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/create-new-skillset/scripts/scaffold_skillset.py",
+      "sha256": "6cb85188f36f4d0489549c700289ad070af90c95527e956092fb890384629bf3",
+      "size": 45222,
+      "mode": "0755"
+    },
+    {
+      "path": "dist/opencode/shared/repository-development/index.json",
+      "sha256": "677abcb7b1964d80f0ba35de181ce24130252720a1fb5659534b0e12fbbcca4c",
+      "size": 1046,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/python/best-practices/.claude-plugin/plugin.json",
+      "sha256": "9fac86b7963a6a39bfdf2808fdbe28730fa8b70c369f50808476306804e5d646",
+      "size": 629,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/python/best-practices/.codex-plugin/plugin.json",
+      "sha256": "676751922276677ddb64752978f54d1386ce35be9af7d4e2b507ada347e2b6e2",
+      "size": 1260,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/python/best-practices/README.md",
+      "sha256": "f971b7eb949cd627cc022919a041881dd38eaaf2414a632584a479fd4298b6dc",
+      "size": 4443,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/python/cli-apps/.claude-plugin/plugin.json",
+      "sha256": "f83359184c2e977c184ff4b5738d0bb458a173ef57b5077df011ba1aea0c6174",
+      "size": 591,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/python/cli-apps/.codex-plugin/plugin.json",
+      "sha256": "fd9a3ceab240300fcee54242dcc179869d74d7c80d7b7203ca9a3784612b6f84",
+      "size": 1190,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/python/cli-apps/README.md",
+      "sha256": "f3afcb05072972640bf3a934fcd5479d876d91766175432c43bb1522a4eb80b1",
+      "size": 4362,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/rust/best-practices/.claude-plugin/plugin.json",
+      "sha256": "c3503c1bee778710a1472b804bf8ccfee6eb6478aa09e78033d3b002b838a505",
+      "size": 679,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/rust/best-practices/.codex-plugin/plugin.json",
+      "sha256": "489c226ba52b04f12b0ded38028c90a8858b0b44766bbc924b58817add07e392",
+      "size": 1326,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/rust/best-practices/README.md",
+      "sha256": "3e16196f3800228938d3dda8782e64eb81204fbc050315aa786c77d79a5ba125",
+      "size": 7542,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/rust/cli-apps/.claude-plugin/plugin.json",
+      "sha256": "5f00a8b26ca7e836f53016f613958eaa03c795ed68ebb2d1f44b56d701a35e29",
+      "size": 631,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/rust/cli-apps/.codex-plugin/plugin.json",
+      "sha256": "3c7c6ab0bf4a382a2531282426d7365d9680139e7877aee7f057cafb63b0f41d",
+      "size": 1264,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/rust/cli-apps/README.md",
+      "sha256": "9768cf5f4d72cf351dce270b88f801ab423da4160dfe7528422df2e89cc77733",
+      "size": 5246,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/shared/postgres-databases/.claude-plugin/plugin.json",
+      "sha256": "5673458af032cc49ebcc7a69a4a633748d57ff9a9e9a9bbc46d7bb4c46428ddb",
+      "size": 649,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/shared/postgres-databases/.codex-plugin/plugin.json",
+      "sha256": "896d184e5cb7defd449e1c803217394153ddcec350423849badfc971bfd77f2f",
+      "size": 1282,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/shared/postgres-databases/README.md",
+      "sha256": "5a08256b252760be098b5ce9b9f2914d0ecd5c7346566a33563baca5edc64d63",
+      "size": 5165,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/shared/repository-development/.claude-plugin/plugin.json",
+      "sha256": "36da59c82f61816f775a26a009dce0ff116bedb68f3ccdfb6fc9adf00c698d28",
+      "size": 732,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/shared/repository-development/.codex-plugin/plugin.json",
+      "sha256": "dd8528433035dd523984a87c19118f943ffab4123e59511e9d115362f7b2492d",
+      "size": 1477,
+      "mode": "0644"
+    },
+    {
+      "path": "packs/shared/repository-development/README.md",
+      "sha256": "4e22fcc16afb6b4bf8b8bfc8843e8dbd2a80323c3718072a075ed4c186aeb284",
+      "size": 5622,
+      "mode": "0644"
+    }
+  ]
+}

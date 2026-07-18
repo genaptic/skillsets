@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "pack": "postgres-databases",
+  "version": "1.0.0",
+  "skills": [
+    "postgres-schema-design",
+    "postgres-schema-review",
+    "postgres-query-performance-review",
+    "postgres-index-design",
+    "postgres-migration-safety",
+    "postgres-backup-recovery"
+  ]
+}

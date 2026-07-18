@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "postgres-schema-review",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the postgres-schema-review skill to audit this deployed database's constraints, ownership, grants, RLS, partitions, and indexes.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the schema-review workflow."
+    },
+    {
+      "id": "implicit-positive-catalog",
+      "kind": "implicit-positive",
+      "prompt": "Here are pg_catalog extracts and our migration files. Find security and integrity gaps, rank them, and propose minimal remediations.",
+      "shouldTrigger": true,
+      "reason": "Reconciling intended DDL with deployed catalog state is a schema review."
+    },
+    {
+      "id": "implicit-positive-rls-grants",
+      "kind": "implicit-positive",
+      "prompt": "Check whether our owners, default privileges, search_path, and row-security policies can leak data between tenants.",
+      "shouldTrigger": true,
+      "reason": "Privilege and role-dependent RLS review is a central part of this skill."
+    },
+    {
+      "id": "contextual-positive-dump",
+      "kind": "contextual-positive",
+      "prompt": "Review this schema-only dump before an audit. Include invalid constraints, unexpected cascades, partition drift, and referencing foreign-key indexes.",
+      "shouldTrigger": true,
+      "reason": "The provided existing DDL requires an audit rather than a new model."
+    },
+    {
+      "id": "negative-greenfield",
+      "kind": "negative",
+      "prompt": "Design a greenfield PostgreSQL schema from these entities, lifecycle rules, and expected workloads.",
+      "shouldTrigger": false,
+      "reason": "Greenfield modeling belongs to schema design."
+    },
+    {
+      "id": "negative-backup",
+      "kind": "negative",
+      "prompt": "Define our RPO, WAL archiving, retention, restore topology, and quarterly recovery exercise.",
+      "shouldTrigger": false,
+      "reason": "This is backup and recovery planning, not schema review."
+    },
+    {
+      "id": "overlap-migration",
+      "kind": "overlap",
+      "prompt": "Plan a low-lock production rollout for these already approved constraint and index changes on a 2 TB table.",
+      "shouldTrigger": false,
+      "reason": "The schema decision is complete and safe deployment is the narrower concern.",
+      "preferredSkill": "postgres-migration-safety"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-rls-review",
+      "kind": "focused",
+      "prompt": "Review supplied PostgreSQL role memberships, schema ACLs, table ownership, and RLS policies for a pooled multi-tenant application.",
+      "assertions": [
+        "Analyzes owner, superuser, BYPASSRLS, policy-role, and session-context behavior",
+        "Checks writable schemas on trusted search paths",
+        "Separates observed catalog evidence from intended policy",
+        "Proposes role-specific verification without exposing table contents"
+      ],
+      "forbidden": [
+        "Declares RLS safe from policy text alone",
+        "Connects to or changes the database without explicit approval"
+      ]
+    },
+    {
+      "id": "end-to-end-schema-audit",
+      "kind": "end-to-end",
+      "prompt": "Audit a migration history, schema dump, and catalog snapshots; produce ranked PostgreSQL findings and a remediation sequence.",
+      "assertions": [
+        "Covers ownership, privileges, constraints, indexes, RLS, partitions, and dependency evidence",
+        "Gives each finding consequence, confidence, minimal change, and verification",
+        "Identifies lock, rewrite, deployment, and rollback concerns",
+        "Treats index usage counters as time-bounded evidence"
+      ],
+      "forbidden": [
+        "Recommends dropping indexes solely because idx_scan is zero",
+        "Presents naming preferences as high-severity production defects"
+      ]
+    }
+  ]
+}

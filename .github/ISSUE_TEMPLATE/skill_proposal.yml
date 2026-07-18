@@ -1,0 +1,94 @@
+name: Skill or skillpack proposal
+description: Propose a focused new skill or a complete language/subject pack.
+title: "[proposal]: "
+labels:
+  - enhancement
+  - proposal
+body:
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: Authoring boundary
+      description: Choose whether this belongs in an existing pack or needs a new release boundary.
+      options:
+        - One skill in an existing skillpack
+        - New independently installable skillpack
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Proposed public ID
+      description: Globally unique kebab-case skill or pack ID.
+      placeholder: python-api-client-retry-design
+    validations:
+      required: true
+  - type: textarea
+    id: skills
+    attributes:
+      label: Ordered skill inventory
+      description: For a new pack, list every proposed public skill in order; for one skill, repeat its ID.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Focused outcome
+      description: What concrete artifact, review, or workflow should the skill produce?
+    validations:
+      required: true
+  - type: textarea
+    id: triggers
+    attributes:
+      label: Trigger examples
+      description: Give explicit and implicit prompts that should activate it.
+    validations:
+      required: true
+  - type: textarea
+    id: exclusions
+    attributes:
+      label: Non-triggers and overlaps
+      description: What should not activate it, and which existing skill should win instead?
+    validations:
+      required: true
+  - type: textarea
+    id: cohesion
+    attributes:
+      label: Installation boundary and nearest neighbors
+      description: Explain why these capabilities ship together and name the closest existing or proposed skill for every boundary.
+    validations:
+      required: true
+  - type: textarea
+    id: research
+    attributes:
+      label: Primary sources and target versions
+      description: Prefer official specifications and documentation.
+    validations:
+      required: true
+  - type: textarea
+    id: operations
+    attributes:
+      label: Operational and safety profile
+      description: Network, filesystem, command, external-write, credential, and production implications.
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and runtime requirements
+      description: Name required runtimes, target clients, supported environments, and any degraded mode.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope confirmation
+      options:
+        - label: The proposal is one focused skill, or a coherent pack with one or more focused skills.
+          required: true
+        - label: The proposed name does not intentionally replace an existing public ID.
+          required: true
+        - label: I considered negative and overlap routing cases.
+          required: true
+        - label: I identified source-freshness requirements and the exact operation envelope.
+          required: true

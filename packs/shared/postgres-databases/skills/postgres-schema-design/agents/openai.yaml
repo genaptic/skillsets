@@ -1,0 +1,4 @@
+interface:
+  display_name: "PostgreSQL Schema Design"
+  short_description: "Design robust PostgreSQL schemas"
+  default_prompt: "Use $postgres-schema-design to design a PostgreSQL schema from these domain invariants and workloads."

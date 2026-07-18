@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "rust-cli-apps",
+  "displayName": "Rust CLI Applications",
+  "version": "1.0.0",
+  "description": "Portable workflows for designing stable Rust CLI applications and safely developing commands in existing CLIs.",
+  "author": {
+    "name": "Genaptic"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/rust/cli-apps",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "rust",
+    "cli",
+    "clap",
+    "command-line",
+    "cross-platform"
+  ]
+}

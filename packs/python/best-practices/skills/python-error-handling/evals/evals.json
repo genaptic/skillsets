@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "python-error-handling",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use python-error-handling to define the exception hierarchy and translation boundaries for this library.",
+      "shouldTrigger": true,
+      "reason": "The skill and exception-contract outcome are explicit."
+    },
+    {
+      "id": "implicit-positive-broad-catches",
+      "kind": "implicit-positive",
+      "prompt": "This module catches Exception in five layers, logs each time, and raises RuntimeError without preserving the cause. Refactor the policy.",
+      "shouldTrigger": true,
+      "reason": "The request centers on catch ownership, translation, chaining, and logging."
+    },
+    {
+      "id": "implicit-positive-retry",
+      "kind": "implicit-positive",
+      "prompt": "Decide which repository failures should be retried and how callers distinguish invalid input from a temporarily unavailable dependency.",
+      "shouldTrigger": true,
+      "reason": "Exception taxonomy and bounded retry classification are required."
+    },
+    {
+      "id": "contextual-positive-warning",
+      "kind": "contextual-positive",
+      "prompt": "Review these exception classes, context managers, and deprecation warnings for a public Python API before its next release.",
+      "shouldTrigger": true,
+      "reason": "The artifacts expose an error and warning contract."
+    },
+    {
+      "id": "negative-cli-stderr",
+      "kind": "negative",
+      "prompt": "Map command failures to stable exit codes and ensure human diagnostics go to stderr while JSON remains on stdout.",
+      "shouldTrigger": false,
+      "reason": "This is CLI-specific failure output."
+    },
+    {
+      "id": "negative-http-errors",
+      "kind": "negative",
+      "prompt": "Design RFC-style HTTP error response bodies and status-code mapping for our FastAPI service.",
+      "shouldTrigger": false,
+      "reason": "HTTP protocol error schemas are outside this Python exception skill."
+    },
+    {
+      "id": "overlap-cli-error",
+      "kind": "overlap",
+      "prompt": "Review a Python command's messages, debug mode, stderr routing, and process exit status when exceptions occur.",
+      "shouldTrigger": false,
+      "reason": "The CLI error-output skill owns the user-visible process contract.",
+      "preferredSkill": "python-cli-error-output"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-translation-review",
+      "kind": "focused",
+      "prompt": "Review code that catches a database driver's NotFound, logs it, and raises Exception('failed') from inside a library method.",
+      "assertions": [
+        "Identifies the caller's actionable domain failure",
+        "Proposes a stable exception type and explicit causal chaining",
+        "Prevents duplicate logging by assigning one boundary",
+        "Discusses safe message and structured context"
+      ],
+      "forbidden": [
+        "Catches BaseException as the normal solution",
+        "Removes the original diagnostic cause without rationale"
+      ]
+    },
+    {
+      "id": "end-to-end-error-policy",
+      "kind": "end-to-end",
+      "prompt": "Design an error policy for a Python worker that validates jobs, calls an idempotent remote dependency, manages a transaction, and reports unexpected task failures.",
+      "assertions": [
+        "Defines taxonomy, catch/translation boundaries, cleanup, logging, and retry classification",
+        "Preserves cancellation and unexpected tracebacks",
+        "Includes bounded retry and idempotency requirements",
+        "Specifies tests and verification for each failure class"
+      ],
+      "forbidden": [
+        "Retries arbitrary exceptions forever",
+        "Logs credentials or complete untrusted payloads"
+      ]
+    }
+  ]
+}

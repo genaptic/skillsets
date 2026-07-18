@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "python-cli-error-output",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use python-cli-error-output to define stderr, machine errors, debug tracebacks, and exit codes for this command.",
+      "shouldTrigger": true,
+      "reason": "The skill and failure-output contract are explicit."
+    },
+    {
+      "id": "implicit-positive-streams",
+      "kind": "implicit-positive",
+      "prompt": "Our failed command prints a table and a traceback to stdout, so pipelines parse garbage and every failure returns 1.",
+      "shouldTrigger": true,
+      "reason": "The task requires stream separation, classification, and stable statuses."
+    },
+    {
+      "id": "implicit-positive-domain-map",
+      "kind": "implicit-positive",
+      "prompt": "Map validation, not-found, conflict, permission, temporary dependency, and internal exceptions into actionable command results.",
+      "shouldTrigger": true,
+      "reason": "The request is a domain-to-process failure mapping."
+    },
+    {
+      "id": "contextual-positive-transcript",
+      "kind": "contextual-positive",
+      "prompt": "Review these CLI transcripts and exception handlers; make human and JSON failures consistent without leaking tokens.",
+      "shouldTrigger": true,
+      "reason": "Transcripts and handlers expose user-visible failure behavior."
+    },
+    {
+      "id": "negative-command-tree",
+      "kind": "negative",
+      "prompt": "Redesign the command hierarchy, option names, configuration precedence, and help examples.",
+      "shouldTrigger": false,
+      "reason": "Command design is owned by python-cli-command-design."
+    },
+    {
+      "id": "negative-library-taxonomy",
+      "kind": "negative",
+      "prompt": "Define a reusable library exception hierarchy and causal chaining policy, with no process or CLI boundary.",
+      "shouldTrigger": false,
+      "reason": "General Python error handling is the narrower skill."
+    },
+    {
+      "id": "overlap-library-errors",
+      "kind": "overlap",
+      "prompt": "Refactor internal exceptions, context-manager cleanup, retries, and logging before any CLI mapping is considered.",
+      "shouldTrigger": false,
+      "reason": "The task is internal exception policy rather than process output.",
+      "preferredSkill": "python-error-handling"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-leaky-traceback",
+      "kind": "focused",
+      "prompt": "Review a Click command that catches Exception, prints repr(exc) and a token-bearing URL to stdout, then exits 1 for every case.",
+      "assertions": [
+        "Identifies secret leakage, broad classification, stream corruption, and lost caller action",
+        "Proposes one boundary with stable public codes and safe messages",
+        "Keeps traceback opt-in and separates logging from user output",
+        "Defines independent stdout/stderr/status tests"
+      ],
+      "forbidden": [
+        "Repeats the token-bearing URL in the proposed message",
+        "Maps raw exception class names directly to public exit codes"
+      ]
+    },
+    {
+      "id": "end-to-end-failure-contract",
+      "kind": "end-to-end",
+      "prompt": "Design the complete failure contract for a cross-platform Python CLI with text and JSON modes, streamed list output, interrupts, and a debug option.",
+      "assertions": [
+        "Defines failure classes, status mapping, stream policy, and machine schema",
+        "Covers partial output, interrupt, broken pipe, timeout, and debug behavior",
+        "Includes redaction and one logging boundary",
+        "Provides compatibility and executable verification cases"
+      ],
+      "forbidden": [
+        "Claims one signal status is universally portable without testing",
+        "Emits decorative text into machine-readable output"
+      ]
+    }
+  ]
+}

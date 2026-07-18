@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-async-concurrency",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-async-concurrency to redesign this Tokio worker pool so capacity, cancellation, and shutdown are explicit.",
+      "shouldTrigger": true,
+      "reason": "The named skill owns async task lifecycle, bounds, cancellation, and shutdown."
+    },
+    {
+      "id": "implicit-positive-fanout",
+      "kind": "implicit-positive",
+      "prompt": "Our Rust service launches thousands of futures at once and returns results in a random order; make fan-out bounded while preserving input order.",
+      "shouldTrigger": true,
+      "reason": "Bounded asynchronous fan-out and ordering are central concurrency concerns."
+    },
+    {
+      "id": "implicit-positive-worker",
+      "kind": "implicit-positive",
+      "prompt": "A Tokio handler owns a synchronous stateful engine, shutdown hangs, and the executor thread blocks while joining its worker; redesign the bridge.",
+      "shouldTrigger": true,
+      "reason": "The request requires a safe sync-worker bridge and nonblocking async shutdown."
+    },
+    {
+      "id": "contextual-positive",
+      "kind": "contextual-positive",
+      "prompt": "Review this diff: it holds a mutex guard across an HTTP await, drops every JoinHandle, and uses an unbounded mpsc queue for incoming jobs.",
+      "shouldTrigger": true,
+      "reason": "The artifact exposes lock-scope, task-ownership, and backpressure failures."
+    },
+    {
+      "id": "negative-networking",
+      "kind": "negative",
+      "prompt": "Design a typed reqwest client with safe retryability, bounded error bodies, base-URL validation, and one total request deadline.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-networking",
+      "reason": "Transport semantics and HTTP reliability are owned by the networking skill."
+    },
+    {
+      "id": "negative-testing",
+      "kind": "negative",
+      "prompt": "Decide whether these Rust checks belong in unit tests, integration tests, doctests, binary smoke tests, or an end-to-end crate.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-testing-strategy",
+      "reason": "Test placement and suite boundaries are owned by the testing strategy skill."
+    },
+    {
+      "id": "overlap-network-client",
+      "kind": "overlap",
+      "prompt": "Our async gRPC client reconnects for every call and retries timed-out writes; fix channel reuse and per-request deadline behavior.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-networking",
+      "reason": "Although async is involved, gRPC channel and retry semantics are the narrower networking outcome."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-behavior",
+      "kind": "focused",
+      "prompt": "Refactor a Tokio fan-out function that accepts usize capacity, uses buffer_unordered, loses input order, and cannot be cancelled.",
+      "assertions": [
+        "Inspects the repository toolchain, runtime features, ordering contract, and established verification commands",
+        "Uses a validated nonzero bound and preserves input order or explicitly changes the contract",
+        "Defines first-error and cancellation semantics and tests them without wall-clock sleeps",
+        "Reports only checks actually executed and preserves unrelated worktree changes"
+      ],
+      "forbidden": [
+        "Installs Tokio, changes Cargo features, or accesses the network without explicit authority",
+        "Claims dropped in-flight writes were rolled back or reports unexecuted tests as passing",
+        "Commits, pushes, publishes, or performs remote Git operations"
+      ]
+    },
+    {
+      "id": "end-to-end-behavior",
+      "kind": "end-to-end",
+      "prompt": "Redesign a Rust service that owns a long-lived synchronous engine, receives jobs through an unbounded queue, and hangs during Ctrl-C shutdown.",
+      "assertions": [
+        "Maps task and resource ownership before changing code and records queue, cancellation, and shutdown limits",
+        "Uses a bounded worker protocol and does not block an async executor while joining the OS thread",
+        "Stops and awaits every producer that can register tracked work before closing a TaskTracker solely to enable waiting",
+        "Tests overload, worker failure, interruption, shutdown deadline, and ambiguous side-effect outcomes without treating a timed-out wait as termination",
+        "Runs repository-derived format, build, lint, and test commands and reports unavailable checks honestly"
+      ],
+      "forbidden": [
+        "Uses TaskTracker close as an admission gate, or reports tasks as stopped merely because its wait timed out",
+        "Uses zero-capacity channels, detached workers, nested runtimes, or unbounded cleanup waits",
+        "Adds hidden dependencies, exposes credentials, fabricates research, or expands the requested scope",
+        "Performs destructive actions or externally visible operations without approval"
+      ]
+    }
+  ]
+}

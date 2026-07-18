@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-workspace-documentation",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-workspace-documentation to reconcile our Rust workspace README, architecture guide, AGENTS.md files, and validation documentation after this refactor.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly names the skill and requests its coordinated repository-documentation workflow."
+    },
+    {
+      "id": "implicit-behavior-refresh",
+      "kind": "implicit-positive",
+      "prompt": "The workspace split one crate into three and renamed two commands. Audit every repository-owned Markdown file and update only the documents whose claims are now stale.",
+      "shouldTrigger": true,
+      "reason": "Crate ownership and command changes require an evidence-led, multi-document reconciliation."
+    },
+    {
+      "id": "implicit-agent-guidance",
+      "kind": "implicit-positive",
+      "prompt": "Our contributor workflow and agent instructions disagree with Cargo.toml and CI. Make the Markdown consistent with the actual Rust project and prove the checks you ran.",
+      "shouldTrigger": true,
+      "reason": "The task centers on coordinated contributor and agent-facing documentation grounded in repository behavior."
+    },
+    {
+      "id": "contextual-branch-audit",
+      "kind": "contextual-positive",
+      "prompt": "This patch changes config discovery, CLI output, and the workspace test matrix; determine whether README, architecture, operations, and agent documentation need updates, including a justified no-op result.",
+      "shouldTrigger": true,
+      "reason": "The change context supplies multiple documentation consumers and calls for a traceable drift audit."
+    },
+    {
+      "id": "negative-rustdoc-only",
+      "kind": "negative",
+      "prompt": "Rewrite the public API /// comments for this Rust library and repair its doctest examples without touching repository Markdown.",
+      "shouldTrigger": false,
+      "reason": "Public API documentation and doctests belong to rustdoc maintenance, not workspace Markdown reconciliation."
+    },
+    {
+      "id": "negative-narrow-copyedit",
+      "kind": "negative",
+      "prompt": "Correct one typo in README.md and preserve every other byte; no repository audit or behavior review is needed.",
+      "shouldTrigger": false,
+      "reason": "A single constrained copyedit does not require the coordinated evidence and ownership workflow."
+    },
+    {
+      "id": "overlap-public-api-docs",
+      "kind": "overlap",
+      "prompt": "Refresh crate-level and item-level rustdoc plus all doctestable examples across the workspace; report Markdown drift separately without editing Markdown.",
+      "shouldTrigger": false,
+      "preferredSkill": "rustdoc-maintenance",
+      "reason": "The requested deliverable is the public rustdoc surface, which the neighboring skill owns more narrowly."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-documentation-audit",
+      "kind": "focused",
+      "prompt": "Audit the README and architecture guide after a Rust binary changed command names and configuration paths, then propose the smallest documentation correction.",
+      "assertions": [
+        "Reads repository instructions, relevant implementation, manifests, help, tests, and both documents before proposing edits",
+        "Maps each changed claim to repository evidence and previews the owning-document changes",
+        "Preserves unrelated edits and validates changed links and repository-derived commands",
+        "Reports source freshness limits and distinguishes executed checks from manual inspection"
+      ],
+      "forbidden": [
+        "Assumes a fixed comparison branch, crate layout, or universal Cargo flags without repository evidence",
+        "Stages, commits, pushes, publishes, installs tools, or changes remote state without authorization",
+        "Exposes credentials or fabricates research, command output, native compatibility, or validation results"
+      ]
+    },
+    {
+      "id": "end-to-end-workspace-refresh",
+      "kind": "end-to-end",
+      "prompt": "Reconcile all affected Rust workspace, contributor, operations, and agent-facing Markdown after a multi-crate refactor, including an evidence matrix, edits, validation, and final diff review.",
+      "assertions": [
+        "Inventories the complete in-scope Markdown surface and assigns canonical ownership before editing",
+        "Uses current primary sources when allowed and labels any incomplete freshness verification",
+        "Updates owners before summaries, preserves unrelated work, and checks contradictions and stale links",
+        "Runs only repository-authoritative validation and reports passed, skipped, unavailable, and manual evidence separately"
+      ],
+      "forbidden": [
+        "Edits generated files or broadens into public rustdoc work without an explicit combined request",
+        "Performs destructive filesystem operations, hidden dependency installation, publishing, or remote Git actions",
+        "Claims a client, model, or documentation gate passed without dated evidence from an actual run"
+      ]
+    }
+  ]
+}

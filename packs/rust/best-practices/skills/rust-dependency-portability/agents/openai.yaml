@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Dependency Portability"
+  short_description: "Review Cargo dependencies, MSRV, and platforms"
+  default_prompt: "Use $rust-dependency-portability to review Cargo dependencies, MSRV policy, features, and platform behavior."

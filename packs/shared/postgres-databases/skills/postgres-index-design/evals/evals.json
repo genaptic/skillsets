@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "postgres-index-design",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the postgres-index-design skill to propose and verify the exact index for this diagnosed query pattern.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the index-design workflow."
+    },
+    {
+      "id": "implicit-positive-covering",
+      "kind": "implicit-positive",
+      "prompt": "This tenant-scoped lookup filters by account and status, orders by created_at desc, returns five columns, and still does many heap reads.",
+      "shouldTrigger": true,
+      "reason": "Key order and a possible covering index are the central deliverables."
+    },
+    {
+      "id": "implicit-positive-partial",
+      "kind": "implicit-positive",
+      "prompt": "Only two percent of jobs are pending and every worker claims pending jobs by queue and due time. Should we use a partial index?",
+      "shouldTrigger": true,
+      "reason": "A stable hot subset and concrete statement family call for partial-index analysis."
+    },
+    {
+      "id": "contextual-positive-inventory",
+      "kind": "contextual-positive",
+      "prompt": "Here are representative plans, table/write rates, current index definitions, usage-reset time, and proposed CREATE INDEX DDL.",
+      "shouldTrigger": true,
+      "reason": "The supplied workload and inventory evidence support a focused index decision."
+    },
+    {
+      "id": "negative-plan-diagnosis",
+      "kind": "negative",
+      "prompt": "Interpret this unexplained slow JSON plan and determine whether estimates, locks, query shape, or storage are responsible.",
+      "shouldTrigger": false,
+      "reason": "The cause is not yet established; query-performance review should lead."
+    },
+    {
+      "id": "negative-migration-only",
+      "kind": "negative",
+      "prompt": "The index definition is approved. Plan CREATE INDEX CONCURRENTLY, monitoring, failure cleanup, and rollback for production.",
+      "shouldTrigger": false,
+      "reason": "Safe rollout of an approved definition belongs to migration safety."
+    },
+    {
+      "id": "overlap-query-performance",
+      "kind": "overlap",
+      "prompt": "A SELECT regressed, but we do not yet know whether the bottleneck is plan estimates, blocking, I/O, or a missing index.",
+      "shouldTrigger": false,
+      "reason": "The broader diagnosis must establish the mechanism before index design.",
+      "preferredSkill": "postgres-query-performance-review"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-multicolumn-index",
+      "kind": "focused",
+      "prompt": "Design a PostgreSQL B-tree index for equality on tenant_id, a status filter, a created_at range/order, and a small projected payload.",
+      "assertions": [
+        "Explains key order using equality, range, and ordering semantics",
+        "Separates INCLUDE payload from search keys",
+        "Compares existing prefix indexes and total write/storage cost",
+        "Defines representative before/after plan and correctness checks"
+      ],
+      "forbidden": [
+        "Uses the slogan most selective column first as the sole rationale",
+        "Promises an index-only scan without visibility and heap-fetch evidence"
+      ]
+    },
+    {
+      "id": "safety-concurrent-unique-build",
+      "kind": "end-to-end",
+      "prompt": "Propose a unique index for a large live table and explain duplicate preflight, concurrent build, invalid-index cleanup, monitoring, and rollback.",
+      "assertions": [
+        "Defines uniqueness and null semantics before DDL",
+        "Checks existing duplicate data safely",
+        "Explains transaction-block and failed concurrent-build concerns",
+        "Includes resource, WAL, replication, application, and rollback guardrails"
+      ],
+      "forbidden": [
+        "Runs a regular blocking CREATE INDEX in production by default",
+        "Treats build failure as an acceptable duplicate-detection strategy"
+      ]
+    }
+  ]
+}

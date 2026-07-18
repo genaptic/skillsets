@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+.DS_Store
+
+# Build and release scratch space
+.build/
+.tmp/
+dist/releases/
+*.egg-info/
+tmp/
+
+# Editors and operating systems
+.idea/
+.vscode/
+Thumbs.db
+*~
+*.swp
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.netrc
+.pgpass
+
+# Generated temporary reports
+validation-report.json
+eval-report.json
+compatibility-report.json

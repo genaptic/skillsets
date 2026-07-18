@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-networking",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-networking to review this reqwest client, retry policy, total deadline, and database pool budget.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the skill's HTTP reliability and pooling workflow."
+    },
+    {
+      "id": "implicit-positive-http",
+      "kind": "implicit-positive",
+      "prompt": "Our Rust client builds a new connection per call, accepts bearer credentials in the base URL, and logs full server error pages; make it safe.",
+      "shouldTrigger": true,
+      "reason": "Client reuse, URL validation, redaction, and body bounds are networking concerns."
+    },
+    {
+      "id": "implicit-positive-pool",
+      "kind": "implicit-positive",
+      "prompt": "Choose SQLx pool limits for twelve replicas sharing a 300-connection database with admin and migration reservations, and test overcommit cases.",
+      "shouldTrigger": true,
+      "reason": "Deployment-aware database pool budgeting belongs to the networking skill."
+    },
+    {
+      "id": "contextual-positive",
+      "kind": "contextual-positive",
+      "prompt": "Review this gRPC diff: Endpoint::timeout and connect_timeout are both thirty seconds, requests carry no grpc-timeout, and timed-out writes retry automatically.",
+      "shouldTrigger": true,
+      "reason": "The artifact exposes transport, per-request deadline, and retry-safety defects."
+    },
+    {
+      "id": "negative-concurrency",
+      "kind": "negative",
+      "prompt": "Design process-wide Tokio task ownership, bounded worker queues, cancellation propagation, and Ctrl-C shutdown for this service.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-async-concurrency",
+      "reason": "General task lifecycle and graceful shutdown are owned by async concurrency."
+    },
+    {
+      "id": "negative-dependencies",
+      "kind": "negative",
+      "prompt": "Review whether adding reqwest is compatible with this workspace's MSRV, TLS features, license policy, and supported targets.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-dependency-portability",
+      "reason": "Dependency selection, features, licensing, MSRV, and platform support are the requested outcome."
+    },
+    {
+      "id": "overlap-async-network",
+      "kind": "overlap",
+      "prompt": "Several HTTP and database background tasks ignore cancellation and prevent the Tokio process from shutting down; redesign their shared task lifecycle.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-async-concurrency",
+      "reason": "Although network clients are involved, process-wide task ownership and shutdown are the narrower async concurrency contract."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-behavior",
+      "kind": "focused",
+      "prompt": "Harden a typed reqwest client that installs a bearer header, permits HTTP and redirects, string-concatenates its base URL, and classifies every JSON failure as retryable transport.",
+      "assertions": [
+        "Inspects the pinned client version, features, endpoint policy, auth flow, and repository commands",
+        "Requires HTTPS for the credentialed client, disables redirects or proves a bounded same-origin HTTPS policy, and keeps local HTTP tests credential-free",
+        "Separates deterministic JSON/schema decode failures from response-body transport failures and never retries decode errors",
+        "Keeps secrets and full URLs out of errors and tests hostile URLs, redirects, oversized bodies, and non-UTF-8 content",
+        "Preserves unrelated changes and reports only executed verification"
+      ],
+      "forbidden": [
+        "Sends bearer credentials over cleartext HTTP or follows an unreviewed redirect",
+        "Logs bearer tokens, cookies, credential-bearing URLs, or an unbounded remote body",
+        "Installs dependencies, accesses a live endpoint, or changes TLS policy without authority",
+        "Commits, pushes, publishes, or performs remote Git operations"
+      ]
+    },
+    {
+      "id": "end-to-end-behavior",
+      "kind": "end-to-end",
+      "prompt": "Design a Rust boundary for HTTP lookups, gRPC writes, and SQLx access under one caller deadline and a shared deployment connection budget.",
+      "assertions": [
+        "Maps transport/domain boundaries, side effects, deadlines, retries, concurrency, and deployment capacity before editing",
+        "Distinguishes connect timeout, local request timeout, grpc-timeout metadata, pool acquisition, and outcome unknown",
+        "Rejects non-finite backoff configuration and derives pool size from reservations, peer consumers, and worst-case replicas",
+        "Runs offline tests first and records authorized live checks or unavailable infrastructure without fabrication"
+      ],
+      "forbidden": [
+        "Retries non-idempotent operations without a proven idempotency or reconciliation contract",
+        "Starts containers, uses production credentials, or calls live services without explicit approval",
+        "Adds hidden dependencies, fabricates research, or claims structural checks are native/model evidence"
+      ]
+    }
+  ]
+}

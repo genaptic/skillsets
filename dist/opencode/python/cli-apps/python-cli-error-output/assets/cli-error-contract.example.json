@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "id": "missing-required-input",
+      "argv": ["python", "-m", "example_cli", "show"],
+      "expectedExit": 2,
+      "stdout": {
+        "mode": "empty"
+      },
+      "stderr": {
+        "mode": "regex",
+        "value": "(?i)missing|required|usage"
+      },
+      "environment": {
+        "NO_COLOR": "1"
+      },
+      "timeoutSeconds": 10
+    },
+    {
+      "id": "machine-readable-not-found",
+      "argv": ["python", "-m", "example_cli", "--output", "json", "show", "missing-id"],
+      "expectedExit": 4,
+      "stdout": {
+        "mode": "regex",
+        "value": "^\\{.*\"code\"\\s*:\\s*\"not_found\".*\\}\\n?$"
+      },
+      "stderr": {
+        "mode": "empty"
+      },
+      "timeoutSeconds": 10
+    }
+  ]
+}

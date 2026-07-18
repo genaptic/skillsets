@@ -1,0 +1,73 @@
+name: Bug report
+description: Report incorrect instructions, tooling defects, broken generated output, or documentation problems.
+title: "[bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities or credentials here. Follow `SECURITY.md` for private reporting.
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: Pack, skill, helper, generator, installer, marketplace, workflow, or document.
+      placeholder: postgres-databases / postgres-migration-safety
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Pack tag or commit
+      placeholder: postgres-databases-v1.0.0 or full SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: Client
+      options:
+        - Claude Code
+        - Codex
+        - OpenCode
+        - Repository tooling only
+        - Not client-specific
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Redact secrets, private code, customer data, and sensitive database output.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Include commands, fixtures, and environment details. Never include credentials.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Validation evidence
+      description: Relevant logs, generated diff, or test output after redaction.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed credentials and sensitive data.
+          required: true
+        - label: This is not a privately reportable security vulnerability.
+          required: true

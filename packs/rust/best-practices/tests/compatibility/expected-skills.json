@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "pack": "rust-best-practices",
+  "version": "1.0.0",
+  "skills": [
+    "rust-core-best-practices",
+    "rust-project-architecture",
+    "rust-code-structure",
+    "rust-abstraction-design",
+    "rust-async-concurrency",
+    "rust-networking",
+    "rust-testing-strategy",
+    "rust-dependency-portability",
+    "rust-workspace-documentation",
+    "rustdoc-maintenance"
+  ]
+}

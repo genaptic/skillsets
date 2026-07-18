@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "python-best-practices",
+  "displayName": "Python Best Practices",
+  "version": "1.0.0",
+  "description": "Reusable workflows for structuring, testing, and handling failures in production-quality Python projects.",
+  "author": {
+    "name": "Genaptic"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/python/best-practices",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "python",
+    "packaging",
+    "testing",
+    "exceptions"
+  ]
+}

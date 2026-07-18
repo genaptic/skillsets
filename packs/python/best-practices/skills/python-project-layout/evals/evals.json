@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "python-project-layout",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the python-project-layout skill to redesign this package around pyproject.toml and a src directory.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the project-layout workflow."
+    },
+    {
+      "id": "implicit-positive-import-shadowing",
+      "kind": "implicit-positive",
+      "prompt": "Our tests pass from the checkout but the built wheel cannot import the package, and I suspect package discovery is wrong.",
+      "shouldTrigger": true,
+      "reason": "Checkout-versus-installed import behavior is a core layout and packaging boundary."
+    },
+    {
+      "id": "implicit-positive-modernize-packaging",
+      "kind": "implicit-positive",
+      "prompt": "We have setup.py, setup.cfg, ad hoc PYTHONPATH changes, and two top-level package folders. Propose a safe modern structure.",
+      "shouldTrigger": true,
+      "reason": "The task requires inventory, canonical packaging metadata, and staged layout migration."
+    },
+    {
+      "id": "contextual-positive-tree",
+      "kind": "contextual-positive",
+      "prompt": "Review this repository tree and pyproject.toml before we publish the library; verify package data and console entry points are included.",
+      "shouldTrigger": true,
+      "reason": "The supplied tree and packaging artifact make project layout the controlling concern."
+    },
+    {
+      "id": "negative-test-fixtures",
+      "kind": "negative",
+      "prompt": "Our pytest fixtures are slow and coupled. Redesign fixture scopes and parameterization without moving the package.",
+      "shouldTrigger": false,
+      "reason": "This is test architecture rather than project layout."
+    },
+    {
+      "id": "negative-cli-command-tree",
+      "kind": "negative",
+      "prompt": "Design subcommands, global options, help text, and configuration precedence for our Python executable.",
+      "shouldTrigger": false,
+      "reason": "Command interface design belongs to the CLI pack."
+    },
+    {
+      "id": "overlap-testing-strategy",
+      "kind": "overlap",
+      "prompt": "Create a risk-based unit, integration, and end-to-end test plan for this existing Python package.",
+      "shouldTrigger": false,
+      "reason": "The testing skill has the narrower contract; no layout problem is present.",
+      "preferredSkill": "python-testing-strategy"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-layout-review",
+      "kind": "focused",
+      "prompt": "Review a Python repository with pyproject.toml, a src/acme package, root-level acme.py, and tests that prepend the checkout to sys.path.",
+      "assertions": [
+        "Separates distribution and import names",
+        "Identifies mixed discovery and checkout-path contamination",
+        "Proposes staged changes with artifact-based verification",
+        "Does not assume the build backend configuration without inspecting it"
+      ],
+      "forbidden": [
+        "Moves or deletes files without explicit approval",
+        "Claims the wheel imports successfully without building and installing it"
+      ]
+    },
+    {
+      "id": "end-to-end-new-library",
+      "kind": "end-to-end",
+      "prompt": "Propose a complete, minimal layout and pyproject.toml plan for a new typed Python library with one console entry point and packaged templates.",
+      "assertions": [
+        "Defines source, tests, metadata, entry point, package data, and typing marker locations",
+        "Explains package discovery and clean-environment verification",
+        "Provides an ordered implementation and rollback-friendly sequence",
+        "Labels backend-specific choices as choices rather than universal requirements"
+      ],
+      "forbidden": [
+        "Adds undeclared runtime dependencies",
+        "Uses PYTHONPATH hacks as the primary packaging solution"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "python-cli-testing",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use python-cli-testing to create in-process and subprocess tests for this command-line application.",
+      "shouldTrigger": true,
+      "reason": "The skill and CLI test outcome are explicit."
+    },
+    {
+      "id": "implicit-positive-process-contract",
+      "kind": "implicit-positive",
+      "prompt": "Our callback tests pass, but the installed command has the wrong exit status, merges stderr into stdout, and fails only on Windows.",
+      "shouldTrigger": true,
+      "reason": "The gap is process-boundary and cross-platform CLI testing."
+    },
+    {
+      "id": "implicit-positive-isolation",
+      "kind": "implicit-positive",
+      "prompt": "Design tests that isolate HOME, config, stdin, TTY behavior, temporary files, signals, and JSON output for a Python command.",
+      "shouldTrigger": true,
+      "reason": "The request enumerates CLI-specific test surfaces."
+    },
+    {
+      "id": "contextual-positive-existing-tests",
+      "kind": "contextual-positive",
+      "prompt": "Review this CliRunner suite and subprocess helper, then add coverage for installed entry points, shell quoting, and interrupt cleanup.",
+      "shouldTrigger": true,
+      "reason": "The artifacts are an existing CLI test suite."
+    },
+    {
+      "id": "negative-general-suite",
+      "kind": "negative",
+      "prompt": "Create a repository-wide risk map for unit, contract, database integration, and service end-to-end tests.",
+      "shouldTrigger": false,
+      "reason": "General test strategy is owned by python-testing-strategy."
+    },
+    {
+      "id": "negative-error-policy",
+      "kind": "negative",
+      "prompt": "Choose public exit codes and decide which error payload goes to stdout versus stderr.",
+      "shouldTrigger": false,
+      "reason": "That is design of the failure contract, not its tests."
+    },
+    {
+      "id": "overlap-testing-strategy",
+      "kind": "overlap",
+      "prompt": "Redesign fixture scopes, coverage goals, markers, and the full Python project's pull-request test selection.",
+      "shouldTrigger": false,
+      "reason": "The request is broader than the CLI and belongs to general testing strategy.",
+      "preferredSkill": "python-testing-strategy"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-runner-gap",
+      "kind": "focused",
+      "prompt": "Review tests that call main() directly, assert one combined output string, and reuse the developer's HOME directory.",
+      "assertions": [
+        "Identifies missing parsing/process/status coverage and unsafe state isolation",
+        "Proposes separate in-process and subprocess layers",
+        "Requires independent stdout/stderr assertions and temporary home/config paths",
+        "Includes installed entry-point verification"
+      ],
+      "forbidden": [
+        "Runs tests against the real user configuration",
+        "Uses shell=True as the default subprocess approach"
+      ]
+    },
+    {
+      "id": "end-to-end-cli-matrix",
+      "kind": "end-to-end",
+      "prompt": "Design the complete test matrix for a cross-platform Python CLI with text/JSON modes, stdin, destructive confirmation, streaming, and interrupts.",
+      "assertions": [
+        "Covers invocation, terminal, output, platform, and result dimensions economically",
+        "Defines isolation and exact channel/status assertions",
+        "Tests mutation, partial failure, cleanup, and non-interactive behavior",
+        "Separates fast pull-request coverage from bounded platform integration"
+      ],
+      "forbidden": [
+        "Requires every Cartesian combination without risk justification",
+        "Claims in-process framework tests prove signal behavior"
+      ]
+    }
+  ]
+}

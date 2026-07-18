@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "postgres-query-performance-review",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the postgres-query-performance-review skill to interpret this EXPLAIN ANALYZE JSON and design a safe experiment.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the query-performance workflow."
+    },
+    {
+      "id": "implicit-positive-plan",
+      "kind": "implicit-positive",
+      "prompt": "This join's p95 doubled. The plan shows 400 nested-loop inner executions, estimate errors, and temporary hash batches.",
+      "shouldTrigger": true,
+      "reason": "Runtime plan evidence and latency regression make query diagnosis the controlling task."
+    },
+    {
+      "id": "implicit-positive-statistics",
+      "kind": "implicit-positive",
+      "prompt": "The same prepared SELECT is fast for common tenants and terrible for large tenants; could generic plans or skew be responsible?",
+      "shouldTrigger": true,
+      "reason": "Parameter sensitivity, statistics, and plan selection are query-performance concerns."
+    },
+    {
+      "id": "contextual-positive-explain",
+      "kind": "contextual-positive",
+      "prompt": "Here are sanitized SQL, statement statistics, wait events, and two PostgreSQL JSON plans from before and after the regression.",
+      "shouldTrigger": true,
+      "reason": "The supplied statement-level evidence calls for comparative plan analysis."
+    },
+    {
+      "id": "negative-schema-model",
+      "kind": "negative",
+      "prompt": "Design normalized tables, keys, foreign keys, RLS, and retention for a new multi-tenant product.",
+      "shouldTrigger": false,
+      "reason": "This is schema design rather than performance diagnosis."
+    },
+    {
+      "id": "negative-index-inventory",
+      "kind": "negative",
+      "prompt": "Review this table's complete index inventory and choose one production-ready covering or partial index proposal.",
+      "shouldTrigger": false,
+      "reason": "A focused index decision belongs to the index-design skill."
+    },
+    {
+      "id": "overlap-index-design",
+      "kind": "overlap",
+      "prompt": "Given this diagnosed filter and sort pattern, specify the exact PostgreSQL index definition, rollout, and redundancy plan.",
+      "shouldTrigger": false,
+      "reason": "The bottleneck has been diagnosed and the narrower deliverable is index design.",
+      "preferredSkill": "postgres-index-design"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-plan-review",
+      "kind": "focused",
+      "prompt": "Review a PostgreSQL JSON plan with a large row-estimate error, repeated inner index scan, residual filtering, and temp spill.",
+      "assertions": [
+        "Explains actual rows per loop and repeated work",
+        "Separates estimate, access-path, and memory hypotheses",
+        "Uses buffer and temp evidence without summing inclusive node times",
+        "Proposes bounded experiments with correctness checks"
+      ],
+      "forbidden": [
+        "Declares every sequential scan a defect",
+        "Recommends a global memory increase without concurrency analysis"
+      ]
+    },
+    {
+      "id": "safety-mutating-statement",
+      "kind": "end-to-end",
+      "prompt": "A production UPDATE is slow. Tell me how to collect a plan and diagnose it without risking unintended writes or long locks.",
+      "assertions": [
+        "Warns that EXPLAIN ANALYZE executes the statement",
+        "Prefers a representative sandbox or explicitly reviewed safe collection strategy",
+        "Includes statement and lock timeouts plus side-effect analysis",
+        "Separates plan mechanics from blocking and system evidence"
+      ],
+      "forbidden": [
+        "Runs EXPLAIN ANALYZE on the production UPDATE by default",
+        "Claims rollback reverses sequences, external effects, or every volatile function"
+      ]
+    }
+  ]
+}

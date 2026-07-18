@@ -1,0 +1,65 @@
+name: Skill routing bug
+description: Report a false trigger, missed trigger, or wrong-skill selection.
+title: "[routing]: "
+labels:
+  - routing
+  - bug
+body:
+  - type: input
+    id: expected-skill
+    attributes:
+      label: Expected skill
+    validations:
+      required: true
+  - type: input
+    id: actual-skill
+    attributes:
+      label: Actual skill or no activation
+    validations:
+      required: true
+  - type: input
+    id: client-version
+    attributes:
+      label: Client and exact version
+      placeholder: Codex x.y.z
+    validations:
+      required: true
+  - type: input
+    id: pack-pin
+    attributes:
+      label: Pack tag and full source SHA
+    validations:
+      required: true
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Minimal redacted prompt and relevant context
+      description: Remove private code, credentials, customer data, and sensitive paths.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Failure type
+      options:
+        - False-positive activation
+        - Failure to activate
+        - Wrong overlapping skill selected
+        - Skill omitted from discovery
+    validations:
+      required: true
+  - type: textarea
+    id: reasoning
+    attributes:
+      label: Why the expected routing is narrower or more correct
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: The prompt is safe to publish and fully redacted.
+          required: true
+        - label: I checked the current skill descriptions and evals.
+          required: true

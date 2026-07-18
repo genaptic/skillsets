@@ -1,0 +1,11 @@
+# Direct development inputs. Compile with `make lock`; install only the hashed lock.
+pip==26.1.2
+setuptools==83.0.0
+wheel==0.47.0
+pip-tools==7.5.3
+PyYAML==6.0.3
+jsonschema==4.26.0
+pytest==9.1.1
+pytest-cov==7.1.0
+ruff==0.15.22
+colorama==0.4.6

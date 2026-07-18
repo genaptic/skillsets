@@ -1,0 +1,34 @@
+schema-version: 1
+id: python-best-practices
+display-name: Python Best Practices
+description: Reusable workflows for structuring, testing, and handling failures in production-quality Python projects.
+language: python
+subject: best-practices
+version: 1.0.0
+license: Apache-2.0
+maintainers:
+- github: jecsand838
+skills:
+- python-project-layout
+- python-testing-strategy
+- python-error-handling
+targets:
+- claude-code
+- codex
+- opencode
+category: Developer Tools
+keywords:
+- agent-skills
+- python
+- packaging
+- testing
+- exceptions
+compatibility:
+  runtimes:
+    python: '>=3.11 for optional helpers'
+  notes: Core guidance is framework-neutral. Packaging and test commands must be adapted to the repository's selected build backend and test runner.
+operations:
+  network: none
+  filesystem: project-write
+  command-execution: optional-explicit
+  external-writes: none
