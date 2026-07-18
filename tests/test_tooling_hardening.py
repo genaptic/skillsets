@@ -54,6 +54,7 @@ def _write_manifest(root: Path, pack_id: str, mutate) -> None:
 
 def _normalized_process_output(completed: subprocess.CompletedProcess[str]) -> str:
     plain = ANSI_ESCAPE.sub("", completed.stdout + completed.stderr)
+    plain = re.sub(r"\s+\|\s+", " ", plain)
     return " ".join(plain.split())
 
 
@@ -62,7 +63,7 @@ def test_process_output_normalization_removes_ansi_and_diagnostic_wrapping() -> 
         args=["pwsh"],
         returncode=1,
         stdout="",
-        stderr="\x1b[31;1mInstalled CLI does not support 'gh skill'\x1b[0m\ncommand.\n",
+        stderr=("\x1b[31;1mInstalled CLI does not support 'gh skill'\x1b[0m\n    | command.\n"),
     )
 
     assert _normalized_process_output(completed) == (
