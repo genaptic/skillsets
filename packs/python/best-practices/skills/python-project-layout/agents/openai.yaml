@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Project Layout"
+  short_description: "Design maintainable Python project layouts"
+  default_prompt: "Use $python-project-layout to review this repository and recommend a maintainable Python layout."

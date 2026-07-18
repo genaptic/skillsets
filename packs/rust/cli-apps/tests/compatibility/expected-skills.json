@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "pack": "rust-cli-apps",
+  "version": "1.0.0",
+  "skills": [
+    "rust-cli-application-design",
+    "rust-cli-command-development"
+  ]
+}

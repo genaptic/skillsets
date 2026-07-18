@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "python-testing-strategy",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use python-testing-strategy to design the test architecture for this Python library before we rewrite the suite.",
+      "shouldTrigger": true,
+      "reason": "The skill and outcome are explicitly requested."
+    },
+    {
+      "id": "implicit-positive-risk-map",
+      "kind": "implicit-positive",
+      "prompt": "Our repository has 1,500 tests but production regressions keep escaping. Map risks to unit, contract, integration, and end-to-end coverage.",
+      "shouldTrigger": true,
+      "reason": "The task is a risk-based suite design rather than one test fix."
+    },
+    {
+      "id": "implicit-positive-fixtures",
+      "kind": "implicit-positive",
+      "prompt": "The tests share session fixtures, mutate environment variables, and fail in random order. Propose an isolation and fixture strategy.",
+      "shouldTrigger": true,
+      "reason": "Fixture scope and determinism are central testing-strategy concerns."
+    },
+    {
+      "id": "contextual-positive-ci",
+      "kind": "contextual-positive",
+      "prompt": "Given this tests directory and CI matrix, decide what should run on each pull request versus nightly and identify missing boundary cases.",
+      "shouldTrigger": true,
+      "reason": "The supplied suite and CI context require test architecture and selection."
+    },
+    {
+      "id": "negative-package-layout",
+      "kind": "negative",
+      "prompt": "Move this package to src layout and fix package discovery so the wheel contains the right modules.",
+      "shouldTrigger": false,
+      "reason": "Packaging layout is owned by python-project-layout."
+    },
+    {
+      "id": "negative-single-cli-contract",
+      "kind": "negative",
+      "prompt": "Write subprocess assertions for one CLI command's stderr and exit code contract.",
+      "shouldTrigger": false,
+      "reason": "The narrower CLI testing skill should handle this request."
+    },
+    {
+      "id": "overlap-cli-testing",
+      "kind": "overlap",
+      "prompt": "Create a comprehensive test matrix for command help, stdout, stderr, exit codes, stdin, and shell invocation.",
+      "shouldTrigger": false,
+      "reason": "The request is specifically CLI testing rather than repository-wide test strategy.",
+      "preferredSkill": "python-cli-testing"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-flaky-suite",
+      "kind": "focused",
+      "prompt": "Review a pytest suite where a session fixture shares a mutable SQLite database, tests use current time, and CI retries failures three times.",
+      "assertions": [
+        "Identifies shared state, uncontrolled time, and retries as separate risks",
+        "Proposes narrower fixture ownership and deterministic time controls",
+        "Defines evidence to reproduce and eliminate flakes",
+        "Preserves a fast pull-request path"
+      ],
+      "forbidden": [
+        "Treats retries as the final remediation",
+        "Deletes failing tests merely to restore CI"
+      ]
+    },
+    {
+      "id": "end-to-end-service-strategy",
+      "kind": "end-to-end",
+      "prompt": "Design the test strategy for a Python service with pure pricing logic, a PostgreSQL repository, an HTTP client, and two critical user journeys.",
+      "assertions": [
+        "Maps each behavior to the narrowest trustworthy test level",
+        "Defines real versus replaced boundaries and test-data cleanup",
+        "Includes deterministic controls and CI selection",
+        "Documents gaps, runtime budget, and verification criteria"
+      ],
+      "forbidden": [
+        "Mocks every dependency including the behavior under test",
+        "Claims coverage percentage alone proves adequacy"
+      ]
+    }
+  ]
+}

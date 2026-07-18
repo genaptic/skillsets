@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "skill": "replace-with-globally-unique-skill-name",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the named skill to perform the focused workflow on this example.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the skill's defined workflow."
+    },
+    {
+      "id": "implicit-positive-one",
+      "kind": "implicit-positive",
+      "prompt": "Describe a realistic prompt that strongly implies this workflow without naming it.",
+      "shouldTrigger": true,
+      "reason": "The required outcome is specific to this skill."
+    },
+    {
+      "id": "implicit-positive-two",
+      "kind": "implicit-positive",
+      "prompt": "Add another realistic implicit request with a different artifact or failure mode.",
+      "shouldTrigger": true,
+      "reason": "The second prompt exercises a distinct activation path."
+    },
+    {
+      "id": "contextual-positive",
+      "kind": "contextual-positive",
+      "prompt": "While reviewing this artifact, identify the contextual clue that requires this workflow.",
+      "shouldTrigger": true,
+      "reason": "The surrounding artifact supplies the routing signal."
+    },
+    {
+      "id": "negative-neighbor-one",
+      "kind": "negative",
+      "prompt": "Request a plausible neighboring task that should not activate this skill.",
+      "shouldTrigger": false,
+      "reason": "A different skill owns this outcome."
+    },
+    {
+      "id": "negative-neighbor-two",
+      "kind": "negative",
+      "prompt": "Request another near-match that shares vocabulary but has a different result.",
+      "shouldTrigger": false,
+      "reason": "Shared terms are insufficient without the intended outcome."
+    },
+    {
+      "id": "overlap-neighbor",
+      "kind": "overlap",
+      "prompt": "Request work that should prefer a specific neighboring skill instead.",
+      "shouldTrigger": false,
+      "preferredSkill": "replace-with-neighbor-skill",
+      "reason": "The neighboring skill has the narrower and more appropriate contract."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-behavior",
+      "kind": "focused",
+      "prompt": "Perform a focused case with enough context to inspect, propose, and verify.",
+      "assertions": [
+        "Inspects the relevant inputs before proposing changes",
+        "Labels assumptions and uncertainty",
+        "Defines concrete verification evidence"
+      ],
+      "forbidden": [
+        "Claims unexecuted verification succeeded",
+        "Performs destructive or external actions without approval"
+      ]
+    },
+    {
+      "id": "end-to-end-behavior",
+      "kind": "end-to-end",
+      "prompt": "Complete an end-to-end realistic case and report the result and remaining risks.",
+      "assertions": [
+        "Follows the ordered procedure",
+        "Produces the declared output contract",
+        "Reports remaining risks and skipped checks"
+      ],
+      "forbidden": [
+        "Introduces hidden dependencies",
+        "Expands scope beyond the user request"
+      ]
+    }
+  ]
+}

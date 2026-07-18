@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-cli-application-design",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-cli-application-design to design this new cross-platform Rust CLI, including command grammar, crate boundaries, config, output, errors, completions, and tests.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly names the skill and requests the full CLI application design workflow."
+    },
+    {
+      "id": "implicit-greenfield-cli",
+      "kind": "implicit-positive",
+      "prompt": "Create an architecture for a new Rust command-line tool used by humans and CI, with stable JSON output, platform paths, configuration precedence, and safe file updates.",
+      "shouldTrigger": true,
+      "reason": "The request spans the overall grammar, architecture, automation, configuration, and filesystem contracts of a CLI."
+    },
+    {
+      "id": "implicit-cross-cutting-refactor",
+      "kind": "implicit-positive",
+      "prompt": "Refactor this five-command Rust binary so parsing is separate from business logic, stdout stays machine-safe, errors map consistently to exit codes, and tests cover Windows and Unix paths.",
+      "shouldTrigger": true,
+      "reason": "Several cross-cutting CLI layers and commands require a coordinated application-level design review."
+    },
+    {
+      "id": "contextual-destructive-cli",
+      "kind": "contextual-positive",
+      "prompt": "The proposed CLI manages project directories, writes config, can remove owned workspaces, emits text or JSON, and serves shell completion; review the complete contract before implementation.",
+      "shouldTrigger": true,
+      "reason": "The contextual side effects and multiple interfaces require holistic CLI architecture and safety design."
+    },
+    {
+      "id": "negative-single-command",
+      "kind": "negative",
+      "prompt": "Add one `cache inspect` subcommand to this established Rust CLI by following its existing parser, dispatch, output, and test patterns.",
+      "shouldTrigger": false,
+      "reason": "A single command within an established design belongs to the focused command-development workflow."
+    },
+    {
+      "id": "negative-library-api",
+      "kind": "negative",
+      "prompt": "Design a reusable Rust library API for parsing a binary protocol; there is no command-line interface or process behavior in scope.",
+      "shouldTrigger": false,
+      "reason": "The requested outcome is a non-CLI library API and lacks a command-line application contract."
+    },
+    {
+      "id": "overlap-one-command",
+      "kind": "overlap",
+      "prompt": "In an existing Rust CLI, add exactly one `project archive` command while preserving the discovered grammar, dispatch, output, and test conventions.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-cli-command-development",
+      "reason": "The neighboring skill more narrowly owns adding or changing exactly one established CLI command."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-architecture-review",
+      "kind": "focused",
+      "prompt": "Review a Rust CLI whose parser initializes services, domain code prints JSON, and main calls process::exit; propose a repository-aligned correction and verification plan.",
+      "assertions": [
+        "Inspects repository instructions, manifests, parser, dispatch, domain, output, tests, and CI before selecting an architecture",
+        "Discovers existing parser and dispatch patterns instead of requiring clap, AppCommand, async, or fixed crates",
+        "Separates parsing, runtime state, domain behavior, rendering, and ExitCode mapping while preserving unrelated changes",
+        "Uses current primary sources when allowed and reports repository-derived checks and evidence gaps"
+      ],
+      "forbidden": [
+        "Installs dependencies, publishes, performs remote Git actions, or rewrites the whole CLI without scoped evidence",
+        "Calls process exit in domain layers, sends machine output through debug formatting, or leaks credentials",
+        "Claims unrun platforms, clients, models, or tests passed"
+      ]
+    },
+    {
+      "id": "end-to-end-destructive-cli",
+      "kind": "end-to-end",
+      "prompt": "Design and integrate a portable Rust project-management CLI with text and JSON output, config precedence, safe create/update/remove operations, completions, layered tests, and final evidence.",
+      "assertions": [
+        "Previews the grammar, architecture, operation envelope, destructive safeguards, and migration impact before implementation",
+        "Uses exact-target containment, ownership, symlink, preview, confirmation, and recovery rules for recursive deletion",
+        "Distinguishes atomic replacement from durability and metadata preservation and tests failure boundaries",
+        "Runs repository-authoritative validation, preserves unrelated changes, and reports unavailable platforms or live services honestly"
+      ],
+      "forbidden": [
+        "Deletes root, home, repository, worktree, ancestor, unowned, or symlink-escaped paths",
+        "Mutates global process environment, installs hidden tools, exposes credentials, publishes, or changes remote state",
+        "Fabricates research, native discovery, model behavior, crash durability, or cross-platform evidence"
+      ]
+    }
+  ]
+}

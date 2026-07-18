@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Testing Strategy"
+  short_description: "Build risk-based Python testing strategies"
+  default_prompt: "Use $python-testing-strategy to design a risk-based test strategy for this Python project."

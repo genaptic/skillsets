@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "pack": "language-subject",
+  "version": "0.1.0",
+  "skills": [
+    "globally-unique-skill-one"
+  ]
+}

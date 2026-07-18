@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-code-structure",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-code-structure to refactor these Rust structs, enums, free functions, methods, constructors, and repeated parameters around clear domain owners and invariants.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the skill's type and behavior-organization workflow."
+    },
+    {
+      "id": "implicit-positive-state-model",
+      "kind": "implicit-positive",
+      "prompt": "This Rust struct has a string kind, six optional fields, and boolean flags for mutually exclusive lifecycle states. Make invalid combinations unrepresentable without breaking the wire format.",
+      "shouldTrigger": true,
+      "reason": "Replacing Option-heavy pseudo-variants while preserving representation is a code-structure task."
+    },
+    {
+      "id": "implicit-positive-behavior-owner",
+      "kind": "implicit-positive",
+      "prompt": "Review these repeated parameter groups and helpers that all operate on the same domain value. Decide which behavior needs a receiver and which stateless algorithms should remain free functions.",
+      "shouldTrigger": true,
+      "reason": "The request directly concerns domain grouping and contextual method versus free-function placement."
+    },
+    {
+      "id": "contextual-positive-public-type",
+      "kind": "contextual-positive",
+      "prompt": "The attached Rust API exposes public fields, a transparent type alias, several constructors, and persisted Serde data. Restructure it carefully and document compatibility effects.",
+      "shouldTrigger": true,
+      "reason": "The artifact supplies type-shape and compatibility signals owned by this skill."
+    },
+    {
+      "id": "negative-project-layout",
+      "kind": "negative",
+      "prompt": "Keep all Rust types unchanged; decide how to split this package into a library, binaries, modules, and workspace members with appropriate integration-test placement.",
+      "shouldTrigger": false,
+      "reason": "Package, module, target, and test boundaries belong to rust-project-architecture."
+    },
+    {
+      "id": "negative-edit-existing-skill",
+      "kind": "negative",
+      "prompt": "Edit the documentation and routing evals for an existing Agent Skill about Rust structs; do not change any Rust source code.",
+      "shouldTrigger": false,
+      "reason": "Maintaining an Agent Skill is repository authoring, not structuring Rust domain code."
+    },
+    {
+      "id": "overlap-abstraction-design",
+      "kind": "overlap",
+      "prompt": "The type layout is already stable; choose whether three implementations should use generics, a trait object, or closed enum and define lifetimes and typed public errors.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-abstraction-design",
+      "reason": "Polymorphism, lifetime, and public error contracts dominate over internal type organization."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-state-refactor",
+      "kind": "focused",
+      "prompt": "Refactor an Option-heavy Rust lifecycle struct and its orbiting helpers into a clear model while preserving the serialized contract.",
+      "assertions": [
+        "Inventories invariants, mutually exclusive states, transitions, ownership, call sites, existing impl blocks, and serialized representations before editing",
+        "Uses structs for values that coexist and data-carrying enums for closed mutually exclusive cases without splitting cohesive data mechanically",
+        "Places receiver-owned behavior in methods while retaining stateless, symmetric, adapter, callback, or module-level free functions when justified",
+        "Distinguishes transparent type aliases from invariant-enforcing newtypes and associated types",
+        "Updates callers and tests incrementally and verifies invalid states, transitions, exhaustive handling, and serialization compatibility"
+      ],
+      "forbidden": [
+        "Bans every free function, type alias, Option, boolean, or clone regardless of context",
+        "Changes public or persisted representation without an explicit migration and tests",
+        "Installs dependencies, publishes, or performs remote Git actions",
+        "Rewrites unrelated crates or modules to enforce personal style"
+      ]
+    },
+    {
+      "id": "end-to-end-domain-structure",
+      "kind": "end-to-end",
+      "prompt": "Implement a repository-scoped Rust domain-model cleanup involving primitive soup, constructors, a god struct, state transitions, and public callers, then verify it.",
+      "assertions": [
+        "Reads repository naming, API, ownership, error, serialization, and compatibility policy before choosing a model",
+        "Groups parameters and splits lifecycle data only where shared invariants, owners, or mutation rules justify it",
+        "Selects literals, constructors, From, TryFrom, parsing, or builders proportional to validity and construction complexity",
+        "Checks public fields, downstream construction, exhaustive matching, Serde behavior, auto traits, errors, and generated schema effects",
+        "Runs repository-derived formatting, linting, checking, and tests and inspects the final diff for churn and unrelated edits"
+      ],
+      "forbidden": [
+        "Introduces speculative typestate, traits, builders, or wrappers without demonstrated value",
+        "Makes invalid data easier to construct or hides fallible construction",
+        "Claims compatibility based only on compilation",
+        "Fabricates research, test results, or repository policy"
+      ]
+    }
+  ]
+}

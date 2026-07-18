@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "rust-best-practices",
+  "displayName": "Rust Best Practices",
+  "version": "1.0.0",
+  "description": "Repository-aware workflows for designing, reviewing, testing, documenting, and maintaining production Rust systems.",
+  "author": {
+    "name": "Genaptic"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/rust/best-practices",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "rust",
+    "cargo",
+    "architecture",
+    "async",
+    "testing",
+    "networking",
+    "portability"
+  ]
+}

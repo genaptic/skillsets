@@ -1,0 +1,35 @@
+schema-version: 1
+id: "rust-cli-apps"
+display-name: "Rust CLI Applications"
+description: "Portable workflows for designing stable Rust CLI applications and safely developing commands in existing CLIs."
+language: "rust"
+subject: "cli-apps"
+version: "1.0.0"
+license: Apache-2.0
+maintainers:
+- github: "jecsand838"
+skills:
+- "rust-cli-application-design"
+- "rust-cli-command-development"
+targets:
+- "claude-code"
+- "codex"
+- "opencode"
+category: "Developer Tools"
+keywords:
+- "agent-skills"
+- "rust"
+- "cli"
+- "clap"
+- "command-line"
+- "cross-platform"
+compatibility:
+  runtimes:
+    cargo: "bundled with the target repository's selected Rust toolchain"
+    rust: "target repository toolchain and MSRV; Edition 2024 examples require >=1.85"
+  notes: "Guidance discovers the target parser, dispatch, runtime, output, and test architecture. Clap examples apply only when clap is already selected."
+operations:
+  network: "optional"
+  filesystem: "project-write"
+  command-execution: "optional-explicit"
+  external-writes: "none"

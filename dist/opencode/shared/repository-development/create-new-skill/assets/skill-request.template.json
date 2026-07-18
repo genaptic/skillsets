@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "skillName": "replace-with-globally-unique-skill-name",
+  "packId": "replace-with-existing-pack-id",
+  "expectedPackVersion": "1.0.0",
+  "details": "Describe one observable outcome, required knowledge, artifacts, quality bar, and constraints in enough detail to design a complete skill.",
+  "scope": {
+    "useWhen": [
+      "Describe one realistic user intent that should activate this skill.",
+      "Describe a distinct artifact or context that should also activate it."
+    ],
+    "doNotUseWhen": [
+      "Describe the closest neighboring outcome and who owns it.",
+      "Describe an unsafe, unsupported, or explicitly excluded environment."
+    ],
+    "supportedEnvironments": [
+      "List the supported runtime, platform, client, or repository context."
+    ]
+  },
+  "expectedOutput": "Describe the exact report, patch, files, commands, or other observable result the skill returns.",
+  "successCriteria": [
+    "State evidence that proves the skill outcome and repository integration are complete.",
+    "State a routing, safety, or compatibility condition that must hold."
+  ],
+  "examples": {
+    "shouldTrigger": [
+      "Provide a realistic explicit request that names the intended new capability.",
+      "Provide a realistic implicit request that does not rely on the skill name."
+    ],
+    "shouldNotTrigger": [
+      "Provide a near-neighbor request that shares vocabulary but needs another skill.",
+      "Provide an unrelated request that must not activate this skill."
+    ]
+  },
+  "nearestNeighbor": "replace-with-existing-neighbor-skill",
+  "constraints": [
+    "List a concrete version, tool, policy, platform, or operational boundary."
+  ],
+  "operations": {
+    "network": "optional",
+    "filesystem": "project-write",
+    "commandExecution": "optional-explicit",
+    "externalWrites": "none"
+  },
+  "sourceRequirements": {
+    "freshness": "Recheck version-sensitive claims during execution and record access dates.",
+    "requiredAuthorities": [
+      "Name the primary specification or official product documentation required."
+    ]
+  },
+  "openai": {
+    "displayName": "Replace With Skill Display Name",
+    "shortDescription": "Replace with a focused skill summary",
+    "defaultPrompt": "Use $replace-with-globally-unique-skill-name to complete the requested focused workflow."
+  },
+  "userSources": []
+}

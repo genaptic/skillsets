@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "pack": "repository-development",
+  "version": "1.0.0",
+  "skills": [
+    "create-new-skill",
+    "create-new-skillset"
+  ]
+}

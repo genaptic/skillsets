@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-dependency-portability",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-dependency-portability to review this Cargo dependency, MSRV impact, feature surface, and Windows/macOS/Linux behavior.",
+      "shouldTrigger": true,
+      "reason": "The named skill owns dependency, Cargo policy, MSRV, and platform analysis."
+    },
+    {
+      "id": "implicit-positive-dependency",
+      "kind": "implicit-positive",
+      "prompt": "Before adding this crate, compare std and existing workspace options, transitive packages, licenses, build scripts, unsafe code, and target support.",
+      "shouldTrigger": true,
+      "reason": "The request is a complete Rust dependency and supply-chain evaluation."
+    },
+    {
+      "id": "implicit-positive-platform",
+      "kind": "implicit-positive",
+      "prompt": "This app builds paths from HOME, shells out with interpolated strings, and changes process environment after Tokio starts; make it portable and safe.",
+      "shouldTrigger": true,
+      "reason": "Paths, processes, environment mutation, and cross-platform behavior are central."
+    },
+    {
+      "id": "contextual-positive",
+      "kind": "contextual-positive",
+      "prompt": "Review this Cargo diff: it raises rust-version, enables every default feature, adds a native TLS crate to all targets, and rewrites most of Cargo.lock.",
+      "shouldTrigger": true,
+      "reason": "The artifact exposes MSRV, feature, target dependency, and lockfile risks."
+    },
+    {
+      "id": "negative-architecture",
+      "kind": "negative",
+      "prompt": "Decide how to split this Rust monolith into crates, modules, a thin binary, and internal libraries with clear ownership boundaries.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-project-architecture",
+      "reason": "Crate and module decomposition is owned by project architecture."
+    },
+    {
+      "id": "negative-networking",
+      "kind": "negative",
+      "prompt": "Design reqwest retryability, bounded error bodies, total deadlines, tonic request timeouts, and SQL pool capacity for this service.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-networking",
+      "reason": "Runtime transport reliability and pool behavior are the networking outcome."
+    },
+    {
+      "id": "overlap-crate-boundary",
+      "kind": "overlap",
+      "prompt": "Split this Rust application into a thin binary and several library crates, deciding which dependencies each new boundary should own.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-project-architecture",
+      "reason": "Although dependency ownership is involved, crate-boundary design is the narrower architecture contract."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-behavior",
+      "kind": "focused",
+      "prompt": "Review and implement a proposed Cargo dependency addition that may raise MSRV and pull native TLS onto unsupported targets.",
+      "assertions": [
+        "Inspects toolchain, rust-version, resolver, lockfile, features, targets, CI, and repository precedent before editing",
+        "Compares std, existing dependencies, and candidates across API fit, transitive impact, licenses, advisories, unsafe or native code, and MSRV",
+        "Uses the smallest target-specific feature/dependency declaration and reviews the complete manifest and lockfile diff",
+        "Reports unavailable network, registry, advisory, and platform checks as evidence gaps"
+      ],
+      "forbidden": [
+        "Installs a toolchain, target, crate, audit tool, or native library without authority",
+        "Runs cargo update broadly, hides lockfile churn, or silently raises public support requirements",
+        "Commits, pushes, publishes, or performs remote Git operations"
+      ]
+    },
+    {
+      "id": "end-to-end-behavior",
+      "kind": "end-to-end",
+      "prompt": "Make a Rust application's configuration paths, child commands, environment handling, features, and native dependencies portable across Windows, macOS, and Linux.",
+      "assertions": [
+        "Maps supported platforms and evidence levels and keeps OS-specific code behind narrow adapters",
+        "Returns explicit project-directory errors, preserves non-UTF-8 path handling, and uses argument-based child commands",
+        "Avoids multithreaded global environment mutation and passes immutable or child-specific configuration",
+        "Runs repository-derived supported feature, target, MSRV, and host tests and distinguishes cross-compile from native evidence"
+      ],
+      "forbidden": [
+        "Panics or falls back to root, home, or current directory when project directories are unavailable",
+        "Uses interpolated shell strings, leaks secrets, or claims one host build proves every platform",
+        "Adds hidden dependencies, fabricates source freshness, or expands scope without approval"
+      ]
+    }
+  ]
+}

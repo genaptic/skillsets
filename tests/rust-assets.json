@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "minimumRustVersion": "1.85.0",
+  "completeProjects": [
+    {
+      "path": "packs/rust/best-practices/skills/rust-core-best-practices/assets/templates/baseline-package",
+      "cargoArgs": ["test"],
+      "lockPolicy": "generate-in-scratch"
+    },
+    {
+      "path": "packs/rust/best-practices/skills/rust-project-architecture/assets/templates/thin-lib-bin",
+      "cargoArgs": ["test"],
+      "lockPolicy": "generate-in-scratch"
+    },
+    {
+      "path": "packs/rust/best-practices/skills/rust-project-architecture/assets/templates/workspace-root",
+      "cargoArgs": ["test", "--workspace"],
+      "lockPolicy": "generate-in-scratch"
+    }
+  ],
+  "executableSnippets": [
+    {
+      "path": "packs/rust/best-practices/skills/rust-async-concurrency/assets/templates/bounded_fanout.rs",
+      "harness": "tests/rust-harness/src/bounded_fanout.rs"
+    },
+    {
+      "path": "packs/rust/best-practices/skills/rust-async-concurrency/assets/templates/graceful_shutdown.rs",
+      "harness": "tests/rust-harness/src/graceful_shutdown.rs"
+    },
+    {
+      "path": "packs/rust/best-practices/skills/rust-async-concurrency/assets/templates/sync_worker_bridge.rs",
+      "harness": "tests/rust-harness/src/sync_worker_bridge.rs"
+    },
+    {
+      "path": "packs/rust/best-practices/skills/rust-dependency-portability/assets/templates/project_dirs.rs",
+      "harness": "tests/rust-harness/src/project_dirs.rs"
+    },
+    {
+      "path": "packs/rust/best-practices/skills/rust-networking/assets/templates/sqlx_pool.rs",
+      "harness": "tests/rust-harness/src/sqlx_pool.rs"
+    },
+    {
+      "path": "packs/rust/best-practices/skills/rust-networking/assets/templates/typed_http_client.rs",
+      "harness": "tests/rust-harness/src/typed_http_client.rs"
+    },
+    {
+      "path": "packs/rust/cli-apps/skills/rust-cli-application-design/assets/templates/finite_bounded_number.rs",
+      "harness": "tests/rust-harness/src/finite_bounded_number.rs"
+    },
+    {
+      "path": "packs/rust/cli-apps/skills/rust-cli-application-design/assets/templates/removal_preview.rs",
+      "harness": "tests/rust-harness/src/removal_preview.rs"
+    }
+  ],
+  "syntaxOnlyFragments": [
+    "packs/rust/best-practices/skills/rust-abstraction-design/assets/templates/enum_dispatch.rs",
+    "packs/rust/best-practices/skills/rust-abstraction-design/assets/templates/typed_error.rs",
+    "packs/rust/best-practices/skills/rust-async-concurrency/assets/templates/localset_spawn_local.rs",
+    "packs/rust/best-practices/skills/rust-core-best-practices/assets/templates/member-Cargo.toml",
+    "packs/rust/best-practices/skills/rust-dependency-portability/assets/templates/member_with_workspace_lints.toml",
+    "packs/rust/best-practices/skills/rust-dependency-portability/assets/templates/target_specific_deps.toml",
+    "packs/rust/best-practices/skills/rust-networking/assets/templates/grpc_client.rs",
+    "packs/rust/best-practices/skills/rust-testing-strategy/assets/templates/bin_smoke_test.rs",
+    "packs/rust/best-practices/skills/rust-testing-strategy/assets/templates/doctest_examples.rs",
+    "packs/rust/best-practices/skills/rust-testing-strategy/assets/templates/unit_test_with_fake.rs"
+  ],
+  "behaviorHarness": {
+    "manifest": "tests/rust-harness/Cargo.toml",
+    "lockfile": "tests/rust-harness/Cargo.lock"
+  },
+  "cargoPolicyTrap": {
+    "manifest": "tests/rust-cargo-policy-trap/Cargo.toml",
+    "lockfile": "tests/rust-cargo-policy-trap/Cargo.lock"
+  }
+}

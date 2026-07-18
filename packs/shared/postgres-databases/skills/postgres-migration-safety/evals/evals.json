@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "postgres-migration-safety",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the postgres-migration-safety skill to turn these approved PostgreSQL changes into a low-risk production runbook.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the migration-safety workflow."
+    },
+    {
+      "id": "implicit-positive-large-table",
+      "kind": "implicit-positive",
+      "prompt": "We need to add a required column and foreign key to a heavily written 1.5 TB table without a long outage.",
+      "shouldTrigger": true,
+      "reason": "Lock, backfill, validation, compatibility, and replication concerns make this a migration task."
+    },
+    {
+      "id": "implicit-positive-concurrent-index",
+      "kind": "implicit-positive",
+      "prompt": "Our migration runner wraps files in transactions, but this release needs CREATE UNIQUE INDEX CONCURRENTLY and constraint attachment.",
+      "shouldTrigger": true,
+      "reason": "Transaction restrictions, failed-build state, uniqueness, and phased rollout are central."
+    },
+    {
+      "id": "contextual-positive-runbook",
+      "kind": "contextual-positive",
+      "prompt": "Here are table sizes, long-transaction metrics, replication limits, deploy order, DDL, and an operations window. Produce go/no-go and rollback steps.",
+      "shouldTrigger": true,
+      "reason": "The supplied operational context calls for a production migration runbook."
+    },
+    {
+      "id": "negative-design",
+      "kind": "negative",
+      "prompt": "Choose keys, types, constraints, and RLS for a new database with no deployed data.",
+      "shouldTrigger": false,
+      "reason": "Greenfield data modeling belongs to schema design."
+    },
+    {
+      "id": "negative-recovery-program",
+      "kind": "negative",
+      "prompt": "Design continuous archiving, backup retention, restore verification, and a quarterly PITR exercise.",
+      "shouldTrigger": false,
+      "reason": "This is backup and recovery rather than change rollout."
+    },
+    {
+      "id": "overlap-index-design",
+      "kind": "overlap",
+      "prompt": "We know the query is slow but have not chosen the exact access method, columns, order, or partial predicate.",
+      "shouldTrigger": false,
+      "reason": "The change is not yet designed; focused index design should happen before rollout.",
+      "preferredSkill": "postgres-index-design"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "end-to-end-required-column",
+      "kind": "end-to-end",
+      "prompt": "Plan adding and enforcing a non-null column on a large live PostgreSQL table while old and new application versions overlap.",
+      "assertions": [
+        "Uses an expand, application, bounded backfill, validation, enforcement, and contract sequence",
+        "Defines idempotent backfill convergence and concurrent-write handling",
+        "Analyzes target-version locks, scans, WAL, replication, and runner transactions",
+        "Includes metrics, abort thresholds, cleanup, rollback or roll-forward, and verification"
+      ],
+      "forbidden": [
+        "Runs one unbounded UPDATE for the whole table",
+        "Sets NOT NULL immediately without existing-data and lock analysis"
+      ]
+    },
+    {
+      "id": "safety-concurrent-index-failure",
+      "kind": "safety",
+      "prompt": "Write an operational plan for a concurrent unique-index build that may encounter duplicates, long snapshots, lag, or an invalid index.",
+      "assertions": [
+        "Separates the non-transactional phase from runner bookkeeping",
+        "Preflights duplicates and defines application error implications",
+        "Monitors progress, blockers, WAL, lag, storage, and invalid state",
+        "Defines abort, cleanup, retry, constraint attachment, and rollback behavior"
+      ],
+      "forbidden": [
+        "Wraps CREATE INDEX CONCURRENTLY in BEGIN and COMMIT",
+        "Retries indefinitely after lock or resource failure"
+      ]
+    }
+  ]
+}

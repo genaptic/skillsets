@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "postgres-backup-recovery",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use the postgres-backup-recovery skill to design our PostgreSQL backup, PITR, retention, and recovery-drill program.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the backup-and-recovery workflow."
+    },
+    {
+      "id": "implicit-positive-rpo-rto",
+      "kind": "implicit-positive",
+      "prompt": "We need five-minute data loss and two-hour service recovery after deletion, corruption, or regional loss. What should we back up and test?",
+      "shouldTrigger": true,
+      "reason": "Scenario-based RPO/RTO and recovery architecture are the central concerns."
+    },
+    {
+      "id": "implicit-positive-pitr",
+      "kind": "implicit-positive",
+      "prompt": "Our base backups succeed, but WAL archiving occasionally falls behind and nobody has restored to a random point in time.",
+      "shouldTrigger": true,
+      "reason": "WAL-chain assurance and PITR exercises belong to this skill."
+    },
+    {
+      "id": "contextual-positive-audit",
+      "kind": "contextual-positive",
+      "prompt": "Here are backup schedules, object-storage controls, key ownership, retention rules, restore logs, and our last exercise timings. Review readiness.",
+      "shouldTrigger": true,
+      "reason": "The supplied backup and restore evidence supports a recovery-readiness assessment."
+    },
+    {
+      "id": "negative-migration",
+      "kind": "negative",
+      "prompt": "Plan a low-lock rollout for a new non-null column, backfill, constraint validation, and concurrent index.",
+      "shouldTrigger": false,
+      "reason": "This is production migration safety rather than recovery-program design."
+    },
+    {
+      "id": "negative-ha-only",
+      "kind": "negative",
+      "prompt": "Tune our connection routing and automatic failover between synchronous replicas without changing backup policy.",
+      "shouldTrigger": false,
+      "reason": "Replica failover architecture alone is outside the focused backup-and-recovery workflow."
+    },
+    {
+      "id": "overlap-migration-safety",
+      "kind": "overlap",
+      "prompt": "We need an operational rollback and restore trigger for one approved high-risk schema migration next week.",
+      "shouldTrigger": false,
+      "reason": "The primary deliverable is the migration runbook; it should reference existing recovery capability.",
+      "preferredSkill": "postgres-migration-safety"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "end-to-end-recovery-program",
+      "kind": "end-to-end",
+      "prompt": "Design PostgreSQL backup and recovery for accidental deletion, cluster loss, regional outage, and compromised production credentials.",
+      "assertions": [
+        "Defines scenario-specific RPO/RTO and separates failover from restore",
+        "Combines appropriate logical, physical, snapshot, and WAL/PITR methods with stated purposes",
+        "Includes independent encryption, identities, immutability, retention dependencies, and monitoring",
+        "Defines isolated restore drills, business validation, evidence, and remediation"
+      ],
+      "forbidden": [
+        "Treats a streaming replica as the only backup",
+        "Claims scheduler success proves recoverability"
+      ]
+    },
+    {
+      "id": "safety-pitr-drill",
+      "kind": "safety",
+      "prompt": "Create a quarterly PITR exercise that restores a physical backup and WAL to an isolated target and measures achieved RPO and RTO.",
+      "assertions": [
+        "Verifies artifact and WAL-chain integrity before restore",
+        "Uses isolated least-privilege infrastructure and protects secrets",
+        "Measures authorization, provisioning, replay, technical, and business validation stages",
+        "Includes timeline/promotion, application checks, cleanup, evidence, and readiness decision"
+      ],
+      "forbidden": [
+        "Restores an untrusted artifact directly over production",
+        "Calls the drill successful only because PostgreSQL starts"
+      ]
+    }
+  ]
+}

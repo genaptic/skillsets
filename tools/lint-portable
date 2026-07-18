@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Run repository linters that are available on the current host.
+
+CI passes ``--require-tools`` after installing exact tool versions. Local contributors get
+the same checks when the executables are installed, plus Bash syntax checking everywhere.
+"""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def files(pattern: str) -> list[str]:
+    return [
+        str(path.relative_to(ROOT))
+        for path in sorted(ROOT.glob(pattern))
+        if ".venv" not in path.parts and ".git" not in path.parts
+    ]
+
+
+def run(command: list[str]) -> None:
+    print("+", " ".join(command))
+    subprocess.run(command, cwd=ROOT, check=True)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--require-tools",
+        action="store_true",
+        help="fail unless ShellCheck, Actionlint, and PowerShell are installed",
+    )
+    args = parser.parse_args()
+
+    shell_files = files("**/*.sh")
+    workflow_files = files(".github/workflows/*.yml")
+    powershell_files = files("**/*.ps1")
+    missing: list[str] = []
+
+    for path in shell_files:
+        run(["bash", "-n", path])
+
+    shellcheck = shutil.which("shellcheck")
+    if shellcheck:
+        run([shellcheck, "--external-sources", *shell_files])
+    else:
+        missing.append("shellcheck")
+
+    actionlint = shutil.which("actionlint")
+    if actionlint:
+        run([actionlint, *workflow_files])
+    else:
+        missing.append("actionlint")
+
+    pwsh = shutil.which("pwsh")
+    if pwsh:
+        quoted = ",".join("'" + path.replace("'", "''") + "'" for path in powershell_files)
+        script = (
+            "$ErrorActionPreference='Stop'; "
+            "Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0; "
+            "$issues=@(); "
+            f"@({quoted}) | ForEach-Object {{$issues += Invoke-ScriptAnalyzer -Path $_}}; "
+            "if ($issues) {$issues | Format-Table -AutoSize | Out-String | Write-Error}"
+        )
+        run([pwsh, "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script])
+    else:
+        missing.append("pwsh with PSScriptAnalyzer 1.25.0")
+
+    if missing:
+        message = "optional host lint tools unavailable: " + ", ".join(missing)
+        if args.require_tools:
+            print(message, file=sys.stderr)
+            return 1
+        print(message + " (CI requires all of them)")
+    print(
+        f"portable lint complete: {len(shell_files)} shell, "
+        f"{len(workflow_files)} workflow, {len(powershell_files)} PowerShell files"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

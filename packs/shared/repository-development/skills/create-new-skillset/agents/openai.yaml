@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create New Skillpack"
+  short_description: "Create and verify one repository skillpack"
+  default_prompt: "Use $create-new-skillset to design, add, and verify one independently installable skillpack."

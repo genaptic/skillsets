@@ -1,0 +1,97 @@
+name: Validate structural skill evals
+
+on:
+  pull_request:
+    paths:
+      - "packs/**"
+      - "schemas/**"
+      - "src/skillpack_tools/evals.py"
+      - "tools/run-evals"
+      - ".github/workflows/eval.yml"
+  push:
+    branches:
+      - "main"
+    paths:
+      - "packs/**"
+      - "schemas/**"
+      - "src/skillpack_tools/evals.py"
+      - "tools/run-evals"
+      - ".github/workflows/eval.yml"
+  workflow_dispatch:
+    inputs:
+      skill:
+        description: Optional exact skill ID; leave empty to validate every skill.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: structural-evals-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  structural-evals:
+    name: complete structural eval export
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install hash-locked validators and local CLI
+        run: |
+          python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
+          python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e .
+      - name: Export all prompts, assertions, prohibitions, and overlap expectations
+        if: github.event_name != 'workflow_dispatch' || inputs.skill == ''
+        run: skillpacks eval --json eval-report.json
+      - name: Export one skill's complete structural definition
+        if: github.event_name == 'workflow_dispatch' && inputs.skill != ''
+        env:
+          SELECTED_SKILL: ${{ inputs.skill }}
+        run: skillpacks eval --skill "$SELECTED_SKILL" --json eval-report.json
+      - name: Validate the exported report schema and write the evidence boundary
+        shell: python
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          from jsonschema import Draft202012Validator
+
+          report = json.loads(Path("eval-report.json").read_text(encoding="utf-8"))
+          schema = json.loads(
+              Path("schemas/eval-report.schema.json").read_text(encoding="utf-8")
+          )
+          errors = sorted(
+              Draft202012Validator(schema).iter_errors(report),
+              key=lambda error: list(error.absolute_path),
+          )
+          if errors:
+              details = "\n".join(
+                  f"- {list(error.absolute_path)}: {error.message}" for error in errors
+              )
+              raise SystemExit(f"eval report schema validation failed:\n{details}")
+          totals = report["totals"]
+          if not report.get("skills"):
+              raise SystemExit("eval export omitted per-skill prompt and assertion details")
+          summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          summary.write_text(
+              "# Structural skill eval definitions\n\n"
+              f"- Skills: **{totals['skills']}**\n"
+              f"- Routing cases: **{totals['routingCases']}**\n"
+              f"- Behavior cases: **{totals['behaviorCases']}**\n\n"
+              "The report contains complete eval inputs and expectations. These checks validate "
+              "definitions and coverage; they do not invoke a client or model and are not native "
+              "compatibility evidence.\n",
+              encoding="utf-8",
+          )

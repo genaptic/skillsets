@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: Please cite this repository when you reuse or adapt its skillpacks.
+title: Genaptic Skillsets
+type: software
+authors:
+- family-names: Sanders
+  given-names: Connor
+repository-code: https://github.com/genaptic/skillsets
+url: https://github.com/genaptic/skillsets
+license: Apache-2.0
+keywords:
+- agent-skills
+- claude-code
+- codex
+- opencode
+- python
+- postgresql

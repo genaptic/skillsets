@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "skill": "create-new-skill",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use create-new-skill to add a skill named typescript-api-error-contracts to the existing typescript-best-practices pack. It should design and review stable API error schemas, and must exclude CLI stderr behavior.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests exactly one new skill in an existing pack and supplies name, details, and scope."
+    },
+    {
+      "id": "implicit-positive-existing-pack",
+      "kind": "implicit-positive",
+      "prompt": "Add one complete skill to python-cli-apps for reviewing shell completion behavior. Research current Click and argparse guidance, include all repo-required files and evals, register it, and run the checks.",
+      "shouldTrigger": true,
+      "reason": "One researched, registered skill is being added to an existing pack without naming the meta-skill."
+    },
+    {
+      "id": "implicit-positive-finish-draft",
+      "kind": "implicit-positive",
+      "prompt": "I have a proposed skill name postgres-role-privilege-review, a detailed scope, and an existing postgres-databases pack. Turn it into a production-ready repository skill with sources, safe helper decisions, routing negatives, and verification.",
+      "shouldTrigger": true,
+      "reason": "The requested result is one complete new skill in a known existing pack."
+    },
+    {
+      "id": "contextual-positive-manifest",
+      "kind": "contextual-positive",
+      "prompt": "Given this repository and the attached skillpack.yaml for python-best-practices, create the single new skill python-dependency-boundary-review from my requirements and update every canonical and generated artifact required by this repo.",
+      "shouldTrigger": true,
+      "reason": "The project context supplies an existing pack and asks for exactly one complete skill."
+    },
+    {
+      "id": "negative-edit-existing-skill",
+      "kind": "negative",
+      "prompt": "Tighten the description and add two negative evals to the existing python-testing-strategy skill; do not add a new skill.",
+      "shouldTrigger": false,
+      "reason": "This is maintenance of an existing skill rather than creation of a new public skill."
+    },
+    {
+      "id": "negative-generic-skill-publication",
+      "kind": "negative",
+      "prompt": "Create a reusable personal note-taking skill under my home Codex skills directory, then commit, push, and publish it remotely; this is not for the Genaptic Skillsets repository or any existing pack.",
+      "shouldTrigger": false,
+      "reason": "Generic personal skill authoring outside this repository and its requested Git/publication actions do not use the Genaptic repository-development workflow."
+    },
+    {
+      "id": "overlap-new-skillset",
+      "kind": "overlap",
+      "prompt": "Add a new independently installable rust-unsafe-code-audit pack containing exactly one skill, rust-unsafe-boundary-review. Security reviewers need that focused installation and release boundary; rust-core-best-practices owns the nearest excluded general Rust review outcome. Research and integrate the complete pack.",
+      "shouldTrigger": false,
+      "preferredSkill": "create-new-skillset",
+      "reason": "Even with one declared skill, a new independently installable pack belongs to the skillset workflow."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-one-skill-authoring",
+      "kind": "focused",
+      "prompt": "Create one new skill named python-async-task-lifecycle in python-best-practices. It should review cancellation, task ownership, structured concurrency, and shutdown behavior; exclude HTTP framework routing and distributed queues.",
+      "assertions": [
+        "Validates a complete normalized request with explicit pack version, neighbor, operations, source requirements, and OpenAI interface before writing",
+        "Reads repository authorities, target pack content, neighboring skill descriptions, schemas, templates, and tests",
+        "Uses current primary web sources for Python async behavior and skill/client rules and records access dates",
+        "Creates every required canonical skill file with non-placeholder content and registers the skill in pack metadata, README, changelog, and compatibility inventory",
+        "Adds positive, contextual, negative, overlap, focused, and end-to-end eval cases",
+        "Runs make generate before non-mutating make check and reports the real results without claiming native-client evidence"
+      ],
+      "forbidden": [
+        "Creates a new pack when an existing pack owns the capability",
+        "Hand-edits generated marketplaces or catalogs",
+        "Claims web research or commands succeeded without evidence",
+        "Commits, pushes, tags, publishes, or overwrites unrelated work"
+      ]
+    },
+    {
+      "id": "end-to-end-safe-scaffold-and-verify",
+      "kind": "end-to-end",
+      "prompt": "Add postgres-connection-pool-review to postgres-databases from this detailed brief. Use a preview-first scaffold if useful, fully research it, author all resources and evals, update canonical pack files, regenerate, validate, and give me a final evidence report.",
+      "assertions": [
+        "Checks for name and conceptual collisions across all packs before mutation",
+        "Produces a deterministic no-write preview, reviews source preimages and plan digest, and applies only with that exact digest",
+        "Explains whether a helper is justified and keeps any helper offline and safe by default",
+        "Separates observed, inferred, proposed, executed, and verified statements",
+        "Preserves unrelated changes and reviews the final diff for placeholder prose, duplicate canonical copies, secrets, scope expansion, and generated drift"
+      ],
+      "forbidden": [
+        "Treats scaffolded template text as a complete skill",
+        "Installs missing tools or dependencies, uses hidden network access, or runs subprocesses from the scaffold helper",
+        "Uses secondary summaries in place of available primary sources",
+        "Omits skipped checks, interrupted-apply recovery limits, or residual compatibility risk"
+      ]
+    }
+  ]
+}

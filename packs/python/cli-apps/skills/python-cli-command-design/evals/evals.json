@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "skill": "python-cli-command-design",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use python-cli-command-design to create the command tree, flags, arguments, and configuration precedence for this tool.",
+      "shouldTrigger": true,
+      "reason": "The skill and interface-design outcome are explicit."
+    },
+    {
+      "id": "implicit-positive-command-tree",
+      "kind": "implicit-positive",
+      "prompt": "We have 25 top-level verbs, inconsistent --project flags, and prompts that break CI. Redesign the interface around user tasks.",
+      "shouldTrigger": true,
+      "reason": "The request concerns command hierarchy, consistency, and automation."
+    },
+    {
+      "id": "implicit-positive-machine-output",
+      "kind": "implicit-positive",
+      "prompt": "Define how a Python utility should support text and JSON output, stdin, color, paging, config files, and environment variables.",
+      "shouldTrigger": true,
+      "reason": "These are command-interface and output-mode design decisions."
+    },
+    {
+      "id": "contextual-positive-spec",
+      "kind": "contextual-positive",
+      "prompt": "Review this argparse parser and help transcript for discoverability, destructive-action safeguards, and backward compatibility.",
+      "shouldTrigger": true,
+      "reason": "The parser and help artifact provide a CLI design context."
+    },
+    {
+      "id": "negative-error-contract",
+      "kind": "negative",
+      "prompt": "Keep the command tree unchanged and fix which failures go to stderr and which exit codes they return.",
+      "shouldTrigger": false,
+      "reason": "The narrower CLI error-output skill owns the task."
+    },
+    {
+      "id": "negative-test-implementation",
+      "kind": "negative",
+      "prompt": "Write pytest and subprocess tests for the existing CLI's help, stdin, output, and signals.",
+      "shouldTrigger": false,
+      "reason": "The task is CLI testing rather than command design."
+    },
+    {
+      "id": "overlap-error-output",
+      "kind": "overlap",
+      "prompt": "Design the user-facing diagnostic format, debug traceback policy, and numeric exit-status mapping for existing commands.",
+      "shouldTrigger": false,
+      "reason": "The interface already exists; the failure contract is the narrower concern.",
+      "preferredSkill": "python-cli-error-output"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-unsafe-delete",
+      "kind": "focused",
+      "prompt": "Review a delete command that prompts even when stdin is a pipe, accepts a secret token option, prints progress into JSON, and has no dry run.",
+      "assertions": [
+        "Separates secret, prompt, output-mode, and mutation-safety issues",
+        "Defines deterministic non-interactive behavior",
+        "Preserves machine-readable stdout",
+        "Proposes confirmation and dry-run semantics without claiming preview is perfect"
+      ],
+      "forbidden": [
+        "Places the token in an example command line",
+        "Treats TTY detection as user consent"
+      ]
+    },
+    {
+      "id": "end-to-end-command-spec",
+      "kind": "end-to-end",
+      "prompt": "Design a complete CLI for listing, showing, creating, and deleting projects with config files, environment variables, JSON output, and a compatibility plan.",
+      "assertions": [
+        "Maps tasks to a coherent command tree and arguments/options",
+        "Defines configuration precedence and output streams",
+        "Includes safe mutation, help, automation, and deprecation behavior",
+        "Provides a verification matrix for installed entry points and shell use"
+      ],
+      "forbidden": [
+        "Exposes internal API endpoint names as commands without rationale",
+        "Makes human table parsing the machine interface"
+      ]
+    }
+  ]
+}

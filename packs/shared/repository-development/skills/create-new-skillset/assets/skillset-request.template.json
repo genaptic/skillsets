@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "skillsetName": "Replace With Skillpack Display Name",
+  "packId": "replace-with-pack-id",
+  "displayName": "Replace With Skillpack Display Name",
+  "language": "shared",
+  "subject": "replace-with-subject",
+  "description": "Describe the coherent pack boundary and the outcomes its declared skills provide.",
+  "details": "Describe the package purpose, domain, audience, installation value, expected outcomes, examples, constraints, and quality bar.",
+  "scope": {
+    "owns": [
+      "Describe the coherent subject, audience, and independent installation value."
+    ],
+    "excludes": [
+      "Describe neighboring packs and work this package must not own."
+    ],
+    "supportedEnvironments": [
+      "List supported runtimes, platforms, clients, or deployment contexts."
+    ]
+  },
+  "version": "1.0.0",
+  "targets": ["claude-code", "codex", "opencode"],
+  "category": "Developer Tools",
+  "keywords": ["agent-skills", "replace-domain", "replace-subject"],
+  "compatibility": {
+    "runtimes": {
+      "python": ">=3.11 for optional helpers"
+    },
+    "notes": "State client, language, platform, optional-tool, and native-evidence boundaries."
+  },
+  "operations": {
+    "network": "optional",
+    "filesystem": "project-write",
+    "commandExecution": "optional-explicit",
+    "externalWrites": "none"
+  },
+  "sourceRequirements": {
+    "freshness": "Recheck version-sensitive package and skill claims during execution and record access dates.",
+    "requiredAuthorities": [
+      "Name the primary package-level specification or official documentation required."
+    ]
+  },
+  "skills": [
+    {
+      "name": "replace-with-first-globally-unique-skill",
+      "details": "Describe one observable outcome, required knowledge, artifacts, examples, and quality bar for this skill.",
+      "scope": {
+        "useWhen": [
+          "Describe one realistic positive intent for the first skill.",
+          "Describe a distinct artifact or context that should activate it."
+        ],
+        "doNotUseWhen": [
+          "Describe the closest outcome owned by the second skill.",
+          "Describe an unsafe or unsupported environment for this skill."
+        ],
+        "supportedEnvironments": [
+          "List the runtime, platform, client, or repository context this skill supports."
+        ]
+      },
+      "expectedOutput": "Describe the exact artifact, report, patch, or decision this skill returns.",
+      "successCriteria": [
+        "State observable evidence that proves this skill's focused outcome.",
+        "State a routing, safety, or compatibility condition that must hold."
+      ],
+      "examples": {
+        "shouldTrigger": [
+          "Provide a realistic explicit request for the first proposed capability.",
+          "Provide a realistic implicit request that does not rely on its public name."
+        ],
+        "shouldNotTrigger": [
+          "Provide a near-neighbor request that the second skill should own.",
+          "Provide an unrelated request that must not activate this skill."
+        ]
+      },
+      "nearestNeighbor": "replace-with-second-globally-unique-skill",
+      "constraints": [
+        "List a concrete version, tool, permission, platform, or policy boundary."
+      ],
+      "operations": {
+        "network": "optional",
+        "filesystem": "project-write",
+        "commandExecution": "optional-explicit",
+        "externalWrites": "none"
+      },
+      "sourceRequirements": {
+        "freshness": "Recheck version-sensitive claims while authoring this skill.",
+        "requiredAuthorities": [
+          "Name the primary specification or official documentation for this skill."
+        ]
+      },
+      "openai": {
+        "displayName": "Replace With First Skill Name",
+        "shortDescription": "Replace with the first focused summary",
+        "defaultPrompt": "Use $replace-with-first-globally-unique-skill to complete the first focused workflow."
+      }
+    },
+    {
+      "name": "replace-with-second-globally-unique-skill",
+      "details": "Describe a different observable outcome within the same coherent package and its required quality bar.",
+      "scope": {
+        "useWhen": [
+          "Describe one realistic positive intent for the second skill.",
+          "Describe a distinct artifact or context that should activate it."
+        ],
+        "doNotUseWhen": [
+          "Describe the closest outcome owned by the first skill.",
+          "Describe an unsafe or unsupported environment for this skill."
+        ],
+        "supportedEnvironments": [
+          "List the runtime, platform, client, or repository context this skill supports."
+        ]
+      },
+      "expectedOutput": "Describe the exact artifact, report, patch, or decision this skill returns.",
+      "successCriteria": [
+        "State observable evidence that proves this skill's focused outcome.",
+        "State a routing, safety, or compatibility condition that must hold."
+      ],
+      "examples": {
+        "shouldTrigger": [
+          "Provide a realistic explicit request for the second proposed capability.",
+          "Provide a realistic implicit request that does not rely on its public name."
+        ],
+        "shouldNotTrigger": [
+          "Provide a near-neighbor request that the first skill should own.",
+          "Provide an unrelated request that must not activate this skill."
+        ]
+      },
+      "nearestNeighbor": "replace-with-first-globally-unique-skill",
+      "constraints": [
+        "List a concrete version, tool, permission, platform, or policy boundary."
+      ],
+      "operations": {
+        "network": "optional",
+        "filesystem": "project-write",
+        "commandExecution": "optional-explicit",
+        "externalWrites": "none"
+      },
+      "sourceRequirements": {
+        "freshness": "Recheck version-sensitive claims while authoring this skill.",
+        "requiredAuthorities": [
+          "Name the primary specification or official documentation for this skill."
+        ]
+      },
+      "openai": {
+        "displayName": "Replace With Second Skill Name",
+        "shortDescription": "Replace with the second focused summary",
+        "defaultPrompt": "Use $replace-with-second-globally-unique-skill to complete the second focused workflow."
+      }
+    }
+  ],
+  "userSources": []
+}

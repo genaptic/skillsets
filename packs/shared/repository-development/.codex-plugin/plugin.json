@@ -1,0 +1,35 @@
+{
+  "name": "repository-development",
+  "version": "1.0.0",
+  "description": "Research-led workflows for adding complete Agent Skills and independently installable skillpacks while preserving this repository's architecture, safety, eval, generation, and release guarantees.",
+  "author": {
+    "name": "Genaptic",
+    "url": "https://github.com/genaptic/skillsets"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/shared/repository-development",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "authoring",
+    "scaffolding",
+    "repository",
+    "evals"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Repository Development",
+    "shortDescription": "Research-led workflows for adding complete Agent Skills and independently installable skillpacks while preserving this r",
+    "longDescription": "Research-led workflows for adding complete Agent Skills and independently installable skillpacks while preserving this repository's architecture, safety, eval, generation, and release guarantees.",
+    "developerName": "Genaptic",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/genaptic/skillsets/tree/main/packs/shared/repository-development",
+    "defaultPrompt": [
+      "Use Repository Development to review the relevant files and propose a verified plan."
+    ]
+  }
+}

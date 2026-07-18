@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Regenerate the hashed dependency lock in a temporary directory and compare bytes."""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+INPUT = ROOT / "requirements-dev.in"
+LOCK = ROOT / "requirements-dev.txt"
+
+
+def main() -> int:
+    with tempfile.TemporaryDirectory(prefix="genaptic-lock-") as temporary:
+        candidate = Path(temporary) / LOCK.name
+        environment = os.environ.copy()
+        environment["CUSTOM_COMPILE_COMMAND"] = "make lock"
+        environment["PIP_TOOLS_CACHE_DIR"] = str(Path(temporary) / "cache")
+        command = [
+            sys.executable,
+            "-m",
+            "piptools",
+            "compile",
+            "--allow-unsafe",
+            "--generate-hashes",
+            "--quiet",
+            "--strip-extras",
+            "--resolver=backtracking",
+            f"--output-file={candidate}",
+            INPUT.name,
+        ]
+        completed = subprocess.run(command, cwd=ROOT, env=environment, check=False)
+        if completed.returncode:
+            print(
+                "dependency lock freshness could not be evaluated; "
+                "confirm package-index access and rerun `make lock-check`",
+                file=sys.stderr,
+            )
+            return completed.returncode
+        expected = LOCK.read_bytes() if LOCK.exists() else b""
+        actual = candidate.read_bytes()
+        if actual != expected:
+            print("requirements-dev.txt is stale; run `make lock`.", file=sys.stderr)
+            return 1
+    print("dependency lock is current and hash-pinned")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "pack": "python-best-practices",
+  "version": "1.0.0",
+  "skills": [
+    "python-project-layout",
+    "python-testing-strategy",
+    "python-error-handling"
+  ]
+}

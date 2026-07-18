@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust CLI Application Design"
+  short_description: "Design portable, stable Rust CLI applications"
+  default_prompt: "Use $rust-cli-application-design to design or review a portable, stable Rust command-line application."

@@ -1,0 +1,82 @@
+{
+  "skills": [
+    {
+      "name": "postgres-schema-design",
+      "version": "1.0.0",
+      "files": [
+        "postgres-schema-design.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "assets/schema-design-brief-template.md",
+        "assets/schema.example.sql",
+        "scripts/audit_schema_sql.py"
+      ]
+    },
+    {
+      "name": "postgres-schema-review",
+      "version": "1.0.0",
+      "files": [
+        "postgres-schema-review.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "assets/catalog-review-queries.example.sql",
+        "assets/schema-review-report-template.md",
+        "scripts/render_review_queries.py"
+      ]
+    },
+    {
+      "name": "postgres-query-performance-review",
+      "version": "1.0.0",
+      "files": [
+        "postgres-query-performance-review.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "assets/explain-plan.example.json",
+        "assets/query-performance-review-template.md",
+        "scripts/summarize_explain_json.py"
+      ]
+    },
+    {
+      "name": "postgres-index-design",
+      "version": "1.0.0",
+      "files": [
+        "postgres-index-design.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "assets/index-inventory.example.json",
+        "assets/index-proposal-template.md",
+        "scripts/review_index_inventory.py"
+      ]
+    },
+    {
+      "name": "postgres-migration-safety",
+      "version": "1.0.0",
+      "files": [
+        "postgres-migration-safety.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "assets/migration-plan-template.md",
+        "assets/phased-migration.example.sql",
+        "scripts/audit_migration_sql.py"
+      ]
+    },
+    {
+      "name": "postgres-backup-recovery",
+      "version": "1.0.0",
+      "files": [
+        "postgres-backup-recovery.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "assets/recovery-drill-report-template.md",
+        "assets/recovery-profile.example.json",
+        "scripts/build_recovery_drill.py"
+      ]
+    }
+  ]
+}

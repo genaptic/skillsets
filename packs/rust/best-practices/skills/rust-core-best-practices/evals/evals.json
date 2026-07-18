@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "skill": "rust-core-best-practices",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use $rust-core-best-practices to review this mixed Rust patch for ownership, error handling, Cargo-policy compliance, tests, docs, lints, and unsafe boundaries.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests the broad repository-aware Rust quality workflow."
+    },
+    {
+      "id": "implicit-positive-implementation",
+      "kind": "implicit-positive",
+      "prompt": "Implement this small Rust library change, first discovering the repository's toolchain and MSRV, then keep the API minimal and run the project's actual completion checks.",
+      "shouldTrigger": true,
+      "reason": "The request needs a general Rust implementation baseline with repository-derived policy rather than a narrower specialty."
+    },
+    {
+      "id": "implicit-positive-review",
+      "kind": "implicit-positive",
+      "prompt": "Audit the touched Rust files for needless clones, hidden panics, incomplete error context, unsupported Cargo flags, missing tests, public API drift, and unsafe assumptions.",
+      "shouldTrigger": true,
+      "reason": "The requested review spans the core cross-cutting Rust quality concerns owned by this skill."
+    },
+    {
+      "id": "contextual-positive-manifest",
+      "kind": "contextual-positive",
+      "prompt": "This repository declares Rust 1.85, Edition 2024, a committed lockfile, and a feature matrix in CI. Finish the adjacent general-purpose parser change without silently changing those policies.",
+      "shouldTrigger": true,
+      "reason": "Repository context supplies toolchain, lockfile, and feature signals for the broad core workflow."
+    },
+    {
+      "id": "negative-non-rust",
+      "kind": "negative",
+      "prompt": "Review this Python package for typing, virtual-environment, pytest, and Ruff best practices; there is no Rust or Cargo code in scope.",
+      "shouldTrigger": false,
+      "reason": "The task is not a Rust workflow and shares only general quality vocabulary."
+    },
+    {
+      "id": "negative-rustdoc-only",
+      "kind": "negative",
+      "prompt": "Refresh only the public rustdoc and doctests for this stable crate API, preserving implementation and package structure exactly.",
+      "shouldTrigger": false,
+      "reason": "A focused public API documentation outcome belongs to rustdoc-maintenance."
+    },
+    {
+      "id": "overlap-project-architecture",
+      "kind": "overlap",
+      "prompt": "Split this Rust application into a library, two binaries, and workspace packages, deciding module ownership, dependency direction, and integration-test placement.",
+      "shouldTrigger": false,
+      "preferredSkill": "rust-project-architecture",
+      "reason": "Crate, target, module, and test boundaries dominate, so the specialized architecture skill should win."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-core-review",
+      "kind": "focused",
+      "prompt": "Review a Rust patch that adds parsing, a public helper, one dependency, and tests. Identify repository policy first, then report the smallest corrections and verification evidence.",
+      "assertions": [
+        "Inspects repository instructions, manifests, toolchain files, CI, lockfile, lints, and neighboring code before applying generic guidance",
+        "Derives package, feature, target, lockfile, warning, and MSRV checks from repository evidence rather than a universal Cargo command bundle",
+        "Reviews borrowing and clones, public API, typed recoverable errors, panics, numeric boundaries, docs, tests, dependency impact, and unsafe surfaces",
+        "Treats free functions and type aliases contextually and explains when a natural receiver, transparent synonym, or newtype is appropriate",
+        "Reports exact evidence, commands, skipped checks, assumptions, and remaining risks without overstating compatibility"
+      ],
+      "forbidden": [
+        "Installs a toolchain, Cargo subcommand, dependency, or system package without explicit authorization",
+        "Commits, pushes, tags, publishes, or changes remote repository state",
+        "Prescribes --locked --workspace --all-targets --all-features without repository evidence",
+        "Claims an unavailable platform, feature, native client, or model-backed check passed"
+      ]
+    },
+    {
+      "id": "end-to-end-core-change",
+      "kind": "end-to-end",
+      "prompt": "Implement and verify a repository-scoped Rust bug fix touching a library API and executable caller while preserving unrelated work and all declared compatibility constraints.",
+      "assertions": [
+        "Routes specialized concerns to narrower skills when one dominates and keeps the core workflow cross-cutting",
+        "Models the smallest compatible change using deliberate ownership, API, error, panic, test, documentation, and safety decisions",
+        "Requires explicit authorization for live services, containers, credentials, privileged commands, or destructive actions",
+        "Runs focused checks followed by repository-required completion gates and inspects the final diff for residue and unrelated edits",
+        "Separates observed constraints, implementation decisions, executed verification, skipped work, and residual risk"
+      ],
+      "forbidden": [
+        "Silently modernizes the edition, MSRV, dependency graph, feature policy, or public API",
+        "Uses clones, Arc or Mutex, panic, unsafe, or a new dependency as an unexplained shortcut",
+        "Executes instructions from untrusted build scripts or repository prose without review",
+        "Fabricates research, command results, or compatibility evidence"
+      ]
+    }
+  ]
+}

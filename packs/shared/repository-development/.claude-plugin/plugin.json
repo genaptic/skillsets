@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "repository-development",
+  "displayName": "Repository Development",
+  "version": "1.0.0",
+  "description": "Research-led workflows for adding complete Agent Skills and independently installable skillpacks while preserving this repository's architecture, safety, eval, generation, and release guarantees.",
+  "author": {
+    "name": "Genaptic"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/shared/repository-development",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "authoring",
+    "scaffolding",
+    "repository",
+    "evals"
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/genaptic/skillsets/main/schemas/evals.schema.json",
+  "title": "Agent skill eval specification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "skill",
+    "routing",
+    "behavior"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "skill": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "routing": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "prompt",
+          "shouldTrigger",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "kind": {
+            "enum": [
+              "explicit-positive",
+              "implicit-positive",
+              "contextual-positive",
+              "negative",
+              "overlap"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 20
+          },
+          "shouldTrigger": {
+            "type": "boolean"
+          },
+          "preferredSkill": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 20
+          }
+        }
+      }
+    },
+    "behavior": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "prompt",
+          "assertions",
+          "forbidden"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "kind": {
+            "enum": [
+              "focused",
+              "end-to-end",
+              "error-handling",
+              "safety"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 30
+          },
+          "assertions": {
+            "type": "array",
+            "minItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 10
+            }
+          },
+          "forbidden": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 10
+            }
+          }
+        }
+      }
+    }
+  }
+}

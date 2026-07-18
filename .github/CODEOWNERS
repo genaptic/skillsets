@@ -1,0 +1,18 @@
+* @jecsand838
+
+# Security-sensitive distribution and automation surfaces.
+/.github/workflows/ @jecsand838
+/.github/dependabot.yml @jecsand838
+/.claude-plugin/ @jecsand838
+/.agents/plugins/ @jecsand838
+/dist/install/ @jecsand838
+/src/skillpack_tools/ @jecsand838
+/tools/ @jecsand838
+/schemas/ @jecsand838
+/repository.yaml @jecsand838
+
+# Canonical packs. Add language or domain owners as maintainership grows.
+/packs/python/ @jecsand838
+/packs/rust/ @jecsand838
+/packs/shared/postgres-databases/ @jecsand838
+/packs/shared/repository-development/ @jecsand838

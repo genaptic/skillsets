@@ -1,0 +1,171 @@
+name: Validate repository
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository:
+    name: repository contracts (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.11"
+          - "3.13"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Redirect Python bytecode outside the worktree
+        run: |
+          cache_root="$RUNNER_TEMP/genaptic-python-cache/${{ matrix.python-version }}"
+          mkdir -p "$cache_root"
+          printf 'PYTHONPYCACHEPREFIX=%s\n' "$cache_root" >> "$GITHUB_ENV"
+      - name: Install the hash-locked toolchain
+        run: python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
+      - name: Install this project without dependency resolution
+        run: python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e .
+      - name: Verify the installed console entry point
+        run: skillpacks --help
+      - name: Verify dependency-lock freshness
+        if: matrix.python-version == '3.11'
+        run: python tools/check-dependency-lock
+      - name: Check Python style and formatting
+        run: |
+          python -m ruff check .
+          python -m ruff format --check .
+      - name: Check generated artifacts without writing
+        run: python tools/generate-all --check
+      - name: Validate schemas, manifests, installers, links, and placeholders
+        run: python tools/validate-repository --check-generated --strict-placeholders
+      - name: Export and validate complete structural eval definitions
+        run: python tools/run-evals --json eval-report.json
+      - name: Compile Python without source-tree residue
+        run: |
+          python -m compileall -q src tools tests packs
+          test -n "$(find "$PYTHONPYCACHEPREFIX" -type f -name '*.pyc' -print -quit)"
+          if find src tools tests packs \( -type d -name __pycache__ -o -type f \( -name '*.pyc' -o -name '*.pyo' \) \) -print -quit | grep -q .; then
+            echo "Python compilation left bytecode in a canonical source tree" >&2
+            exit 1
+          fi
+          python tools/generate-all --check
+      - name: Run the branch-covered unit suite
+        run: python -m pytest
+
+  rust-assets:
+    name: Rust 1.85+ asset contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - name: Install the exact Rust 1.85.0 validation toolchain
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt
+          rustc +1.85.0 --version
+          cargo +1.85.0 --version
+          rustfmt +1.85.0 --version
+      - name: Fetch only the Rust 1.85.0 locked harness dependencies
+        env:
+          RUSTUP_TOOLCHAIN: 1.85.0
+        run: >-
+          python tools/check-rust-assets --bootstrap
+          --cargo-home "$RUNNER_TEMP/genaptic-rust-cargo-home"
+      - name: Check Rust assets with Rust 1.85.0 and Cargo offline
+        env:
+          RUSTUP_TOOLCHAIN: 1.85.0
+        run: >-
+          python tools/check-rust-assets
+          --cargo-home "$RUNNER_TEMP/genaptic-rust-cargo-home"
+      - name: Verify the Rust check did not mutate source
+        run: git diff --exit-code
+
+  shell-and-workflow-lint:
+    name: ShellCheck 0.9.0 and Actionlint 1.7.12
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Install exact ShellCheck package
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends shellcheck=0.9.0-1
+          test "$(shellcheck --version | awk '/^version:/ {print $2}')" = "0.9.0"
+      - name: Install exact Actionlint Go module
+        env:
+          ACTIONLINT_VERSION: v1.7.12
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@"${ACTIONLINT_VERSION}"
+          "$(go env GOPATH)/bin/actionlint" -version
+      - name: Validate Bash syntax and ShellCheck findings
+        run: |
+          find . -type f -name '*.sh' -not -path './.git/*' -not -path './.venv/*' -print0 \
+            | sort -z \
+            | xargs -0 -r bash -n
+          find . -type f -name '*.sh' -not -path './.git/*' -not -path './.venv/*' -print0 \
+            | sort -z \
+            | xargs -0 -r shellcheck --external-sources
+      - name: Validate GitHub Actions syntax
+        run: '"$(go env GOPATH)/bin/actionlint" .github/workflows/*.yml'
+
+  powershell-lint:
+    name: PSScriptAnalyzer 1.25.0
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Install exact PSScriptAnalyzer module
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Scope CurrentUser -Force
+          Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0
+          $loaded = (Get-Module PSScriptAnalyzer).Version.ToString()
+          if ($loaded -ne "1.25.0") { throw "Expected PSScriptAnalyzer 1.25.0, found $loaded" }
+      - name: Analyze all PowerShell sources
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0
+          $files = Get-ChildItem -Path . -Recurse -File -Filter *.ps1 |
+            Where-Object { $_.FullName -notmatch '[\\/]\.venv[\\/]' }
+          if (-not $files) { throw "No PowerShell files found" }
+          $issues = $files | ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName }
+          if ($issues) {
+            $issues | Format-Table -AutoSize | Out-String | Write-Error
+          }

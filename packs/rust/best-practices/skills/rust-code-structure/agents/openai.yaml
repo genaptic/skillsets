@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Code Structure"
+  short_description: "Structure Rust types, state, and owned behavior"
+  default_prompt: "Use $rust-code-structure to structure Rust types, state, functions, and owned behavior clearly."
