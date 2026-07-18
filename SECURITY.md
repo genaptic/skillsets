@@ -13,10 +13,10 @@ does not publish a repository-wide software version.
 ## Report privately
 
 Use [GitHub private vulnerability reporting](https://github.com/genaptic/skillsets/security/advisories/new).
-Enabling that feature is a prerequisite for public repository publication. Until the remote
-setting is enabled, do not put vulnerability details in an issue, discussion, pull request,
-or other public channel; retain the report and coordinate a private submission with the
-maintainer. The project does not publish a fallback security email address.
+This is the canonical disclosure channel. Do not put vulnerability details in an issue,
+discussion, pull request, or other public channel. If GitHub reports the private form as
+temporarily unavailable, retain the report until the private channel is restored. The project
+does not publish a fallback security email address.
 
 Include:
 

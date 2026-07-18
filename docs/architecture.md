@@ -55,6 +55,7 @@ The root catalogs list packs. They are generated from all `skillpack.yaml` files
 - `catalog.json` — neutral machine index.
 - `.claude-plugin/marketplace.json` — Claude marketplace.
 - `.agents/plugins/marketplace.json` — Codex marketplace.
+- `dist/index.html` — deterministic GitHub Pages landing page.
 - `dist/opencode/.../index.json` — one OpenCode HTTP catalog per pack.
 - `dist/install/*` — direct installers that default to the exact released source SHA.
 
@@ -84,7 +85,8 @@ tools/generate-all
        ├── root marketplaces and catalog
        ├── README catalog
        ├── direct installers
-       └── target-selected OpenCode HTTP trees
+       ├── target-selected OpenCode HTTP trees
+       └── Pages landing page
 ```
 
 Generated files contain a notice or live only in generated paths. CI regenerates them and

@@ -26,18 +26,34 @@ on:
 
 permissions:
   actions: read
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ inputs.pack_id }}
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    name: release dispatch from main
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Validate the workflow dispatch source branch
+        env:
+          DEFAULT_BRANCH: main
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]]; then
+            echo "Releases must be dispatched from refs/heads/$DEFAULT_BRANCH; received $GITHUB_REF." >&2
+            exit 1
+          fi
+
   rust-assets:
     name: exact-tag Rust 1.85.0 asset contracts
+    needs: preflight
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    environment: release
     permissions:
       contents: read
     outputs:
@@ -126,6 +142,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     environment: release
+    permissions:
+      actions: read
+      attestations: write
+      contents: write
+      id-token: write
     steps:
       - name: Validate dispatch identifiers before checkout
         env:
@@ -318,25 +339,158 @@ jobs:
           checksum_file=$(basename "$CHECKSUM")
           cd "$checksum_directory"
           sha256sum --check "$checksum_file"
-      - name: Publish the existing tag as a GitHub release
+      - name: Refuse to overwrite any existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$RUNNER_TEMP/existing-release.json"
+          error="$RUNNER_TEMP/existing-release.error"
+          if gh api "/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
+            > "$response" 2> "$error"; then
+            echo "A release already exists for $RELEASE_TAG; refusing to overwrite it." >&2
+            exit 1
+          fi
+          if ! grep -Eq 'HTTP 404' "$error"; then
+            cat "$error" >&2
+            echo "Could not prove that $RELEASE_TAG has no existing release." >&2
+            exit 1
+          fi
+      - name: Generate ZIP provenance
+        id: provenance
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6
+        with:
+          subject-path: ${{ steps.metadata.outputs.archive }}
+      - name: Verify the returned provenance bundle immediately
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          ATTESTATION_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          GH_TOKEN: ${{ github.token }}
+          SIGNER_WORKFLOW: ${{ github.repository }}/.github/workflows/release.yml
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$ATTESTATION_BUNDLE"
+          gh attestation verify "$ARCHIVE" \
+            --repo "$GITHUB_REPOSITORY" \
+            --bundle "$ATTESTATION_BUNDLE" \
+            --signer-workflow "$SIGNER_WORKFLOW" \
+            --deny-self-hosted-runners
+      - name: Create an asset-free draft for the verified tag
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
           RELEASE_TITLE: ${{ steps.metadata.outputs.title }}
-          ARCHIVE: ${{ steps.metadata.outputs.archive }}
-          CHECKSUM: ${{ steps.metadata.outputs.checksum }}
           NOTES: ${{ steps.metadata.outputs.notes }}
         shell: bash
         run: |
           set -euo pipefail
-          reports_dir="$RUNNER_TEMP/compatibility-reports"
           gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --verify-tag \
+            --title "$RELEASE_TITLE" \
+            --notes-file "$NOTES"
+      - name: Upload the immutable release asset set without replacement
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          CHECKSUM: ${{ steps.metadata.outputs.checksum }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          reports_dir="$RUNNER_TEMP/compatibility-reports"
+          gh release upload "$RELEASE_TAG" \
             "$ARCHIVE" \
             "$CHECKSUM" \
             "$reports_dir/claude-code/claude-code.json" \
             "$reports_dir/codex/codex.json" \
             "$reports_dir/opencode/opencode.json" \
+            --repo "$GITHUB_REPOSITORY"
+      - name: Verify the exact draft asset inventory
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          CHECKSUM: ${{ steps.metadata.outputs.checksum }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" --jq '.draft')" = true
+          mapfile -t expected < <(
+            printf '%s\n' \
+              "$(basename "$ARCHIVE")" \
+              "$(basename "$CHECKSUM")" \
+              claude-code.json \
+              codex.json \
+              opencode.json | LC_ALL=C sort
+          )
+          mapfile -t actual < <(
+            gh api "/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
+              --jq '.assets[].name' | LC_ALL=C sort
+          )
+          if [[ "${actual[*]}" != "${expected[*]}" ]]; then
+            printf 'Expected assets: %s\n' "${expected[*]}" >&2
+            printf 'Actual assets: %s\n' "${actual[*]}" >&2
+            exit 1
+          fi
+      - name: Publish the verified draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        run: gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+      - name: Wait boundedly for the immutable-release attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            if gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null; then
+              exit 0
+            fi
+            if [[ "$attempt" -lt 12 ]]; then
+              sleep 10
+            fi
+          done
+          echo "Immutable-release attestation was unavailable after 12 attempts." >&2
+          exit 1
+      - name: Verify the immutable release attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        run: gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+      - name: Verify every published asset against the immutable release
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          CHECKSUM: ${{ steps.metadata.outputs.checksum }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          reports_dir="$RUNNER_TEMP/compatibility-reports"
+          for asset in \
+            "$ARCHIVE" \
+            "$CHECKSUM" \
+            "$reports_dir/claude-code/claude-code.json" \
+            "$reports_dir/codex/codex.json" \
+            "$reports_dir/opencode/opencode.json"; do
+            gh release verify-asset "$RELEASE_TAG" "$asset" --repo "$GITHUB_REPOSITORY"
+          done
+      - name: Verify the published ZIP provenance
+        env:
+          ARCHIVE: ${{ steps.metadata.outputs.archive }}
+          GH_TOKEN: ${{ github.token }}
+          SIGNER_WORKFLOW: ${{ github.repository }}/.github/workflows/release.yml
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh attestation verify "$ARCHIVE" \
             --repo "$GITHUB_REPOSITORY" \
-            --verify-tag \
-            --title "$RELEASE_TITLE" \
-            --notes-file "$NOTES"
+            --signer-workflow "$SIGNER_WORKFLOW" \
+            --deny-self-hosted-runners

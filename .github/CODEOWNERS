@@ -11,8 +11,10 @@
 /schemas/ @jecsand838
 /repository.yaml @jecsand838
 
-# Canonical packs. Add language or domain owners as maintainership grows.
-/packs/python/ @jecsand838
-/packs/rust/ @jecsand838
+# Canonical packs. Keep every independently versioned pack explicit.
+/packs/python/best-practices/ @jecsand838
+/packs/python/cli-apps/ @jecsand838
+/packs/rust/best-practices/ @jecsand838
+/packs/rust/cli-apps/ @jecsand838
 /packs/shared/postgres-databases/ @jecsand838
 /packs/shared/repository-development/ @jecsand838

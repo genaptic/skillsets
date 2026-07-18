@@ -21,6 +21,8 @@ The format follows Keep a Changelog principles, and pack versions follow Semanti
 - Repository-development workflows for creating one skill in an existing pack or a complete,
   independently installable skillpack.
 - Validated repository-local request contracts and preview-first scaffold helpers.
+- GitHub Pages generation and deployment, DCO and dependency review, hardened release
+  publication with provenance verification, and solo-maintainer repository protection.
 
 ### Changed
 
@@ -36,6 +38,8 @@ The format follows Keep a Changelog principles, and pack versions follow Semanti
   configuration write.
 - Redirected CI bytecode compilation to runner-owned temporary storage and clarified the
   one-skill versus independently installable one-skill-pack routing boundary.
+- Made every required workflow instantiate on every pull request and documented the stable
+  twelve-check protection contract without changing any pack version or publication state.
 
 No repository-wide version has been released. Each pack maintains its own changelog and
 Semantic Version.

@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""Validate Developer Certificate of Origin trailers in a commit range."""
+
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+
+FULL_SHA = re.compile(r"[0-9a-f]{40}")
+IDENTITY = re.compile(r"(?P<name>.+?)\s*<(?P<email>[^<>\s]+)>")
+DEPENDABOT_NAME = "dependabot[bot]"
+DEPENDABOT_EMAIL = "49699333+dependabot[bot]@users.noreply.github.com"
+DEPENDABOT_TRAILER_EMAIL = "support@github.com"
+
+
+@dataclass(frozen=True)
+class Commit:
+    sha: str
+    author_name: str
+    author_email: str
+    message: str
+
+    @property
+    def author(self) -> str:
+        return f"{self.author_name} <{self.author_email}>"
+
+    @property
+    def expected_trailer(self) -> str:
+        return f"Signed-off-by: {self.author}"
+
+
+@dataclass(frozen=True)
+class Failure:
+    commit: Commit
+    reason: str
+    expected_trailer: str | None = None
+
+
+def _git(*arguments: str, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *arguments],
+        capture_output=True,
+        check=False,
+        input=input_text,
+        text=True,
+    )
+
+
+def _validated_commit(label: str, value: str) -> str:
+    if not FULL_SHA.fullmatch(value):
+        raise ValueError(f"{label} must be a lowercase full 40-character commit SHA: {value!r}")
+    result = _git("cat-file", "-e", f"{value}^{{commit}}")
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "object is missing or is not a commit"
+        raise ValueError(f"{label} is not a readable commit {value}: {detail}")
+    return value
+
+
+def _commits(base_sha: str, head_sha: str) -> list[Commit]:
+    ancestry = _git("merge-base", "--is-ancestor", base_sha, head_sha)
+    if ancestry.returncode == 1:
+        raise ValueError(
+            f"invalid commit range {base_sha}..{head_sha}: BASE_SHA is not an ancestor of HEAD_SHA"
+        )
+    if ancestry.returncode != 0:
+        detail = ancestry.stderr.strip() or "git could not determine commit ancestry"
+        raise ValueError(f"invalid commit range {base_sha}..{head_sha}: {detail}")
+
+    result = _git("rev-list", "--reverse", "--topo-order", f"{base_sha}..{head_sha}")
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "git rejected the revision range"
+        raise ValueError(f"invalid commit range {base_sha}..{head_sha}: {detail}")
+
+    commits: list[Commit] = []
+    for sha in result.stdout.splitlines():
+        metadata = _git("show", "-s", "--format=%an%x00%ae%x00%B", sha)
+        if metadata.returncode != 0:
+            detail = metadata.stderr.strip() or "git could not read commit metadata"
+            raise ValueError(f"cannot inspect commit {sha}: {detail}")
+        fields = metadata.stdout.split("\0", maxsplit=2)
+        if len(fields) != 3:
+            raise ValueError(f"cannot inspect commit {sha}: malformed git metadata output")
+        author_name, author_email, message = fields
+        commits.append(
+            Commit(
+                sha=sha,
+                author_name=author_name,
+                author_email=author_email,
+                message=message,
+            )
+        )
+    return commits
+
+
+def _signed_off_identities(message: str) -> list[tuple[str, str] | None]:
+    lines = message.rstrip().splitlines()
+    terminal_start = 0
+    for index in range(len(lines) - 1, -1, -1):
+        if not lines[index].strip():
+            terminal_start = index + 1
+            break
+    terminal_block = "\n".join(lines[terminal_start:])
+    if terminal_block:
+        terminal_block += "\n"
+
+    trailer_input = f"\n{terminal_block}" if terminal_block else ""
+    result = _git("interpret-trailers", "--parse", input_text=trailer_input)
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "git interpret-trailers failed"
+        raise ValueError(f"cannot parse terminal trailer block: {detail}")
+
+    identities: list[tuple[str, str] | None] = []
+    for line in result.stdout.splitlines():
+        key, separator, value = line.partition(":")
+        if not separator or key.strip().casefold() != "signed-off-by":
+            continue
+        match = IDENTITY.fullmatch(value.strip())
+        if match is None:
+            identities.append(None)
+        else:
+            identities.append((match.group("name").strip(), match.group("email")))
+    return identities
+
+
+def _is_exact_dependabot(commit: Commit) -> bool:
+    return commit.author_name == DEPENDABOT_NAME and commit.author_email == DEPENDABOT_EMAIL
+
+
+def _check_commit(commit: Commit, *, allow_dependabot: bool) -> Failure | None:
+    identities = _signed_off_identities(commit.message)
+    if allow_dependabot and _is_exact_dependabot(commit):
+        expected_dependabot = (DEPENDABOT_NAME, DEPENDABOT_TRAILER_EMAIL)
+        if expected_dependabot in identities:
+            return None
+        rendered = ", ".join(
+            "malformed" if identity is None else f"{identity[0]} <{identity[1]}>"
+            for identity in identities
+        )
+        actual = rendered or "none"
+        return Failure(
+            commit=commit,
+            reason=(
+                "the Dependabot exemption requires the exact terminal trailer "
+                f"Signed-off-by: {DEPENDABOT_NAME} <{DEPENDABOT_TRAILER_EMAIL}>; found {actual}"
+            ),
+            expected_trailer=(f"Signed-off-by: {DEPENDABOT_NAME} <{DEPENDABOT_TRAILER_EMAIL}>"),
+        )
+
+    expected = (commit.author_name, commit.author_email.casefold())
+    if any(
+        identity is not None and (identity[0], identity[1].casefold()) == expected
+        for identity in identities
+    ):
+        return None
+
+    if not identities:
+        reason = "the terminal Git trailer block has no Signed-off-by trailer matching the author"
+    elif all(identity is None for identity in identities):
+        reason = "the terminal Signed-off-by trailer is malformed"
+    else:
+        rendered = ", ".join(
+            "malformed" if identity is None else f"{identity[0]} <{identity[1]}>"
+            for identity in identities
+        )
+        reason = f"terminal Signed-off-by identity does not match the commit author ({rendered})"
+    if allow_dependabot and commit.author_name == DEPENDABOT_NAME:
+        reason += "; the Dependabot exemption requires its exact verified noreply identity"
+    return Failure(commit=commit, reason=reason)
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="check-dco",
+        description="Validate terminal Signed-off-by trailers for every commit in BASE..HEAD.",
+    )
+    parser.add_argument(
+        "--allow-dependabot",
+        action="store_true",
+        help="allow the exact verified Dependabot author/support-trailer identity pair",
+    )
+    parser.add_argument("base_sha", metavar="BASE_SHA")
+    parser.add_argument("head_sha", metavar="HEAD_SHA")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = _parser().parse_args(argv)
+    try:
+        base_sha = _validated_commit("BASE_SHA", arguments.base_sha)
+        head_sha = _validated_commit("HEAD_SHA", arguments.head_sha)
+        commits = _commits(base_sha, head_sha)
+        failures = [
+            failure
+            for commit in commits
+            if (failure := _check_commit(commit, allow_dependabot=arguments.allow_dependabot))
+            is not None
+        ]
+    except ValueError as exc:
+        print(f"DCO check could not run: {exc}", file=sys.stderr)
+        return 2
+
+    if not failures:
+        print(f"DCO check passed for {len(commits)} commit(s) in {base_sha}..{head_sha}.")
+        return 0
+
+    print(f"DCO check failed for {len(failures)} of {len(commits)} commit(s):", file=sys.stderr)
+    for failure in failures:
+        print(
+            f"- {failure.commit.sha} {failure.commit.author}\n"
+            f"  reason: {failure.reason}\n"
+            f"  expected: {failure.expected_trailer or failure.commit.expected_trailer}",
+            file=sys.stderr,
+        )
+    print(
+        "Remediation: amend each failing commit with the expected terminal trailer "
+        "(`git commit --amend --signoff`) and safely update the pull-request branch.",
+        file=sys.stderr,
+    )
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

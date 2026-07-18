@@ -2,12 +2,6 @@ name: Validate structural skill evals
 
 on:
   pull_request:
-    paths:
-      - "packs/**"
-      - "schemas/**"
-      - "src/skillpack_tools/evals.py"
-      - "tools/run-evals"
-      - ".github/workflows/eval.yml"
   push:
     branches:
       - "main"

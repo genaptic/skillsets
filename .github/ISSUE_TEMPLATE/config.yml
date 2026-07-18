@@ -1,2 +1,8 @@
 blank_issues_enabled: false
-contact_links: []
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/genaptic/skillsets/security/advisories/new
+    about: Do not disclose vulnerabilities in a public issue or discussion.
+  - name: Ask a support or design question
+    url: https://github.com/genaptic/skillsets/discussions/categories/q-a
+    about: Use Discussions Q&A for support, design questions, and usage help.
