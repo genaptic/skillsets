@@ -133,6 +133,19 @@ and immutable releases. Also confirm the absence of secrets, tags, releases, dep
 webhooks, package publications, and native compatibility uploads. Save audit results as setup
 evidence; do not add generated timestamps to distributable files.
 
+The initial bootstrap has durable, non-release evidence:
+
+- Pull request 1 merged the final `v0.0.1` head `f79901a` into `main` as `4db6d23`; both
+  commits resolve to tree `801b67eba5f300403fc03ea2011253326ae97343`.
+- Pull request 4 merged the signed infrastructure head `7c55d1a` as `75a1160`; both commits
+  resolve to tree `420249e2d1b42e08e4935ed2a1cc18e6ed8fee53` after all twelve intended checks passed.
+- Pages workflow run `29660802091` deployed merge `75a1160` through the `github-pages`
+  environment. The landing page and all six OpenCode indexes returned HTTP 200.
+
+These short hashes are identifiers for the immutable full commit and tree objects above; they
+are not pack versions or release tags. Repeat the read-back audit after ruleset changes and
+before every first publication from a pack release line.
+
 Before the first pack release, follow [the release process](docs/release-process.md) and run the
 local draft rehearsal twice. Byte-identical ZIPs and checksums prove only build determinism, not
 native-client or model compatibility.
