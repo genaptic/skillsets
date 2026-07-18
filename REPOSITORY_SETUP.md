@@ -141,6 +141,21 @@ The initial bootstrap has durable, non-release evidence:
   resolve to tree `420249e2d1b42e08e4935ed2a1cc18e6ed8fee53` after all twelve intended checks passed.
 - Pages workflow run `29660802091` deployed merge `75a1160` through the `github-pages`
   environment. The landing page and all six OpenCode indexes returned HTTP 200.
+- Protection-probe pull request 5 merged signed head `51b8d3c` as `788c96d` through active
+  `protect-main` ruleset `19153852`. Rule suite `3378284397` passed CodeQL, all required status
+  checks, the pull-request gate, linear history, non-fast-forward protection, and deletion
+  protection. The active release-tag ruleset is `19153912`.
+- Two local draft rehearsals for `python-best-practices` produced byte-identical ZIP, checksum,
+  and release-note files. The ZIP SHA-256 was
+  `8a8eda8088e83189330572dc4cd4f31c656068a67ac38c5ffbcc0c8d0ed49207`; all draft outputs were
+  removed afterward.
+
+The final programmable-setting read-back confirmed the repository identity, merge and Actions
+policies, 30-day artifact retention, security features, Pages, environments, rulesets, labels,
+and immutable releases. It also found zero repository, environment, Dependabot, or Codespaces
+secrets; repository variables; self-hosted runners; tags; releases; deploy keys; webhooks;
+packages; native-compatibility runs; or native-client reports. The only workflow artifacts were
+the expected Pages deployment artifacts.
 
 These short hashes are identifiers for the immutable full commit and tree objects above; they
 are not pack versions or release tags. Repeat the read-back audit after ruleset changes and
