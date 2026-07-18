@@ -555,6 +555,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$NativeErrorPreference = Get-Variable `
+    -Name PSNativeCommandUseErrorActionPreference `
+    -ErrorAction SilentlyContinue
+if ($null -ne $NativeErrorPreference) {{
+    $PSNativeCommandUseErrorActionPreference = $false
+}}
 $Unpublished = {unpublished}
 
 if (-not $DryRun -and $Pin -eq "UNPUBLISHED") {{

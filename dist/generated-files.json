@@ -33,8 +33,8 @@
     },
     {
       "path": "dist/install/postgres-databases.ps1",
-      "sha256": "ac767dfb52807d8b40460839a27fb3d21af34cac77d40c71cce3434a1657f9b2",
-      "size": 3877,
+      "sha256": "c176877620c4940f46225c603213b0f6d2aadd969ea7eaa9b9f0dc59c174c60b",
+      "size": 4099,
       "mode": "0644"
     },
     {
@@ -45,8 +45,8 @@
     },
     {
       "path": "dist/install/python-best-practices.ps1",
-      "sha256": "11c97da5d330556daf1dc5d6165bfb19245a00fe82b1f76e73ff3ca99e0b037e",
-      "size": 3767,
+      "sha256": "e6e1ea1d50533b9080d3d83441b4ee4d7dbbe90e6b12119fcd8f5554ff7228b1",
+      "size": 3989,
       "mode": "0644"
     },
     {
@@ -57,8 +57,8 @@
     },
     {
       "path": "dist/install/python-cli-apps.ps1",
-      "sha256": "969b500a08ef3f93773cd18c18c23e5d49fbbb0432aab54c9a92fc847b4a91ff",
-      "size": 3762,
+      "sha256": "57bb4461bbcf296c786606b5b5da5a6984ec56d62c360fc68899770f80a5f737",
+      "size": 3984,
       "mode": "0644"
     },
     {
@@ -69,8 +69,8 @@
     },
     {
       "path": "dist/install/repository-development.ps1",
-      "sha256": "87b0706c12ac7e88a04ced9749b70af588b3dbddb753fb32c484e7c669df3a33",
-      "size": 3737,
+      "sha256": "90e7ff7c08cf74888e8a6e11d3a6e8446022c2288a1c288146852d213314cfb5",
+      "size": 3959,
       "mode": "0644"
     },
     {
@@ -81,8 +81,8 @@
     },
     {
       "path": "dist/install/rust-best-practices.ps1",
-      "sha256": "2a14b681b66ba8032bd0872d0cfc8f9bd16cdf80434b70c8426ca8d5a853063e",
-      "size": 3979,
+      "sha256": "d3e055f38fb3d74e08ae93a5a0a61f59fdeba34e24d5e1fd64adcf8a65d2886b",
+      "size": 4201,
       "mode": "0644"
     },
     {
@@ -93,8 +93,8 @@
     },
     {
       "path": "dist/install/rust-cli-apps.ps1",
-      "sha256": "7dd7daa9ee10928defbb67904de2e40fecf22551e5b5b403e5ae1b88c8b35afb",
-      "size": 3741,
+      "sha256": "0a1b8ec97c42811d7ee6c113480f4b35d34246550851dcbbba856969859cac32",
+      "size": 3963,
       "mode": "0644"
     },
     {

@@ -725,6 +725,7 @@ def test_powershell_installer_has_distinct_preflight_and_restores_environment_wh
     assert '"GH_TELEMETRY" = "false"' in script
     assert '"GH_PROMPT_DISABLED" = "1"' in script
     assert '"GH_NO_UPDATE_NOTIFIER" = "1"' in script
+    assert "$PSNativeCommandUseErrorActionPreference = $false" in script
     assert '& $GhCommand.Source "skill" "--help"' in script
     assert '& $GhCommand.Source "skill" "install" "--help"' in script
     assert "exit 127" in script
