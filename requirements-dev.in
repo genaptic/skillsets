@@ -2,7 +2,7 @@
 pip==26.1.2
 setuptools==83.0.0
 wheel==0.47.0
-pip-tools==7.5.3
+pip-tools==7.6.0
 PyYAML==6.0.3
 jsonschema==4.26.0
 pytest==9.1.1
