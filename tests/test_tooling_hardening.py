@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tomllib
@@ -27,6 +28,7 @@ from skillpack_tools.validate import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 
 def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
@@ -48,6 +50,24 @@ def _write_manifest(root: Path, pack_id: str, mutate) -> None:
     data = load_yaml(pack.path / "skillpack.yaml")
     mutate(data)
     (pack.path / "skillpack.yaml").write_text(dump_yaml(data), encoding="utf-8")
+
+
+def _normalized_process_output(completed: subprocess.CompletedProcess[str]) -> str:
+    plain = ANSI_ESCAPE.sub("", completed.stdout + completed.stderr)
+    return " ".join(plain.split())
+
+
+def test_process_output_normalization_removes_ansi_and_diagnostic_wrapping() -> None:
+    completed = subprocess.CompletedProcess(
+        args=["pwsh"],
+        returncode=1,
+        stdout="",
+        stderr="\x1b[31;1mInstalled CLI does not support 'gh skill'\x1b[0m\ncommand.\n",
+    )
+
+    assert _normalized_process_output(completed) == (
+        "Installed CLI does not support 'gh skill' command."
+    )
 
 
 def _write_fake_gh(directory: Path) -> Path:
@@ -748,7 +768,7 @@ def test_powershell_installer_has_distinct_preflight_and_restores_environment_wh
         capture_output=True,
     )
     assert missing.returncode == 127
-    assert "not installed" in (missing.stdout + missing.stderr)
+    assert "not installed" in _normalized_process_output(missing)
 
     fake_bin = repo_copy.parent / "powershell-fake-gh-bin"
     _write_fake_gh(fake_bin)
@@ -770,7 +790,7 @@ def test_powershell_installer_has_distinct_preflight_and_restores_environment_wh
     )
     assert unsupported.returncode == 1
     assert "does not support the public-preview 'gh skill' command" in (
-        unsupported.stdout + unsupported.stderr
+        _normalized_process_output(unsupported)
     )
 
     log.write_text("", encoding="utf-8")
@@ -784,7 +804,7 @@ def test_powershell_installer_has_distinct_preflight_and_restores_environment_wh
     )
     assert unsupported_install.returncode == 1
     assert "does not support the public-preview 'gh skill install' command" in (
-        unsupported_install.stdout + unsupported_install.stderr
+        _normalized_process_output(unsupported_install)
     )
     assert log.read_text(encoding="utf-8").splitlines() == [
         "false|1|1|skill --help",

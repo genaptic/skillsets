@@ -1090,7 +1090,8 @@ def validate_repository(
     else:
         for relative in unsafe_directories:
             errors.append(
-                f"{relative}: tracked cache, credential, or editor directory must not be committed."
+                f"{relative.as_posix()}: tracked cache, credential, or editor directory "
+                "must not be committed."
             )
         for path, _metadata in residue.files:
             relative = path.relative_to(root)
@@ -1100,12 +1101,13 @@ def validate_repository(
             suffix = security_name_key(path.suffix)
             unsafe_environment = name.startswith(".env.") and path.name != ".env.example"
             if name in _CREDENTIAL_NAMES or suffix in _CREDENTIAL_SUFFIXES or unsafe_environment:
-                errors.append(f"{relative}: credential file must not be committed.")
+                errors.append(f"{relative.as_posix()}: credential file must not be committed.")
             elif security_sensitive_path(relative, allow_env_example_file=True) and (
                 tracked_paths is None or relative in tracked_paths
             ):
                 errors.append(
-                    f"{relative}: tracked cache, credential, or editor file must not be committed."
+                    f"{relative.as_posix()}: tracked cache, credential, or editor file "
+                    "must not be committed."
                 )
 
     try:
