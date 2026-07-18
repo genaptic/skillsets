@@ -14,6 +14,7 @@ from .util import SkillpackError, atomic_write_bytes
 _REPARSE_POINT = 0x0400
 _EXPECTED_UNSET = object()
 _DIRECTORY_METADATA_STABLE = os.name != "nt"
+_DIRENTRY_IDENTITY_STABLE = os.name != "nt"
 _RUNTIME_EXCLUDED_PARTS = {
     ".git",
     ".idea",
@@ -361,6 +362,10 @@ def walk_tree(
             portable_names[key] = name
 
             path = parent / name
+            if not _DIRENTRY_IDENTITY_STABLE:
+                refreshed = inspect_path(path, root_absolute, leaf_kind="any")
+                assert refreshed is not None
+                child_metadata = refreshed
             _check_not_link(path, root_absolute, child_metadata)
             if stat.S_ISDIR(child_metadata.st_mode):
                 if prune_directory is not None and prune_directory(path):

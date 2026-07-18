@@ -161,6 +161,23 @@ def test_windows_directory_identity_ignores_unstable_size_and_time(
     assert path_safety_module._same_directory_identity(before, after)
 
 
+def test_walk_can_refresh_unstable_directory_entry_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "repo"
+    nested = root / "nested"
+    nested.mkdir(parents=True)
+    canonical = nested / "canonical.txt"
+    canonical.write_text("canonical\n", encoding="utf-8")
+
+    monkeypatch.setattr(path_safety_module, "_DIRENTRY_IDENTITY_STABLE", False)
+    snapshot = walk_tree(root, root)
+
+    assert [path for path, _metadata in snapshot.files] == [canonical]
+    assert [path for path, _metadata in snapshot.directories] == [nested]
+
+
 @pytest.mark.skipif(os.name == "nt", reason="dir-fd race fixture is POSIX-specific")
 def test_directory_creation_refuses_parent_replaced_with_symlink(
     tmp_path: Path,
