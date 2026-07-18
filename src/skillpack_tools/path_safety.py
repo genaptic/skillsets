@@ -13,6 +13,7 @@ from .util import SkillpackError, atomic_write_bytes
 
 _REPARSE_POINT = 0x0400
 _EXPECTED_UNSET = object()
+_DIRECTORY_METADATA_STABLE = os.name != "nt"
 _RUNTIME_EXCLUDED_PARTS = {
     ".git",
     ".idea",
@@ -225,6 +226,14 @@ def same_identity(left: os.stat_result, right: os.stat_result) -> bool:
     return _metadata_identity(left) == _metadata_identity(right)
 
 
+def _same_directory_identity(left: os.stat_result, right: os.stat_result) -> bool:
+    """Compare directory identity without unstable Windows size/time metadata."""
+
+    if not _DIRECTORY_METADATA_STABLE:
+        return _object_identity(left) == _object_identity(right)
+    return same_identity(left, right)
+
+
 def _require_expected_preimage(
     path: Path,
     root: Path,
@@ -283,7 +292,7 @@ def walk_tree(
     ) -> list[tuple[str, os.stat_result]]:
         current = inspect_path(parent, root_absolute, leaf_kind="directory")
         assert current is not None
-        if not same_identity(current, expected):
+        if not _same_directory_identity(current, expected):
             raise _kind_error(parent, root_absolute, "directory changed during inspection")
 
         try:
@@ -292,7 +301,9 @@ def walk_tree(
                 descriptor = os.open(parent, flags)
                 try:
                     opened = os.fstat(descriptor)
-                    if not stat.S_ISDIR(opened.st_mode) or not same_identity(opened, expected):
+                    if not stat.S_ISDIR(opened.st_mode) or not _same_directory_identity(
+                        opened, expected
+                    ):
                         raise _kind_error(
                             parent,
                             root_absolute,
@@ -303,7 +314,7 @@ def walk_tree(
                             (entry.name, entry.stat(follow_symlinks=False)) for entry in iterator
                         ]
                     after = os.fstat(descriptor)
-                    if not same_identity(after, opened):
+                    if not _same_directory_identity(after, opened):
                         raise _kind_error(
                             parent,
                             root_absolute,
@@ -318,7 +329,7 @@ def walk_tree(
                     ]
                 after = inspect_path(parent, root_absolute, leaf_kind="directory")
                 assert after is not None
-                if not same_identity(after, expected):
+                if not _same_directory_identity(after, expected):
                     raise _kind_error(
                         parent,
                         root_absolute,
@@ -555,7 +566,7 @@ def safe_atomic_write_bytes(
     else:  # pragma: no cover - exercised by Windows CI
         parent_current = inspect_path(path_absolute.parent, root_absolute, leaf_kind="directory")
         assert parent_current is not None
-        if not same_identity(parent_current, parent_before):
+        if not _same_directory_identity(parent_current, parent_before):
             raise _kind_error(path_absolute.parent, root_absolute, "parent changed after preflight")
         atomic_write_bytes(path_absolute, content, mode=mode)
 

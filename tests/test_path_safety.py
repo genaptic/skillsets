@@ -144,6 +144,23 @@ def test_walk_rejects_directory_replaced_between_listing_and_recursion(
     assert (sentinel.read_bytes(), sentinel.stat().st_mode, sentinel.stat().st_mtime_ns) == before
 
 
+def test_windows_directory_identity_ignores_unstable_size_and_time(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    directory = tmp_path / "directory"
+    directory.mkdir()
+    before = directory.stat()
+    values = list(before)
+    values[6] += 4096
+    values[8] += 1
+    after = os.stat_result(values)
+
+    assert not path_safety_module.same_identity(before, after)
+    monkeypatch.setattr(path_safety_module, "_DIRECTORY_METADATA_STABLE", False)
+    assert path_safety_module._same_directory_identity(before, after)
+
+
 @pytest.mark.skipif(os.name == "nt", reason="dir-fd race fixture is POSIX-specific")
 def test_directory_creation_refuses_parent_replaced_with_symlink(
     tmp_path: Path,
