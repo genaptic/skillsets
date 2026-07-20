@@ -49,7 +49,7 @@ def run_renderer(flag: str, value: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_skill_frontmatter_uses_portable_release_candidate_contract() -> None:
+def test_skill_frontmatter_mirrors_owning_pack_lifecycle() -> None:
     assert len(SKILL_FILES) == 26
     for path in SKILL_FILES:
         frontmatter, body = parse_skill(path)
@@ -59,23 +59,36 @@ def test_skill_frontmatter_uses_portable_release_candidate_contract() -> None:
 
         metadata = frontmatter["metadata"]
         assert isinstance(metadata, dict), path
-        assert metadata["maturity"] == "release-candidate", path
+        manifest = yaml.safe_load((path.parents[2] / "skillpack.yaml").read_text(encoding="utf-8"))
+        assert metadata["skillpack"] == manifest["id"], path
+        assert metadata["version"] == manifest["version"], path
+        assert metadata["maturity"] == manifest["maturity"], path
         assert all(isinstance(value, str) for value in metadata.values()), path
         assert "## Compatibility\n" in body, path
 
 
 def test_skill_resource_links_resolve_without_boilerplate_readmes() -> None:
     readmes = list(ROOT.glob("packs/**/skills/*/assets/README.md"))
+    readmes.extend(ROOT.glob("packs/**/skills/*/references/README.md"))
     readmes.extend(ROOT.glob("packs/**/skills/*/scripts/README.md"))
     assert readmes == []
 
-    for path in SKILL_FILES:
-        _, body = parse_skill(path)
-        for target in MARKDOWN_LINK.findall(body):
-            if target.startswith(("#", "https://", "http://")):
-                continue
-            relative_target = target.split("#", maxsplit=1)[0]
-            assert (path.parent / relative_target).is_file(), f"{path}: {target}"
+    resource_directories = [
+        path
+        for kind in ("assets", "references", "scripts")
+        for path in ROOT.glob(f"packs/**/skills/*/{kind}")
+    ]
+    assert all(any(child.is_file() for child in path.rglob("*")) for path in resource_directories)
+
+    for skill_path in SKILL_FILES:
+        for path in skill_path.parent.rglob("*.md"):
+            text = path.read_text(encoding="utf-8")
+            for target in MARKDOWN_LINK.findall(text):
+                if target.startswith(("#", "https://", "http://")):
+                    continue
+                relative_target = target.split("#", maxsplit=1)[0]
+                destination = path.parent / relative_target
+                assert destination.is_file() or destination.is_dir(), f"{path}: {target}"
 
 
 def test_every_skill_has_minimal_openai_interface_metadata() -> None:

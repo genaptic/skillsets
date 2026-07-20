@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "genaptic-skillsets-development",
+  "displayName": "Genaptic Skillsets Development",
+  "version": "1.0.0",
+  "description": "Author and validate skills and skillpacks for genaptic/skillsets.",
+  "author": {
+    "name": "Genaptic"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/shared/genaptic-skillsets-development",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "authoring",
+    "scaffolding",
+    "repository",
+    "evals"
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python CLI Error Output"
+  short_description: "Define safe and consistent CLI failures"
+  default_prompt: "Use $python-cli-error-output to define safe error output and exit behavior for this Python CLI."

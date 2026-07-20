@@ -1,0 +1,62 @@
+{
+  "name": "genaptic-skillsets",
+  "interface": {
+    "displayName": "Genaptic Skillsets"
+  },
+  "plugins": [
+    {
+      "name": "python-best-practices",
+      "source": "./plugins/python-best-practices",
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "python-cli-apps",
+      "source": "./plugins/python-cli-apps",
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "rust-best-practices",
+      "source": "./plugins/rust-best-practices",
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "rust-cli-apps",
+      "source": "./plugins/rust-cli-apps",
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "genaptic-skillsets-development",
+      "source": "./plugins/genaptic-skillsets-development",
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "postgres-databases",
+      "source": "./plugins/postgres-databases",
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Data & Databases"
+    }
+  ]
+}

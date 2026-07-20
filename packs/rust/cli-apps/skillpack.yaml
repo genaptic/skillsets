@@ -1,10 +1,26 @@
-schema-version: 1
+schema-version: 2
 id: "rust-cli-apps"
 display-name: "Rust CLI Applications"
 description: "Portable workflows for designing stable Rust CLI applications and safely developing commands in existing CLIs."
 language: "rust"
 subject: "cli-apps"
 version: "1.0.0"
+maturity: "release-candidate"
+distribution:
+  visibility: "public"
+publication:
+  state: "unpublished"
+release-gates:
+- "native-evidence"
+- "deterministic-archive"
+- "rust-assets"
+interface:
+  short-description: "Design portable Rust CLIs and evolve commands safely."
+  starter-prompts:
+  - skill: "rust-cli-application-design"
+    prompt: "Use $rust-cli-application-design to design or review a portable, stable Rust command-line application."
+  - skill: "rust-cli-command-development"
+    prompt: "Use $rust-cli-command-development to add or change one command in this existing Rust CLI."
 license: Apache-2.0
 maintainers:
 - github: "jecsand838"

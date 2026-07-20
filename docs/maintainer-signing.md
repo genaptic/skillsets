@@ -39,6 +39,26 @@ identity to the public signing key. Before using the key here, create an isolate
 repository, make a signed and signed-off commit, create a signed annotated tag, and require
 `git verify-commit` and `git verify-tag` to pass. Remove the temporary repository afterward.
 
+`repository.yaml` is the release trust root. A cryptographically valid pack tag is accepted only
+when the actual full signing-key fingerprint also appears in `release.trusted-signers`. The
+current dedicated SSH signing key is pinned as:
+
+```text
+SHA256:RXn4sQSc9mwJb13oQVvUUkQvPw+B5N+WrRWH4elMJHg
+```
+
+GitHub profile signing keys from each trusted signer's configured `github` login and local
+allowed-signers files are candidate-discovery surfaces, not trust stores. Release tooling
+fingerprints every SSH candidate, discards candidates outside
+the repository allowlist, and verifies the tag against each remaining key independently.
+OpenPGP verification likewise uses full v4/v6 fingerprints and the `VALIDSIG` signing-key
+fingerprint; short key IDs are never accepted. A machine-readable revoked, expired, bad, or error
+signature status rejects the candidate even if the same command output also contains `VALIDSIG`.
+
+Protected release and recovery workflows resolve this policy from their exact default-branch
+dispatch SHA, not from the tag being authenticated. The tagged source must also pass the local
+release build, but it cannot broaden the current protected signer allowlist.
+
 Create repository commits with:
 
 ```bash
@@ -55,3 +75,13 @@ Never store a private key, passphrase, copied client credential, PAT, deploy key
 material in repository or environment secrets. If the signing key is lost or compromised,
 remove it from GitHub, stop publication, preserve existing immutable evidence, and rotate to a
 new dedicated key before preparing another release.
+
+Rotate without a trust gap: add the new full fingerprint through a protected pull request,
+verify that the matching public signing key is registered on GitHub, sign a later release tag
+with the new key, and remove the old fingerprint in a second protected pull request. Removing a
+compromised fingerprint intentionally prevents resuming any mutable draft signed by that key;
+generate the read-only removal dossier and use a separately authorized, immediately re-inspected
+manual break-glass process before restarting with a trusted tag. No recovery workflow deletes the
+draft. Git tag signing and GitHub Actions Sigstore attestations are independent controls: the
+former uses the pinned long-lived maintainer fingerprint, while the latter trusts the repository
+workflow's OIDC identity.

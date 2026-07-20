@@ -1,0 +1,4 @@
+interface:
+  display_name: "PostgreSQL Migration Safety"
+  short_description: "Plan safe PostgreSQL production changes"
+  default_prompt: "Use $postgres-migration-safety to turn this PostgreSQL change into a safe production rollout plan."

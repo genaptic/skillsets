@@ -3,12 +3,33 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 
 from .path_safety import read_regular_text, walk_tree
 from .util import SkillpackError
+
+
+@dataclass(frozen=True)
+class AuthorizedReviewer:
+    github: str
+    github_id: int
+
+
+@dataclass(frozen=True)
+class CompatibilityEvidencePolicy:
+    max_age_days: int
+    future_skew_minutes: int
+    independent_review_required: bool
+    authorized_reviewers: tuple[AuthorizedReviewer, ...]
+
+
+@dataclass(frozen=True)
+class TrustedSigner:
+    kind: Literal["ssh", "openpgp"]
+    github: str
+    fingerprint: str
 
 
 def _load_repository_yaml(path: Path, root: Path) -> dict[str, Any]:
@@ -115,12 +136,39 @@ class RepositoryConfig:
         return str(self.raw["marketplace"]["description"])
 
     @property
+    def compatibility_evidence(self) -> CompatibilityEvidencePolicy:
+        policy = self.raw["compatibility-evidence"]
+        return CompatibilityEvidencePolicy(
+            max_age_days=int(policy["max-age-days"]),
+            future_skew_minutes=int(policy["future-skew-minutes"]),
+            independent_review_required=bool(policy["independent-review-required"]),
+            authorized_reviewers=tuple(
+                AuthorizedReviewer(
+                    github=str(reviewer["github"]),
+                    github_id=int(reviewer["github-id"]),
+                )
+                for reviewer in policy["authorized-reviewers"]
+            ),
+        )
+
+    @property
     def license(self) -> str:
         return str(self.raw["release"]["license"])
 
     @property
     def initial_year(self) -> int:
         return int(self.raw["release"]["initial-year"])
+
+    @property
+    def trusted_signers(self) -> tuple[TrustedSigner, ...]:
+        return tuple(
+            TrustedSigner(
+                kind=signer["type"],
+                github=str(signer["github"]),
+                fingerprint=str(signer["fingerprint"]),
+            )
+            for signer in self.raw["release"]["trusted-signers"]
+        )
 
 
 @dataclass(frozen=True)
@@ -158,13 +206,41 @@ class Pack:
         return str(self.raw["version"])
 
     @property
+    def maturity(self) -> str:
+        return str(self.raw["maturity"])
+
+    @property
+    def visibility(self) -> str:
+        return str(self.raw["distribution"]["visibility"])
+
+    @property
     def tag(self) -> str:
         return f"{self.id}-v{self.version}"
 
     @property
     def source_sha(self) -> str | None:
-        value = self.raw.get("source-sha")
+        """Return the last published source SHA, when one exists.
+
+        This compatibility property intentionally reads only the nested v2 release snapshot;
+        a legacy top-level ``source-sha`` is never accepted as publication state.
+        """
+
+        value = (self.latest_release or {}).get("source-sha")
         return str(value) if value else None
+
+    @property
+    def latest_release(self) -> dict[str, Any] | None:
+        value = self.raw["publication"].get("latest-release")
+        return dict(value) if isinstance(value, dict) else None
+
+    @property
+    def published_version(self) -> str | None:
+        value = (self.latest_release or {}).get("version")
+        return str(value) if value else None
+
+    @property
+    def published_tag(self) -> str | None:
+        return f"{self.id}-v{self.published_version}" if self.published_version else None
 
     @property
     def license(self) -> str:
@@ -196,7 +272,19 @@ class Pack:
 
     @property
     def publication_state(self) -> str:
-        return "published" if self.source_sha else "unpublished"
+        return str(self.raw["publication"]["state"])
+
+    @property
+    def release_gates(self) -> list[str]:
+        return list(self.raw["release-gates"])
+
+    @property
+    def short_description(self) -> str:
+        return str(self.raw["interface"]["short-description"])
+
+    @property
+    def starter_prompts(self) -> list[dict[str, str]]:
+        return [dict(item) for item in self.raw["interface"]["starter-prompts"]]
 
     @property
     def operations(self) -> dict[str, str]:

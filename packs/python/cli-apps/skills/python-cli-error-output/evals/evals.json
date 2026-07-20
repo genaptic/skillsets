@@ -43,14 +43,6 @@
       "prompt": "Define a reusable library exception hierarchy and causal chaining policy, with no process or CLI boundary.",
       "shouldTrigger": false,
       "reason": "General Python error handling is the narrower skill."
-    },
-    {
-      "id": "overlap-library-errors",
-      "kind": "overlap",
-      "prompt": "Refactor internal exceptions, context-manager cleanup, retries, and logging before any CLI mapping is considered.",
-      "shouldTrigger": false,
-      "reason": "The task is internal exception policy rather than process output.",
-      "preferredSkill": "python-error-handling"
     }
   ],
   "behavior": [

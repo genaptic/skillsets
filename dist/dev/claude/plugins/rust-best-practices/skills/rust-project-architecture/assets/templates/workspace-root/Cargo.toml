@@ -1,0 +1,13 @@
+[workspace]
+members = ["apps/tool", "crates/app-core"]
+default-members = ["apps/tool"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"

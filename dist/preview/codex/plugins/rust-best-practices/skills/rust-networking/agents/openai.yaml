@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Networking"
+  short_description: "Design safe Rust network clients and pools"
+  default_prompt: "Use $rust-networking to design or review safe Rust clients, retries, timeouts, and pools."

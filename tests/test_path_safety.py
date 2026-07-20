@@ -90,7 +90,8 @@ def test_walk_rejects_portable_name_collisions_before_pruning(tmp_path: Path) ->
     root = tmp_path / "repo"
     root.mkdir()
     (root / "ignored").mkdir()
-    (root / "ｉｇｎｏｒｅｄ").mkdir()
+    # Intentional full-width adversarial spelling exercises portable collision handling.
+    (root / "ｉｇｎｏｒｅｄ").mkdir()  # noqa: RUF001 - adversarial full-width path fixture
 
     with pytest.raises(SkillpackError, match="portable name collision"):
         walk_tree(root, root, prune_directory=lambda _path: True)
@@ -533,7 +534,7 @@ def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
     (assets / "résumé.txt").write_bytes(b"allowed unicode resource\n")
 
     allowed = build_generated_files(repo_copy)
-    prefix = "dist/opencode/python/best-practices/python-project-layout/assets/"
+    prefix = "dist/dev/opencode/python/best-practices/python-project-layout/assets/"
     allowed_resources = {path.removeprefix(prefix) for path in allowed if path.startswith(prefix)}
     assert ".env.example" in allowed_resources
     assert "résumé.txt" in allowed_resources
@@ -571,11 +572,12 @@ def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
     assert not generated_resources.intersection(excluded)
 
     (assets / "CREDENTIALS.JSON").unlink()
-    compatibility_name = "ＣＲＥＤＥＮＴＩＡＬＳ.json"
+    # These full-width spellings are security fixtures, not user-facing text.
+    compatibility_name = "ＣＲＥＤＥＮＴＩＡＬＳ.json"  # noqa: RUF001 - Unicode spoof fixture
     (assets / compatibility_name).write_bytes(b"compatibility spelling\n")
     compatibility_generated = build_generated_files(repo_copy)
     assert not any(path.endswith(compatibility_name) for path in compatibility_generated)
-    assert security_name_key("ＣＲＥＤＥＮＴＩＡＬＳ.JSON") == "credentials.json"
+    assert security_name_key("ＣＲＥＤＥＮＴＩＡＬＳ.JSON") == "credentials.json"  # noqa: RUF001 - Unicode spoof fixture
     assert security_name_key("Straße") == security_name_key("STRASSE")
 
 
@@ -584,7 +586,7 @@ def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
     (
         "docs/__PyCache__/module.PYC",
         "docs/Secrets/hidden.txt",
-        "docs/ＣＲＥＤＥＮＴＩＡＬＳ/hidden.txt",
+        "docs/ＣＲＥＤＥＮＴＩＡＬＳ/hidden.txt",  # noqa: RUF001 - Unicode spoof fixture
     ),
 )
 def test_repository_validation_reports_normalized_residue_directories(

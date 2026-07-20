@@ -1,0 +1,67 @@
+{
+  "program": "acme",
+  "summary": "Manage Acme resources.",
+  "configurationPrecedence": [
+    "command-line",
+    "environment",
+    "configuration-file",
+    "default"
+  ],
+  "globalOptions": [
+    {
+      "names": ["--config"],
+      "valueName": "PATH",
+      "help": "Read configuration from PATH."
+    },
+    {
+      "names": ["--output"],
+      "valueName": "FORMAT",
+      "choices": ["text", "json"],
+      "default": "text",
+      "help": "Select the output format."
+    },
+    {
+      "names": ["--no-color"],
+      "help": "Disable ANSI color."
+    }
+  ],
+  "commands": [
+    {
+      "name": "resource",
+      "summary": "Manage resources.",
+      "options": [],
+      "arguments": [],
+      "commands": [
+        {
+          "name": "list",
+          "summary": "List resources.",
+          "options": [
+            {
+              "names": ["--limit"],
+              "valueName": "COUNT",
+              "help": "Return at most COUNT resources."
+            }
+          ],
+          "arguments": []
+        },
+        {
+          "name": "delete",
+          "summary": "Delete one resource.",
+          "options": [
+            {
+              "names": ["--yes"],
+              "help": "Skip the interactive confirmation."
+            }
+          ],
+          "arguments": [
+            {
+              "name": "RESOURCE_ID",
+              "optional": false,
+              "variadic": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

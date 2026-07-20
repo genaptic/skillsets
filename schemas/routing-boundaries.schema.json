@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/genaptic/skillsets/main/schemas/routing-boundaries.schema.json",
+  "title": "Reviewed cross-skill routing boundary matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "boundaries"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "boundaries": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {"$ref": "#/$defs/boundary"}
+    }
+  },
+  "$defs": {
+    "skillId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "explanation": {
+      "type": "string",
+      "minLength": 20
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "skills",
+        "sharedVocabulary",
+        "outcomeExplanations",
+        "cases"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/skillId"},
+        "skills": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/skillId"}
+        },
+        "sharedVocabulary": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60,
+            "pattern": "^[a-z0-9][a-z0-9 +./-]*$"
+          }
+        },
+        "outcomeExplanations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["a-only", "b-only", "both", "neither"],
+          "properties": {
+            "a-only": {"$ref": "#/$defs/explanation"},
+            "b-only": {"$ref": "#/$defs/explanation"},
+            "both": {"$ref": "#/$defs/explanation"},
+            "neither": {"$ref": "#/$defs/explanation"}
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {"$ref": "#/$defs/aOnlyCase"},
+            {"$ref": "#/$defs/bOnlyCase"},
+            {"$ref": "#/$defs/bothCase"},
+            {"$ref": "#/$defs/neitherCase"}
+          ],
+          "items": false
+        }
+      }
+    },
+    "caseBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "outcome", "prompt", "expectedSkills", "reason"],
+      "properties": {
+        "id": {"$ref": "#/$defs/skillId"},
+        "outcome": {"enum": ["a-only", "b-only", "both", "neither"]},
+        "prompt": {"type": "string", "minLength": 20},
+        "expectedSkills": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/skillId"}
+        },
+        "reason": {"$ref": "#/$defs/explanation"}
+      }
+    },
+    "aOnlyCase": {
+      "allOf": [
+        {"$ref": "#/$defs/caseBase"},
+        {
+          "type": "object",
+          "properties": {
+            "outcome": {"const": "a-only"},
+            "expectedSkills": {"minItems": 1, "maxItems": 1}
+          }
+        }
+      ]
+    },
+    "bOnlyCase": {
+      "allOf": [
+        {"$ref": "#/$defs/caseBase"},
+        {
+          "type": "object",
+          "properties": {
+            "outcome": {"const": "b-only"},
+            "expectedSkills": {"minItems": 1, "maxItems": 1}
+          }
+        }
+      ]
+    },
+    "bothCase": {
+      "allOf": [
+        {"$ref": "#/$defs/caseBase"},
+        {
+          "type": "object",
+          "properties": {
+            "outcome": {"const": "both"},
+            "expectedSkills": {"minItems": 2, "maxItems": 2}
+          }
+        }
+      ]
+    },
+    "neitherCase": {
+      "allOf": [
+        {"$ref": "#/$defs/caseBase"},
+        {
+          "type": "object",
+          "properties": {
+            "outcome": {"const": "neither"},
+            "expectedSkills": {"maxItems": 0}
+          }
+        }
+      ]
+    }
+  }
+}

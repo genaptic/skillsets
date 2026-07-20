@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import errno
 import os
 import secrets
@@ -104,9 +105,7 @@ def security_sensitive_path(
             return True
     if normalized_name in _RUNTIME_EXCLUDED_NAMES or normalized_name.endswith("~"):
         return True
-    if Path(normalized_name).suffix in _RUNTIME_EXCLUDED_SUFFIXES:
-        return True
-    return False
+    return Path(normalized_name).suffix in _RUNTIME_EXCLUDED_SUFFIXES
 
 
 def repository_relative(path: Path, root: Path) -> Path:
@@ -448,10 +447,8 @@ def ensure_directory(path: Path, root: Path, *, mode: int = 0o755) -> None:
                 try:
                     child_descriptor = os.open(part, flags, dir_fd=descriptor)
                 except FileNotFoundError:
-                    try:
+                    with contextlib.suppress(FileExistsError):
                         os.mkdir(part, mode, dir_fd=descriptor)
-                    except FileExistsError:
-                        pass
                     child_descriptor = os.open(part, flags, dir_fd=descriptor)
                 except OSError as exc:
                     raise _kind_error(current, root_absolute, "expected a real directory") from exc
@@ -468,10 +465,8 @@ def ensure_directory(path: Path, root: Path, *, mode: int = 0o755) -> None:
             try:
                 metadata = os.lstat(current)
             except FileNotFoundError:
-                try:
+                with contextlib.suppress(FileExistsError):
                     os.mkdir(current, mode)
-                except FileExistsError:
-                    pass
                 metadata = os.lstat(current)
             _check_not_link(current, root_absolute, metadata)
             if not stat.S_ISDIR(metadata.st_mode):
@@ -563,10 +558,8 @@ def safe_atomic_write_bytes(
             temporary_created = False
         finally:
             if temporary_created:
-                try:
+                with contextlib.suppress(FileNotFoundError):
                     os.unlink(temporary_name, dir_fd=directory_fd)
-                except FileNotFoundError:
-                    pass
             os.close(directory_fd)
     else:  # pragma: no cover - exercised by Windows CI
         parent_current = inspect_path(path_absolute.parent, root_absolute, leaf_kind="directory")

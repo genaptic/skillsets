@@ -14,6 +14,7 @@ on:
       - "schemas/**"
       - "src/skillpack_tools/**"
       - "tools/**"
+      - "scripts/**"
       - ".github/workflows/compatibility.yml"
       - "tests/test_path_safety.py"
       - "tests/test_tooling_hardening.py"
@@ -30,7 +31,7 @@ jobs:
   adapters-and-installers:
     name: adapters and installers (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -43,6 +44,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
@@ -50,15 +52,36 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-dev.txt
       - name: Install hash-locked validators and local CLI
+        if: runner.os != 'Windows'
         run: |
           python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
           python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e .
       - name: Validate current generated state and vendor structures
+        if: runner.os != 'Windows'
         run: |
           skillpacks generate --check
           skillpacks validate --check-generated --strict-placeholders
+      - name: Exercise the documented Windows bootstrap path
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/bootstrap.ps1
+      - name: Exercise the documented Windows full-check path
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/check.ps1
       - name: Run cross-platform filesystem safety fixtures
-        run: python -m pytest tests/test_path_safety.py --no-cov
+        shell: python
+        run: |
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          python = Path(".venv/Scripts/python.exe") if os.name == "nt" else Path(sys.executable)
+          subprocess.run(
+              [str(python), "-m", "pytest", "tests/test_path_safety.py", "--no-cov"],
+              check=True,
+          )
       - name: Run canonical pack discovery fixtures
         shell: python
         run: |
@@ -77,7 +100,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for script in dist/install/*.sh; do
+          for script in dist/dev/install/*.sh; do
             bash "$script" --dry-run
           done
       - name: Dry-run installers under macOS Bash 3.2
@@ -87,7 +110,7 @@ jobs:
           set -euo pipefail
           version=$(/bin/bash -c 'printf "%s.%s" "${BASH_VERSINFO[0]}" "${BASH_VERSINFO[1]}"')
           test "$version" = "3.2"
-          for script in dist/install/*.sh; do
+          for script in dist/dev/install/*.sh; do
             /bin/bash "$script" --dry-run
           done
       - name: Dry-run Windows PowerShell installers
@@ -95,13 +118,14 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $scripts = Get-ChildItem dist/install/*.ps1
+          $scripts = Get-ChildItem dist/dev/install/*.ps1
           if (-not $scripts) { throw "No PowerShell installers found" }
           $scripts | ForEach-Object { & $_.FullName -DryRun }
       - name: Exercise PowerShell GitHub CLI capability preflights
         if: runner.os == 'Windows'
+        shell: pwsh
         run: >-
-          python -m pytest tests/test_tooling_hardening.py
+          ./.venv/Scripts/python.exe -m pytest tests/test_tooling_hardening.py
           -k powershell_installer_has_distinct_preflight_and_restores_environment_when_available
           --no-cov
       - name: Record the structural-only evidence boundary

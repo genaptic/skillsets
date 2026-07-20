@@ -18,6 +18,17 @@ marketplace:
   name: genaptic-skillsets
   display-name: Genaptic Skillsets
   description: Portable, versioned Agent Skill packs for Claude Code, Codex, and OpenCode.
+compatibility-evidence:
+  max-age-days: 45
+  future-skew-minutes: 5
+  independent-review-required: false
+  authorized-reviewers:
+    - github: jecsand838
+      github-id: 170039284
 release:
   license: Apache-2.0
   initial-year: 2026
+  trusted-signers:
+    - type: ssh
+      github: jecsand838
+      fingerprint: SHA256:RXn4sQSc9mwJb13oQVvUUkQvPw+B5N+WrRWH4elMJHg

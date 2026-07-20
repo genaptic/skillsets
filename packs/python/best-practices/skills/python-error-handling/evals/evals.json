@@ -43,14 +43,6 @@
       "prompt": "Design RFC-style HTTP error response bodies and status-code mapping for our FastAPI service.",
       "shouldTrigger": false,
       "reason": "HTTP protocol error schemas are outside this Python exception skill."
-    },
-    {
-      "id": "overlap-cli-error",
-      "kind": "overlap",
-      "prompt": "Review a Python command's messages, debug mode, stderr routing, and process exit status when exceptions occur.",
-      "shouldTrigger": false,
-      "reason": "The CLI error-output skill owns the user-visible process contract.",
-      "preferredSkill": "python-cli-error-output"
     }
   ],
   "behavior": [

@@ -43,14 +43,6 @@
       "prompt": "Tune our connection routing and automatic failover between synchronous replicas without changing backup policy.",
       "shouldTrigger": false,
       "reason": "Replica failover architecture alone is outside the focused backup-and-recovery workflow."
-    },
-    {
-      "id": "overlap-migration-safety",
-      "kind": "overlap",
-      "prompt": "We need an operational rollback and restore trigger for one approved high-risk schema migration next week.",
-      "shouldTrigger": false,
-      "reason": "The primary deliverable is the migration runbook; it should reference existing recovery capability.",
-      "preferredSkill": "postgres-migration-safety"
     }
   ],
   "behavior": [

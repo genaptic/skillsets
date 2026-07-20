@@ -1,0 +1,50 @@
+[
+  {
+    "Plan": {
+      "Node Type": "Nested Loop",
+      "Parallel Aware": false,
+      "Async Capable": false,
+      "Startup Cost": 0.71,
+      "Total Cost": 92.45,
+      "Plan Rows": 8,
+      "Plan Width": 64,
+      "Actual Startup Time": 0.092,
+      "Actual Total Time": 18.417,
+      "Actual Rows": 2475,
+      "Actual Loops": 1,
+      "Shared Hit Blocks": 7312,
+      "Shared Read Blocks": 84,
+      "Plans": [
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "account",
+          "Index Name": "account_status_idx",
+          "Startup Cost": 0.29,
+          "Total Cost": 8.31,
+          "Plan Rows": 4,
+          "Actual Total Time": 1.105,
+          "Actual Rows": 198,
+          "Actual Loops": 1,
+          "Index Cond": "(status = 'active'::text)"
+        },
+        {
+          "Node Type": "Index Scan",
+          "Parent Relationship": "Inner",
+          "Relation Name": "invoice",
+          "Index Name": "invoice_account_id_idx",
+          "Startup Cost": 0.42,
+          "Total Cost": 20.87,
+          "Plan Rows": 2,
+          "Actual Total Time": 0.082,
+          "Actual Rows": 12,
+          "Actual Loops": 198,
+          "Index Cond": "(account_id = account.account_id)",
+          "Rows Removed by Filter": 37,
+          "Filter": "(paid_at IS NULL)"
+        }
+      ]
+    },
+    "Planning Time": 1.223,
+    "Execution Time": 18.901
+  }
+]

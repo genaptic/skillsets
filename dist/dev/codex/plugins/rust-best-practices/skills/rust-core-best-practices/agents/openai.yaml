@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Core Best Practices"
+  short_description: "Review Rust changes against repository policy"
+  default_prompt: "Use $rust-core-best-practices to review this Rust change against repository policy and current core practices."

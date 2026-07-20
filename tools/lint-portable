@@ -2,7 +2,7 @@
 """Run repository linters that are available on the current host.
 
 CI passes ``--require-tools`` after installing exact tool versions. Local contributors get
-the same checks when the executables are installed, plus Bash syntax checking everywhere.
+the same checks when the executables and required modules are installed.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PSSCRIPTANALYZER_VERSION = "1.25.0"
 
 
 def files(pattern: str) -> list[str]:
@@ -27,6 +28,24 @@ def files(pattern: str) -> list[str]:
 def run(command: list[str]) -> None:
     print("+", " ".join(command))
     subprocess.run(command, cwd=ROOT, check=True)
+
+
+def powershell_analyzer_available(pwsh: str) -> bool:
+    """Return whether the exact reviewed PSScriptAnalyzer module is available."""
+
+    script = (
+        "$module = Get-Module -ListAvailable PSScriptAnalyzer | "
+        f"Where-Object {{ $_.Version -eq [version]'{PSSCRIPTANALYZER_VERSION}' }} | "
+        "Select-Object -First 1; if (-not $module) { exit 1 }"
+    )
+    result = subprocess.run(
+        [pwsh, "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script],
+        cwd=ROOT,
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
 
 
 def main() -> int:
@@ -43,8 +62,12 @@ def main() -> int:
     powershell_files = files("**/*.ps1")
     missing: list[str] = []
 
-    for path in shell_files:
-        run(["bash", "-n", path])
+    bash = shutil.which("bash")
+    if bash:
+        for path in shell_files:
+            run([bash, "-n", path])
+    else:
+        missing.append("bash")
 
     shellcheck = shutil.which("shellcheck")
     if shellcheck:
@@ -59,18 +82,18 @@ def main() -> int:
         missing.append("actionlint")
 
     pwsh = shutil.which("pwsh")
-    if pwsh:
+    if pwsh and powershell_analyzer_available(pwsh):
         quoted = ",".join("'" + path.replace("'", "''") + "'" for path in powershell_files)
         script = (
             "$ErrorActionPreference='Stop'; "
-            "Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0; "
+            f"Import-Module PSScriptAnalyzer -RequiredVersion {PSSCRIPTANALYZER_VERSION}; "
             "$issues=@(); "
             f"@({quoted}) | ForEach-Object {{$issues += Invoke-ScriptAnalyzer -Path $_}}; "
             "if ($issues) {$issues | Format-Table -AutoSize | Out-String | Write-Error}"
         )
         run([pwsh, "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script])
     else:
-        missing.append("pwsh with PSScriptAnalyzer 1.25.0")
+        missing.append(f"pwsh with PSScriptAnalyzer {PSSCRIPTANALYZER_VERSION}")
 
     if missing:
         message = "optional host lint tools unavailable: " + ", ".join(missing)

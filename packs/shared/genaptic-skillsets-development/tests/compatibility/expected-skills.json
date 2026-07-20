@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "pack": "genaptic-skillsets-development",
+  "version": "1.0.0",
+  "skills": [
+    "genaptic-skillsets-create-skill",
+    "genaptic-skillsets-create-skillpack"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "paths": [
+    "install/postgres-databases.ps1",
+    "install/postgres-databases.sh",
+    "install/python-best-practices.ps1",
+    "install/python-best-practices.sh",
+    "install/python-cli-apps.ps1",
+    "install/python-cli-apps.sh",
+    "install/repository-development.ps1",
+    "install/repository-development.sh",
+    "install/rust-best-practices.ps1",
+    "install/rust-best-practices.sh",
+    "install/rust-cli-apps.ps1",
+    "install/rust-cli-apps.sh",
+    "opencode/python/best-practices/index.json",
+    "opencode/python/cli-apps/index.json",
+    "opencode/rust/best-practices/index.json",
+    "opencode/rust/cli-apps/index.json",
+    "opencode/shared/postgres-databases/index.json",
+    "opencode/shared/repository-development/index.json"
+  ]
+}

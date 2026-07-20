@@ -43,14 +43,6 @@
       "prompt": "Implement the missing asynchronous API, redesign its error enum, and add tests; documentation can be handled after the behavior exists.",
       "shouldTrigger": false,
       "reason": "The primary outcome is Rust implementation and API design, not documentation of an existing public contract."
-    },
-    {
-      "id": "overlap-workspace-markdown",
-      "kind": "overlap",
-      "prompt": "Reconcile all Rust workspace READMEs, architecture documents, runbooks, and AGENTS.md files with current code; mention rustdoc drift separately.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-workspace-documentation",
-      "reason": "The requested artifacts are repository Markdown and agent guidance, owned by the neighboring documentation skill."
     }
   ],
   "behavior": [

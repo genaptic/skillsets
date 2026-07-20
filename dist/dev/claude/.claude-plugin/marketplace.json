@@ -1,0 +1,122 @@
+{
+  "name": "genaptic-skillsets",
+  "owner": {
+    "name": "Genaptic"
+  },
+  "description": "Portable, versioned Agent Skill packs for Claude Code, Codex, and OpenCode.",
+  "plugins": [
+    {
+      "name": "python-best-practices",
+      "source": "./plugins/python-best-practices",
+      "description": "Structure, test, and harden production Python projects.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Genaptic"
+      },
+      "category": "Developer Tools",
+      "tags": [
+        "agent-skills",
+        "python",
+        "packaging",
+        "testing",
+        "exceptions"
+      ],
+      "strict": true
+    },
+    {
+      "name": "python-cli-apps",
+      "source": "./plugins/python-cli-apps",
+      "description": "Design and test reliable Python command-line interfaces.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Genaptic"
+      },
+      "category": "Developer Tools",
+      "tags": [
+        "agent-skills",
+        "python",
+        "cli",
+        "testing",
+        "ux"
+      ],
+      "strict": true
+    },
+    {
+      "name": "rust-best-practices",
+      "source": "./plugins/rust-best-practices",
+      "description": "Design, review, and maintain repository-aware Rust systems.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Genaptic"
+      },
+      "category": "Developer Tools",
+      "tags": [
+        "agent-skills",
+        "rust",
+        "cargo",
+        "architecture",
+        "async",
+        "testing",
+        "networking",
+        "portability"
+      ],
+      "strict": true
+    },
+    {
+      "name": "rust-cli-apps",
+      "source": "./plugins/rust-cli-apps",
+      "description": "Design portable Rust CLIs and evolve commands safely.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Genaptic"
+      },
+      "category": "Developer Tools",
+      "tags": [
+        "agent-skills",
+        "rust",
+        "cli",
+        "clap",
+        "command-line",
+        "cross-platform"
+      ],
+      "strict": true
+    },
+    {
+      "name": "genaptic-skillsets-development",
+      "source": "./plugins/genaptic-skillsets-development",
+      "description": "Author and validate skills and skillpacks for genaptic/skillsets.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Genaptic"
+      },
+      "category": "Developer Tools",
+      "tags": [
+        "agent-skills",
+        "authoring",
+        "scaffolding",
+        "repository",
+        "evals"
+      ],
+      "strict": true
+    },
+    {
+      "name": "postgres-databases",
+      "source": "./plugins/postgres-databases",
+      "description": "Design and review safe, evidence-backed PostgreSQL changes.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Genaptic"
+      },
+      "category": "Data & Databases",
+      "tags": [
+        "agent-skills",
+        "postgresql",
+        "schema",
+        "performance",
+        "migrations",
+        "recovery"
+      ],
+      "strict": true
+    }
+  ]
+}

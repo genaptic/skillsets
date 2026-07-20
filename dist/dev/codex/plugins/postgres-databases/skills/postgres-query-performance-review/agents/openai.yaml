@@ -1,0 +1,4 @@
+interface:
+  display_name: "PostgreSQL Query Performance Review"
+  short_description: "Diagnose PostgreSQL query performance"
+  default_prompt: "Use $postgres-query-performance-review to diagnose this PostgreSQL query from the available plan evidence."

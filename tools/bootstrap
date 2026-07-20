@@ -1,0 +1,292 @@
+#!/usr/bin/env python3
+"""Create the repository development environment on POSIX and Windows."""
+
+from __future__ import annotations
+
+import json
+import os
+import stat
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+MINIMUM_PYTHON = (3, 11)
+
+
+class BootstrapError(RuntimeError):
+    """A bootstrap precondition failed with an actionable message."""
+
+
+def venv_python_path(venv: Path, *, platform: str = os.name) -> Path:
+    """Return the virtual-environment interpreter path for the selected platform."""
+
+    if platform == "nt":
+        return venv / "Scripts" / "python.exe"
+    return venv / "bin" / "python"
+
+
+def _run(
+    command: list[str], *, root: Path, capture_output: bool = False
+) -> subprocess.CompletedProcess[str]:
+    print("+", " ".join(command))
+    return subprocess.run(
+        command,
+        cwd=root,
+        check=True,
+        text=True,
+        capture_output=capture_output,
+    )
+
+
+def _check_bootstrap_python() -> None:
+    if sys.version_info[:2] < MINIMUM_PYTHON:
+        found = ".".join(str(part) for part in sys.version_info[:3])
+        raise BootstrapError(f"Python 3.11 or newer is required; found {found}.")
+
+
+def _is_link_or_reparse(path: Path) -> bool:
+    """Return whether an existing path redirects filesystem traversal."""
+
+    try:
+        metadata = path.lstat()
+    except FileNotFoundError:
+        return False
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    attributes = getattr(metadata, "st_file_attributes", 0)
+    return stat.S_ISLNK(metadata.st_mode) or bool(attributes & reparse_flag)
+
+
+def _normalized(path: Path) -> str:
+    return os.path.normcase(os.path.abspath(os.fspath(path)))
+
+
+def _is_inside(path: Path, parent: Path) -> bool:
+    path_absolute = _normalized(path)
+    parent_absolute = _normalized(parent)
+    try:
+        return os.path.commonpath([path_absolute, parent_absolute]) == parent_absolute
+    except ValueError:
+        return False
+
+
+def _check_install_targets(root: Path, venv: Path, targets: dict[str, str]) -> None:
+    required = {"purelib", "platlib", "scripts", "data"}
+    if set(targets) != required or any(
+        not isinstance(target, str) or not target for target in targets.values()
+    ):
+        raise BootstrapError("existing .venv interpreter returned invalid installation targets")
+    venv_absolute = Path(os.path.abspath(os.fspath(venv)))
+    for name, raw_target in sorted(targets.items()):
+        target = Path(os.path.abspath(raw_target))
+        if not _is_inside(target, venv):
+            raise BootstrapError(
+                f"existing .venv {name} installation target is outside the repository .venv"
+            )
+        current = venv
+        for part in target.relative_to(venv_absolute).parts:
+            current /= part
+            if _is_link_or_reparse(current):
+                raise BootstrapError(
+                    f"refusing redirected .venv installation target {current.relative_to(root)}"
+                )
+            if current.exists() and not current.is_dir():
+                raise BootstrapError(
+                    f"refusing non-directory .venv installation target {current.relative_to(root)}"
+                )
+
+
+def _check_venv_target(root: Path, venv: Path) -> None:
+    root_absolute = Path(os.path.abspath(os.fspath(root)))
+    venv_absolute = Path(os.path.abspath(os.fspath(venv)))
+    if venv_absolute.parent != root_absolute or venv_absolute.name != ".venv":
+        raise BootstrapError("the development environment target must be the repository .venv")
+    if _is_link_or_reparse(venv):
+        raise BootstrapError("refusing to use .venv because it is a symbolic link or reparse point")
+    if venv.exists() and not venv.is_dir():
+        raise BootstrapError("refusing to use .venv because it is not a directory")
+
+
+def _check_existing_interpreter(python: Path, *, root: Path, venv: Path) -> None:
+    if _is_link_or_reparse(python.parent):
+        raise BootstrapError(
+            f"refusing to use {python.parent.relative_to(root)} because it is a symbolic link "
+            "or reparse point"
+        )
+    if not python.is_file():
+        raise BootstrapError(
+            f"existing .venv has no interpreter at {python.relative_to(root)}; "
+            "move it aside and rerun bootstrap"
+        )
+    result = _run(
+        [
+            str(python),
+            "-c",
+            (
+                "import json,sys; print(json.dumps({"
+                "'version':[sys.version_info.major,sys.version_info.minor],"
+                "'prefix':sys.prefix,'basePrefix':sys.base_prefix,"
+                "'executable':sys.executable,"
+                "'installPaths':{key:__import__('sysconfig').get_paths()[key] "
+                "for key in ('purelib','platlib','scripts','data')}},sort_keys=True))"
+            ),
+        ],
+        root=root,
+        capture_output=True,
+    )
+    try:
+        probe = json.loads(result.stdout)
+        major, minor = probe["version"]
+        prefix = probe["prefix"]
+        base_prefix = probe["basePrefix"]
+        executable = probe["executable"]
+        install_paths = probe["installPaths"]
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        raise BootstrapError(
+            "existing .venv interpreter returned an invalid identity probe"
+        ) from exc
+    if not all(isinstance(value, str) and value for value in (prefix, base_prefix, executable)):
+        raise BootstrapError("existing .venv interpreter returned an invalid identity probe")
+    if not isinstance(install_paths, dict):
+        raise BootstrapError("existing .venv interpreter returned invalid installation targets")
+    if not all(isinstance(value, int) and not isinstance(value, bool) for value in (major, minor)):
+        raise BootstrapError("existing .venv interpreter returned an invalid version probe")
+    if (major, minor) < MINIMUM_PYTHON:
+        raise BootstrapError(
+            f"existing .venv uses Python {major}.{minor}; move it aside and recreate it with "
+            "Python 3.11 or newer"
+        )
+    if _normalized(Path(prefix)) != _normalized(venv):
+        raise BootstrapError(
+            "existing .venv interpreter is not isolated in the repository .venv; "
+            "move it aside and rerun bootstrap"
+        )
+    if _normalized(Path(base_prefix)) == _normalized(venv):
+        raise BootstrapError(
+            "existing .venv interpreter reports the same base and environment prefix"
+        )
+    if not _is_inside(Path(executable), venv):
+        raise BootstrapError(
+            "existing .venv interpreter executable is outside the repository .venv"
+        )
+    _check_install_targets(root, venv, install_paths)
+
+
+def _check_cargo_home_target(root: Path, venv: Path, cargo_home: Path) -> None:
+    if _normalized(cargo_home.parent) != _normalized(venv) or cargo_home.name != "rust-cargo-home":
+        raise BootstrapError("the Rust dependency cache must be .venv/rust-cargo-home")
+    if _is_link_or_reparse(cargo_home):
+        raise BootstrapError(
+            "refusing to use .venv/rust-cargo-home because it is a symbolic link or reparse point"
+        )
+    if cargo_home.exists() and not cargo_home.is_dir():
+        raise BootstrapError("refusing to use .venv/rust-cargo-home because it is not a directory")
+    if not cargo_home.exists():
+        return
+    pending = [cargo_home]
+    while pending:
+        directory = pending.pop()
+        try:
+            entries = list(os.scandir(directory))
+        except OSError as exc:
+            raise BootstrapError(
+                f"cannot inspect Rust dependency cache {directory}: {exc}"
+            ) from exc
+        for entry in entries:
+            path = Path(entry.path)
+            if _is_link_or_reparse(path):
+                raise BootstrapError(
+                    f"refusing redirected Rust dependency cache entry {path.relative_to(root)}"
+                )
+            try:
+                metadata = path.lstat()
+            except OSError as exc:
+                raise BootstrapError(
+                    f"cannot inspect Rust dependency cache entry {path}: {exc}"
+                ) from exc
+            if stat.S_ISDIR(metadata.st_mode):
+                pending.append(path)
+            elif not stat.S_ISREG(metadata.st_mode):
+                raise BootstrapError(
+                    f"refusing special Rust dependency cache entry {path.relative_to(root)}"
+                )
+
+
+def bootstrap(root: Path = ROOT) -> None:
+    """Create or refresh the isolated environment without installing a toolchain."""
+
+    root = Path(os.path.abspath(os.fspath(root)))
+    _check_bootstrap_python()
+    venv = root / ".venv"
+    _check_venv_target(root, venv)
+    python = venv_python_path(venv)
+
+    if venv.exists():
+        _check_existing_interpreter(python, root=root, venv=venv)
+    else:
+        _run([sys.executable, "-m", "venv", str(venv)], root=root)
+        _check_venv_target(root, venv)
+        _check_existing_interpreter(python, root=root, venv=venv)
+
+    cargo_home = venv / "rust-cargo-home"
+    _check_cargo_home_target(root, venv, cargo_home)
+
+    _run(
+        [
+            str(python),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--require-hashes",
+            "-r",
+            "requirements-dev.txt",
+        ],
+        root=root,
+    )
+    _run(
+        [
+            str(python),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-deps",
+            "--no-build-isolation",
+            "-e",
+            ".",
+        ],
+        root=root,
+    )
+    _run(
+        [
+            str(python),
+            "-c",
+            "from skillpack_tools.cli import build_parser; build_parser().print_help()",
+        ],
+        root=root,
+    )
+    _run(
+        [
+            str(python),
+            str(root / "tools" / "check-rust-assets"),
+            "--bootstrap",
+            "--cargo-home",
+            str(cargo_home),
+        ],
+        root=root,
+    )
+
+
+def main() -> int:
+    try:
+        bootstrap()
+    except (BootstrapError, OSError, subprocess.CalledProcessError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print("Repository development environment is ready.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -43,14 +43,6 @@
       "prompt": "Design cancellation, bounded fan-out, task ownership, graceful shutdown, and blocking-work isolation for this existing Tokio service.",
       "shouldTrigger": false,
       "reason": "Async task lifecycle and concurrency behavior belong to rust-async-concurrency."
-    },
-    {
-      "id": "overlap-code-structure",
-      "kind": "overlap",
-      "prompt": "Keep polymorphism and public errors unchanged; replace this string tag and optional-field struct with data-carrying enums, group repeated parameters, and place behavior on natural owners.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-code-structure",
-      "reason": "Internal type/state/function organization dominates, so rust-code-structure is the narrower owner."
     }
   ],
   "behavior": [

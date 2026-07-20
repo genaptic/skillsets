@@ -16,21 +16,22 @@ on:
         required: true
         type: string
       source_sha:
-        description: Full 40-character release-candidate commit SHA that was evaluated.
+        description: Full release-candidate commit SHA evaluated by the native client.
         required: true
         type: string
-      evidence_ref:
-        description: Git ref containing the redacted machine-readable report.
+      evidence_sha:
+        description: Full commit SHA containing the redacted report under compatibility/reports/.
         required: true
-        default: "main"
         type: string
       report_path:
-        description: Repository-relative JSON report path at evidence_ref.
+        description: Repository-relative compatibility/reports/*.json path at evidence_sha.
         required: true
         type: string
 
 permissions:
   contents: read
+  attestations: write
+  id-token: write
 
 concurrency:
   group: native-evidence-${{ inputs.client }}-${{ inputs.pack_id }}-${{ inputs.source_sha }}
@@ -53,10 +54,15 @@ jobs:
             echo "Native evidence must be dispatched from refs/heads/$DEFAULT_BRANCH; received $GITHUB_REF." >&2
             exit 1
           fi
+          if [[ "${GITHUB_ACTOR,,}" != "${GITHUB_TRIGGERING_ACTOR,,}" ]]; then
+            echo "A workflow rerun must be initiated by the original authorized actor." >&2
+            exit 1
+          fi
       - name: Validate dispatch identifiers before checkout
         env:
           REQUESTED_PACK: ${{ inputs.pack_id }}
           REQUESTED_SHA: ${{ inputs.source_sha }}
+          EVIDENCE_SHA: ${{ inputs.evidence_sha }}
           REPORT_PATH: ${{ inputs.report_path }}
         shell: python
         run: |
@@ -66,141 +72,235 @@ jobs:
 
           pack = os.environ["REQUESTED_PACK"]
           source_sha = os.environ["REQUESTED_SHA"]
-          report_path = PurePosixPath(os.environ["REPORT_PATH"])
+          evidence_sha = os.environ["EVIDENCE_SHA"]
+          raw_report_path = os.environ["REPORT_PATH"]
+          report_path = PurePosixPath(raw_report_path)
           if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", pack):
               raise SystemExit("pack_id must be a lowercase kebab-case identifier")
           if not re.fullmatch(r"[0-9a-f]{40}", source_sha):
               raise SystemExit("source_sha must be a lowercase full 40-character SHA")
-          if report_path.is_absolute() or ".." in report_path.parts or report_path.suffix != ".json":
-              raise SystemExit("report_path must be a safe repository-relative JSON path")
-      - name: Check out the exact evaluated source
+          if not re.fullmatch(r"[0-9a-f]{40}", evidence_sha):
+              raise SystemExit("evidence_sha must be a lowercase full 40-character SHA")
+          if (
+              raw_report_path != report_path.as_posix()
+              or report_path.is_absolute()
+              or report_path.parts[:2] != ("compatibility", "reports")
+              or any(part in {"", ".", ".."} for part in report_path.parts)
+              or report_path.suffix != ".json"
+              or re.fullmatch(
+                  r"compatibility/reports/[A-Za-z0-9._/-]+\.json", raw_report_path
+              ) is None
+          ):
+              raise SystemExit(
+                  "report_path must be a safe compatibility/reports/*.json repository path"
+              )
+      - name: Check out the protected dispatch commit
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: ${{ inputs.source_sha }}
-          path: source
+          ref: ${{ github.sha }}
+          path: control
+          fetch-depth: 0
           persist-credentials: false
-      - name: Check out the redacted evidence
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          ref: ${{ inputs.evidence_ref }}
-          path: evidence
-          persist-credentials: false
+      - name: Prove ancestry and preserve the exact raw report blob
+        env:
+          DISPATCH_SHA: ${{ github.sha }}
+          REQUESTED_SHA: ${{ inputs.source_sha }}
+          EVIDENCE_SHA: ${{ inputs.evidence_sha }}
+          REPORT_PATH: ${{ inputs.report_path }}
+          REQUESTED_CLIENT: ${{ inputs.client }}
+        shell: python
+        run: |
+          import os
+          import subprocess
+          from pathlib import Path
+
+          def git(*arguments: str, capture: bool = False) -> bytes:
+              completed = subprocess.run(
+                  ["git", "-C", "control", *arguments],
+                  check=False,
+                  stdout=subprocess.PIPE if capture else None,
+                  stderr=subprocess.PIPE,
+              )
+              if completed.returncode:
+                  detail = completed.stderr.decode(errors="replace").strip()
+                  raise SystemExit(
+                      f"git {' '.join(arguments)} failed provenance validation: {detail}"
+                  )
+              return completed.stdout or b""
+
+          dispatch_sha = os.environ["DISPATCH_SHA"]
+          source_sha = os.environ["REQUESTED_SHA"]
+          evidence_sha = os.environ["EVIDENCE_SHA"]
+          head = git("rev-parse", "HEAD", capture=True).decode().strip()
+          if head != dispatch_sha:
+              raise SystemExit(f"protected checkout {head} does not match {dispatch_sha}")
+          git("cat-file", "-e", f"{source_sha}^{{commit}}")
+          git("cat-file", "-e", f"{evidence_sha}^{{commit}}")
+          git("merge-base", "--is-ancestor", evidence_sha, dispatch_sha)
+          git("merge-base", "--is-ancestor", source_sha, evidence_sha)
+          git("worktree", "add", "--detach", "../evaluated-source", source_sha)
+
+          blob = git("show", f"{evidence_sha}:{os.environ['REPORT_PATH']}", capture=True)
+          output = Path("validated-report")
+          output.mkdir()
+          report = output / f"{os.environ['REQUESTED_CLIENT']}.json"
+          report.write_bytes(blob)
+          print(f"preserved {len(blob)} raw bytes as {report}")
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: source/requirements-dev.txt
+          cache-dependency-path: control/requirements-dev.txt
       - name: Install the hash-locked validation environment
         run: |
-          python -m pip install --disable-pip-version-check --require-hashes -r source/requirements-dev.txt
-          python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e source
-      - name: Validate schema, exact provenance, inventory, cases, and verdict
+          python -m pip install --disable-pip-version-check --require-hashes -r control/requirements-dev.txt
+          python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e control
+      - name: Validate schema, inventory, complete cases, freshness, and policy
         env:
           REQUESTED_CLIENT: ${{ inputs.client }}
           REQUESTED_PACK: ${{ inputs.pack_id }}
           REQUESTED_SHA: ${{ inputs.source_sha }}
-          REPORT_PATH: ${{ inputs.report_path }}
+          ACTOR_ID: ${{ github.actor_id }}
         shell: python
         run: |
-          import datetime as dt
-          import json
           import os
-          import subprocess
-          from pathlib import Path, PurePosixPath
+          from pathlib import Path
 
-          import yaml
-          from jsonschema import Draft202012Validator, FormatChecker
+          from skillpack_tools.models import get_pack, load_repository
+          from skillpack_tools.validate import validate_compatibility_report
 
-          source = Path("source")
-          requested_sha = os.environ["REQUESTED_SHA"]
-          head = subprocess.check_output(
-              ["git", "-C", str(source), "rev-parse", "HEAD"], text=True
-          ).strip()
-          if head != requested_sha:
-              raise SystemExit(f"checked-out source {head} does not match {requested_sha}")
-
-          relative_report = PurePosixPath(os.environ["REPORT_PATH"])
-          evidence_root = Path("evidence").resolve()
-          report_path = evidence_root.joinpath(*relative_report.parts).resolve()
-          if not report_path.is_relative_to(evidence_root) or not report_path.is_file():
-              raise SystemExit(f"report does not exist: {relative_report}")
-          schema = json.loads(
-              (source / "schemas/compatibility-report.schema.json").read_text(encoding="utf-8")
-          )
-          report = json.loads(report_path.read_text(encoding="utf-8"))
-          errors = sorted(
-              Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(report),
-              key=lambda error: list(error.absolute_path),
+          source = Path("evaluated-source")
+          client = os.environ["REQUESTED_CLIENT"]
+          errors, _ = validate_compatibility_report(
+              source,
+              Path("validated-report") / f"{client}.json",
+              pack=get_pack(source, os.environ["REQUESTED_PACK"]),
+              source_sha=os.environ["REQUESTED_SHA"],
+              policy=load_repository(Path("control")).compatibility_evidence,
+              schema_root=Path("control"),
+              actor=os.environ["GITHUB_ACTOR"],
+              actor_id=int(os.environ["ACTOR_ID"]),
+              triggering_actor=os.environ["GITHUB_TRIGGERING_ACTOR"],
           )
           if errors:
-              details = "\n".join(f"- {list(error.absolute_path)}: {error.message}" for error in errors)
-              raise SystemExit(f"compatibility report schema validation failed:\n{details}")
-
-          requested_client = os.environ["REQUESTED_CLIENT"]
-          requested_pack = os.environ["REQUESTED_PACK"]
-          if report["client"]["name"] != requested_client:
-              raise SystemExit("report client does not match the protected dispatch selection")
-          if not report["client"]["model"]:
-              raise SystemExit("release evidence must identify the model used")
-          if report["pack"]["id"] != requested_pack:
-              raise SystemExit("report pack does not match the protected dispatch selection")
-          if report["pack"]["sourceSha"] != requested_sha:
-              raise SystemExit("report sourceSha does not match the exact evaluated commit")
-
-          manifests = []
-          for path in source.glob("packs/*/*/skillpack.yaml"):
-              data = yaml.safe_load(path.read_text(encoding="utf-8"))
-              if data.get("id") == requested_pack:
-                  manifests.append((path, data))
-          if len(manifests) != 1:
-              raise SystemExit(f"expected exactly one manifest for {requested_pack}, found {len(manifests)}")
-          manifest_path, manifest = manifests[0]
-          expected_tag = f"{requested_pack}-v{manifest['version']}"
-          if report["pack"]["version"] != manifest["version"]:
-              raise SystemExit(f"report version does not match {manifest_path}")
-          if report["pack"]["tag"] != expected_tag:
-              raise SystemExit(f"report tag must be {expected_tag}")
-          if requested_client not in manifest["targets"]:
-              raise SystemExit(f"{requested_client} is not a declared target for {requested_pack}")
-          expected_skills = sorted(manifest["skills"])
-          if sorted(report["pack"]["expectedSkills"]) != expected_skills:
-              raise SystemExit("report expectedSkills does not match the canonical pack manifest")
-          if sorted(report["installation"]["discoveredSkills"]) != expected_skills:
-              raise SystemExit("native client did not discover the exact canonical skill inventory")
-
-          all_cases = report["cases"]["routing"] + report["cases"]["behavior"]
-          if any(not case["passed"] for case in all_cases):
-              raise SystemExit("one or more native/model-backed cases failed")
-          if report["verdict"]["status"] != "passed":
-              raise SystemExit("report verdict is not passed")
-          if report["reviewer"]["verdict"].strip().lower() not in {"pass", "passed", "approved"}:
-              raise SystemExit("reviewer verdict is not an explicit pass")
-          report_date = dt.date.fromisoformat(report["date"])
-          if report_date > dt.date.today():
-              raise SystemExit("report date cannot be in the future")
-
-          output = Path("validated-report")
-          output.mkdir()
-          normalized = output / f"{requested_client}.json"
-          normalized.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-          print(f"validated {normalized} for {requested_pack}@{requested_sha}")
-      - name: Validate with the repository compatibility command
+              raise SystemExit("compatibility report validation failed:\n" + "\n".join(errors))
+      - name: Bind the authorized actor and create the provenance envelope
         env:
           REQUESTED_CLIENT: ${{ inputs.client }}
           REQUESTED_PACK: ${{ inputs.pack_id }}
           REQUESTED_SHA: ${{ inputs.source_sha }}
+          EVIDENCE_SHA: ${{ inputs.evidence_sha }}
+          REPORT_PATH: ${{ inputs.report_path }}
+          REPOSITORY_ID: ${{ github.repository_id }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+          ACTOR_ID: ${{ github.actor_id }}
+        shell: python
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          from skillpack_tools.evidence import (
+              build_evidence_envelope,
+              reviewer_authorization_errors,
+              sha256_file,
+              strict_load_json,
+              validate_evidence_envelope,
+          )
+          from skillpack_tools.models import get_pack, load_repository
+
+          client = os.environ["REQUESTED_CLIENT"]
+          report_path = Path("validated-report") / f"{client}.json"
+          report = strict_load_json(report_path)
+          config = load_repository(Path("control"))
+          pack = get_pack(Path("evaluated-source"), os.environ["REQUESTED_PACK"])
+          identity_errors = reviewer_authorization_errors(
+              report["reviewer"],
+              config.compatibility_evidence,
+              actor=os.environ["GITHUB_ACTOR"],
+              actor_id=int(os.environ["ACTOR_ID"]),
+              triggering_actor=os.environ["GITHUB_TRIGGERING_ACTOR"],
+              pack_maintainers=[item["github"] for item in pack.maintainers],
+              label=str(report_path),
+          )
+          if identity_errors:
+              raise SystemExit("\n".join(identity_errors))
+
+          envelope = build_evidence_envelope(
+              repository_id=int(os.environ["REPOSITORY_ID"]),
+              repository_slug=os.environ["GITHUB_REPOSITORY"],
+              run_id=int(os.environ["GITHUB_RUN_ID"]),
+              run_attempt=int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              workflow_ref=os.environ["WORKFLOW_REF"],
+              workflow_sha=os.environ["WORKFLOW_SHA"],
+              event=os.environ["GITHUB_EVENT_NAME"],
+              actor=os.environ["GITHUB_ACTOR"],
+              actor_id=int(os.environ["ACTOR_ID"]),
+              triggering_actor=os.environ["GITHUB_TRIGGERING_ACTOR"],
+              source_sha=os.environ["REQUESTED_SHA"],
+              evidence_sha=os.environ["EVIDENCE_SHA"],
+              report_repository_path=os.environ["REPORT_PATH"],
+              report_sha256=sha256_file(report_path),
+              client=client,
+              pack_id=os.environ["REQUESTED_PACK"],
+              tested_at=report["testedAt"],
+          )
+          envelope_path = report_path.with_name(f"{client}.envelope.json")
+          envelope_path.write_text(json.dumps(envelope, indent=2) + "\n", encoding="utf-8")
+          errors, _ = validate_evidence_envelope(
+              Path("control"),
+              envelope_path,
+              report_path=report_path,
+              report_repository_path=os.environ["REPORT_PATH"],
+              source_sha=os.environ["REQUESTED_SHA"],
+              evidence_sha=os.environ["EVIDENCE_SHA"],
+              client=client,
+              pack_id=os.environ["REQUESTED_PACK"],
+              repository_slug=os.environ["GITHUB_REPOSITORY"],
+              workflow_run_id=int(os.environ["GITHUB_RUN_ID"]),
+          )
+          if errors:
+              raise SystemExit("evidence envelope validation failed:\n" + "\n".join(errors))
+      - name: Attest the raw report and workflow-controlled envelope
+        id: provenance
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6
+        with:
+          subject-path: |
+            validated-report/${{ inputs.client }}.json
+            validated-report/${{ inputs.client }}.envelope.json
+      - name: Preserve and immediately verify the attestation bundle
+        env:
+          REQUESTED_CLIENT: ${{ inputs.client }}
+          ATTESTATION_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          GH_TOKEN: ${{ github.token }}
+          SIGNER_WORKFLOW: ${{ github.repository }}/.github/workflows/native-compatibility.yml
+          DEFAULT_BRANCH: main
         shell: bash
         run: |
-          skillpacks --root source compatibility \
-            "$GITHUB_WORKSPACE/validated-report/$REQUESTED_CLIENT.json" \
-            --pack "$REQUESTED_PACK" \
-            --source-sha "$REQUESTED_SHA"
-      - name: Upload only the validated report
+          set -euo pipefail
+          destination="validated-report/$REQUESTED_CLIENT.attestation.jsonl"
+          cp "$ATTESTATION_BUNDLE" "$destination"
+          test -s "$destination"
+          for subject in \
+            "validated-report/$REQUESTED_CLIENT.json" \
+            "validated-report/$REQUESTED_CLIENT.envelope.json"; do
+            gh attestation verify "$subject" \
+              --repo "$GITHUB_REPOSITORY" \
+              --bundle "$destination" \
+              --signer-workflow "$SIGNER_WORKFLOW" \
+              --source-ref "refs/heads/$DEFAULT_BRANCH" \
+              --deny-self-hosted-runners
+          done
+      - name: Upload the report, envelope, and attestation bundle
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: compatibility-report-${{ inputs.client }}-${{ inputs.pack_id }}-${{ inputs.source_sha }}
-          path: validated-report/${{ inputs.client }}.json
+          path: |
+            validated-report/${{ inputs.client }}.json
+            validated-report/${{ inputs.client }}.envelope.json
+            validated-report/${{ inputs.client }}.attestation.jsonl
           if-no-files-found: error
           retention-days: 90
       - name: State the evidence boundary
@@ -208,6 +308,7 @@ jobs:
           REQUESTED_CLIENT: ${{ inputs.client }}
           REQUESTED_PACK: ${{ inputs.pack_id }}
           REQUESTED_SHA: ${{ inputs.source_sha }}
+          EVIDENCE_SHA: ${{ inputs.evidence_sha }}
         shell: python
         run: |
           import os
@@ -217,9 +318,10 @@ jobs:
               "# Protected compatibility evidence accepted\n\n"
               f"- Client: `{os.environ['REQUESTED_CLIENT']}`\n"
               f"- Pack: `{os.environ['REQUESTED_PACK']}`\n"
-              f"- Evaluated source: `{os.environ['REQUESTED_SHA']}`\n\n"
-              "This workflow validated and preserved a report produced by a real native-client "
-              "and model-backed run. It did not infer compatibility from structural CI and did "
-              "not itself run a model.\n",
+              f"- Evaluated source: `{os.environ['REQUESTED_SHA']}`\n"
+              f"- Evidence commit: `{os.environ['EVIDENCE_SHA']}`\n\n"
+              "The artifact preserves the raw report, a workflow-controlled provenance "
+              "envelope, and their GitHub Actions attestation bundle. It did not infer "
+              "compatibility from structural CI and did not itself run a model.\n",
               encoding="utf-8",
           )

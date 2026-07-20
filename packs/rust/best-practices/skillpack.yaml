@@ -1,10 +1,30 @@
-schema-version: 1
+schema-version: 2
 id: "rust-best-practices"
 display-name: "Rust Best Practices"
 description: "Repository-aware workflows for designing, reviewing, testing, documenting, and maintaining production Rust systems."
 language: "rust"
 subject: "best-practices"
 version: "1.0.0"
+maturity: "release-candidate"
+distribution:
+  visibility: "public"
+publication:
+  state: "unpublished"
+release-gates:
+- "native-evidence"
+- "deterministic-archive"
+- "rust-assets"
+interface:
+  short-description: "Design, review, and maintain repository-aware Rust systems."
+  starter-prompts:
+  - skill: "rust-core-best-practices"
+    prompt: "Use $rust-core-best-practices to review this Rust change against repository policy and current core practices."
+  - skill: "rust-project-architecture"
+    prompt: "Use $rust-project-architecture to design or review this Rust project's crate, module, and workspace boundaries."
+  - skill: "rust-testing-strategy"
+    prompt: "Use $rust-testing-strategy to plan reliable unit, integration, doctest, CLI, and end-to-end coverage."
+  - skill: "rust-networking"
+    prompt: "Use $rust-networking to design or review safe Rust clients, retries, timeouts, and pools."
 license: Apache-2.0
 maintainers:
 - github: "jecsand838"

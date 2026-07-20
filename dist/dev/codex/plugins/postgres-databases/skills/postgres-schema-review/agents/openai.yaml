@@ -1,0 +1,4 @@
+interface:
+  display_name: "PostgreSQL Schema Review"
+  short_description: "Audit PostgreSQL schemas and privileges"
+  default_prompt: "Use $postgres-schema-review to audit this PostgreSQL schema and catalog evidence for operational risks."

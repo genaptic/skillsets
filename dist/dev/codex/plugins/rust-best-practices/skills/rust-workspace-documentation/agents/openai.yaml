@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Workspace Documentation"
+  short_description: "Reconcile Rust workspace and agent documentation"
+  default_prompt: "Use $rust-workspace-documentation to reconcile this Rust workspace's Markdown and agent-facing documentation with current behavior."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Genaptic Skillsets: Create Skill"
+  short_description: "Create and verify one repository Agent Skill"
+  default_prompt: "Use $genaptic-skillsets-create-skill to research, add, and verify one Agent Skill in an existing skillpack."

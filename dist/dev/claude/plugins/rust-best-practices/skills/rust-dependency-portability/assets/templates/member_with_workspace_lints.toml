@@ -1,0 +1,14 @@
+# Adaptable Cargo member snippet; merge only with a repository that defines these workspace keys.
+
+[package]
+name = "example-member"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+
+[lints]
+workspace = true

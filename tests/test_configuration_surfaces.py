@@ -52,7 +52,6 @@ def test_configure_rewrites_every_default_branch_workflow_surface(repo_copy: Pat
         assert '      - "release/v2"\n' in text
 
     native = (repo_copy / ".github/workflows/native-compatibility.yml").read_text(encoding="utf-8")
-    assert '        default: "release/v2"\n' in native
     assert '          DEFAULT_BRANCH: "release/v2"\n' in native
 
     release = (repo_copy / ".github/workflows/release.yml").read_text(encoding="utf-8")
@@ -85,6 +84,6 @@ def test_codeowners_names_every_current_pack_explicitly(repo_copy: Path) -> None
         "/packs/rust/best-practices/",
         "/packs/rust/cli-apps/",
         "/packs/shared/postgres-databases/",
-        "/packs/shared/repository-development/",
+        "/packs/shared/genaptic-skillsets-development/",
     ):
         assert f"{path} @jecsand838\n" in codeowners

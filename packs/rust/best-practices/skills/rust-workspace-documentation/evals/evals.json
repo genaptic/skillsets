@@ -43,14 +43,6 @@
       "prompt": "Correct one typo in README.md and preserve every other byte; no repository audit or behavior review is needed.",
       "shouldTrigger": false,
       "reason": "A single constrained copyedit does not require the coordinated evidence and ownership workflow."
-    },
-    {
-      "id": "overlap-public-api-docs",
-      "kind": "overlap",
-      "prompt": "Refresh crate-level and item-level rustdoc plus all doctestable examples across the workspace; report Markdown drift separately without editing Markdown.",
-      "shouldTrigger": false,
-      "preferredSkill": "rustdoc-maintenance",
-      "reason": "The requested deliverable is the public rustdoc surface, which the neighboring skill owns more narrowly."
     }
   ],
   "behavior": [

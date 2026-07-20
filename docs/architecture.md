@@ -50,20 +50,22 @@ is copied between those plugin adapters.
 
 ### Catalog and marketplace
 
-The root catalogs list packs. They are generated from all `skillpack.yaml` files:
+The root catalogs list only reconciled public releases. Development and preview catalogs are
+generated into isolated, self-contained trees:
 
 - `catalog.json` — neutral machine index.
 - `.claude-plugin/marketplace.json` — Claude marketplace.
 - `.agents/plugins/marketplace.json` — Codex marketplace.
-- `dist/index.html` — deterministic GitHub Pages landing page.
-- `dist/opencode/.../index.json` — one OpenCode HTTP catalog per pack.
-- `dist/install/*` — direct installers that default to the exact released source SHA.
+- `dist/public/index.html` — deterministic GitHub Pages landing page.
+- `dist/public/opencode/.../index.json` — published OpenCode HTTP catalogs.
+- `dist/public/install/*` — published installers pinned to an exact released source SHA.
+- `dist/preview/` — public candidates for CI artifacts only.
+- `dist/dev/` — all non-withdrawn packs, including maintainer tooling.
 
-Before publication, a marketplace entry points to the pack through a repository-local path
-and `catalog.json` labels it `unpublished`. After a protected release succeeds, maintainers
-record the exact released full SHA as `source-sha`; regeneration then emits a Git-backed
-`git-subdir` source pinned by both the pack-specific tag and SHA and labels it `published`.
-The generator never invents a publication SHA.
+Before publication, a pack appears only in preview/development outputs. After a protected release
+succeeds, `publication.latest-release` records its exact version, SHA, release ID, and timestamp;
+regeneration then emits a Git-backed public source pinned by both the derived tag and SHA. The
+generator never invents publication metadata.
 
 ## Data flow
 

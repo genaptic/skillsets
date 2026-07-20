@@ -35,7 +35,6 @@
       "kind": "negative",
       "prompt": "Design process-wide Tokio task ownership, bounded worker queues, cancellation propagation, and Ctrl-C shutdown for this service.",
       "shouldTrigger": false,
-      "preferredSkill": "rust-async-concurrency",
       "reason": "General task lifecycle and graceful shutdown are owned by async concurrency."
     },
     {
@@ -43,16 +42,7 @@
       "kind": "negative",
       "prompt": "Review whether adding reqwest is compatible with this workspace's MSRV, TLS features, license policy, and supported targets.",
       "shouldTrigger": false,
-      "preferredSkill": "rust-dependency-portability",
       "reason": "Dependency selection, features, licensing, MSRV, and platform support are the requested outcome."
-    },
-    {
-      "id": "overlap-async-network",
-      "kind": "overlap",
-      "prompt": "Several HTTP and database background tasks ignore cancellation and prevent the Tokio process from shutting down; redesign their shared task lifecycle.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-async-concurrency",
-      "reason": "Although network clients are involved, process-wide task ownership and shutdown are the narrower async concurrency contract."
     }
   ],
   "behavior": [

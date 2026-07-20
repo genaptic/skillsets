@@ -24,11 +24,11 @@ every Python skill.
 
 ## Choose the authoring boundary
 
-Use `$create-new-skill` when one focused public skill belongs in an existing pack. Use
-`$create-new-skillset` when the request needs a new installation and release boundary, contains
-multiple coordinated skills, or has no coherent existing owner. A one-skill pack is valid only
-when it has an independent distribution boundary and names an existing neighboring skill that
-owns the closest excluded outcome.
+Use `$genaptic-skillsets-create-skill` when one focused public skill belongs in an existing
+pack. Use `$genaptic-skillsets-create-skillpack` when the request needs a new installation and
+release boundary, contains multiple coordinated skills, or has no coherent existing owner. A
+one-skill pack is valid only when it has an independent distribution boundary and names an
+existing neighboring skill that owns the closest excluded outcome.
 
 Before scaffolding, normalize the request with the selected skill's bundled JSON Schema. Record
 public identity, routing examples, nearest neighbors, expected output, success criteria, source

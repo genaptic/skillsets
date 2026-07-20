@@ -43,14 +43,6 @@
       "prompt": "The index definition is approved. Plan CREATE INDEX CONCURRENTLY, monitoring, failure cleanup, and rollback for production.",
       "shouldTrigger": false,
       "reason": "Safe rollout of an approved definition belongs to migration safety."
-    },
-    {
-      "id": "overlap-query-performance",
-      "kind": "overlap",
-      "prompt": "A SELECT regressed, but we do not yet know whether the bottleneck is plan estimates, blocking, I/O, or a missing index.",
-      "shouldTrigger": false,
-      "reason": "The broader diagnosis must establish the mechanism before index design.",
-      "preferredSkill": "postgres-query-performance-review"
     }
   ],
   "behavior": [

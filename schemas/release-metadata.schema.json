@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/genaptic/skillsets/main/schemas/release-metadata.schema.json",
+  "title": "Deterministic skillpack release metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "pack", "tagSignature", "compatibilityEvidence"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "mode": {"enum": ["draft-rehearsal", "publishable"]},
+    "pack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "maturity", "releaseTag", "sourceSha", "license", "distributionVisibility", "skills"],
+      "properties": {
+        "id": {"$ref": "#/$defs/kebab"},
+        "version": {"$ref": "#/$defs/semver"},
+        "maturity": {"enum": ["draft", "release-candidate", "stable", "deprecated"]},
+        "releaseTag": {"type": "string", "minLength": 1},
+        "sourceSha": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+        "license": {"type": "string", "minLength": 1},
+        "distributionVisibility": {"enum": ["public", "maintainers"]},
+        "skills": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/kebab"}
+        }
+      }
+    },
+    "tagSignature": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "fingerprint"],
+          "properties": {
+            "type": {"enum": ["ssh", "openpgp"]},
+            "fingerprint": {"type": "string", "minLength": 1}
+          },
+          "allOf": [
+            {
+              "if": {"properties": {"type": {"const": "ssh"}}, "required": ["type"]},
+              "then": {"properties": {"fingerprint": {"pattern": "^SHA256:[A-Za-z0-9+/]{43}$"}}}
+            },
+            {
+              "if": {"properties": {"type": {"const": "openpgp"}}, "required": ["type"]},
+              "then": {"properties": {"fingerprint": {"pattern": "^(?:[0-9A-F]{40}|[0-9A-F]{64})$"}}}
+            }
+          ]
+        }
+      ]
+    },
+    "compatibilityEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "reports"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "reports": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/evidence"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "draft-rehearsal"}}, "required": ["mode"]},
+      "then": {
+        "properties": {
+          "tagSignature": {"type": "null"},
+          "compatibilityEvidence": {
+            "properties": {
+              "required": {"const": false},
+              "reports": {"maxItems": 0}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"mode": {"const": "publishable"}}, "required": ["mode"]},
+      "then": {
+        "properties": {
+          "pack": {
+            "properties": {
+              "maturity": {"const": "stable"},
+              "sourceSha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+              "distributionVisibility": {"const": "public"}
+            }
+          },
+          "tagSignature": {"type": "object"},
+          "compatibilityEvidence": {
+            "properties": {
+              "required": {"const": true},
+              "reports": {
+                "minItems": 3,
+                "maxItems": 3,
+                "prefixItems": [
+                  {"allOf": [{"$ref": "#/$defs/evidence"}, {"properties": {"client": {"const": "claude-code"}}}]},
+                  {"allOf": [{"$ref": "#/$defs/evidence"}, {"properties": {"client": {"const": "codex"}}}]},
+                  {"allOf": [{"$ref": "#/$defs/evidence"}, {"properties": {"client": {"const": "opencode"}}}]}
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "kebab": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "semver": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "assetName": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["client", "testedAt", "reportAsset", "reportSha256", "provenanceAsset", "provenanceSha256", "attestationBundleAsset", "attestationBundleSha256", "ingestionRunId", "ingestionArtifactId", "ingestionArtifactDigest"],
+      "properties": {
+        "client": {"enum": ["claude-code", "codex", "opencode"]},
+        "testedAt": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"},
+        "reportAsset": {"$ref": "#/$defs/assetName"},
+        "reportSha256": {"$ref": "#/$defs/sha256"},
+        "provenanceAsset": {"$ref": "#/$defs/assetName"},
+        "provenanceSha256": {"$ref": "#/$defs/sha256"},
+        "attestationBundleAsset": {"$ref": "#/$defs/assetName"},
+        "attestationBundleSha256": {"$ref": "#/$defs/sha256"},
+        "ingestionRunId": {"type": "integer", "minimum": 1},
+        "ingestionArtifactId": {"type": "integer", "minimum": 1},
+        "ingestionArtifactDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

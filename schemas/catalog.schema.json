@@ -6,40 +6,83 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "project", "repository", "marketplace", "packs"],
   "properties": {
-    "schemaVersion": {"const": 1},
+    "schemaVersion": {"const": 2},
     "project": {"type": "string", "minLength": 3},
     "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
     "marketplace": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
     "packs": {
       "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "displayName", "description", "language", "subject", "version", "tag", "path", "license", "skills", "targets", "category", "keywords", "compatibility", "operations", "publication"],
-        "properties": {
-          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-          "displayName": {"type": "string", "minLength": 3},
-          "description": {"type": "string", "minLength": 40},
-          "language": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-          "subject": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-          "version": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
-          "tag": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
-          "path": {"type": "string", "pattern": "^packs/[a-z0-9-]+/[a-z0-9-]+$"},
-          "license": {"type": "string", "minLength": 3},
-          "skills": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}},
-          "targets": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["claude-code", "codex", "opencode"]}},
-          "category": {"type": "string", "minLength": 3},
-          "keywords": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-          "compatibility": {"type": "object"},
-          "operations": {"type": "object"},
-          "publication": {
-            "oneOf": [
-              {"type": "object", "additionalProperties": false, "required": ["state", "sourceType"], "properties": {"state": {"const": "unpublished"}, "sourceType": {"const": "repo-local"}}},
-              {"type": "object", "additionalProperties": false, "required": ["state", "sourceType", "sourceSha"], "properties": {"state": {"const": "published"}, "sourceType": {"const": "git-subdir"}, "sourceSha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}}
-            ]
-          }
+      "items": {"$ref": "#/$defs/pack"}
+    }
+  },
+  "$defs": {
+    "semantic-version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "latest-release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "sourceSha", "releaseId", "releasedAt"],
+      "properties": {
+        "version": {"$ref": "#/$defs/semantic-version"},
+        "sourceSha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "releaseId": {"type": "integer", "minimum": 1},
+        "releasedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
         }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "visibility", "maturity", "sourceType"],
+      "properties": {
+        "state": {"enum": ["unpublished", "published", "withdrawn"]},
+        "visibility": {"enum": ["public", "maintainers"]},
+        "maturity": {"enum": ["draft", "release-candidate", "stable", "deprecated"]},
+        "sourceType": {"enum": ["repo-local", "git-subdir"]},
+        "latestRelease": {"$ref": "#/$defs/latest-release"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"const": "unpublished"}}, "required": ["state"]},
+          "then": {"not": {"required": ["latestRelease"]}}
+        },
+        {
+          "if": {"properties": {"state": {"enum": ["published", "withdrawn"]}}, "required": ["state"]},
+          "then": {"required": ["latestRelease"]}
+        },
+        {
+          "if": {"properties": {"sourceType": {"const": "git-subdir"}}, "required": ["sourceType"]},
+          "then": {"properties": {"state": {"const": "published"}}, "required": ["latestRelease"]}
+        }
+      ]
+    },
+    "pack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "shortDescription", "description", "language", "subject", "version", "tag", "path", "license", "skills", "targets", "category", "keywords", "compatibility", "operations", "publication"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "displayName": {"type": "string", "minLength": 3},
+        "shortDescription": {"type": "string", "minLength": 25, "maxLength": 120, "pattern": "^\\S(?:.*[.!?])$"},
+        "description": {"type": "string", "minLength": 40},
+        "language": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "subject": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "version": {"$ref": "#/$defs/semantic-version"},
+        "tag": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"},
+        "path": {"type": "string", "pattern": "^packs/[a-z0-9-]+/[a-z0-9-]+$"},
+        "license": {"type": "string", "minLength": 3},
+        "skills": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}},
+        "targets": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["claude-code", "codex", "opencode"]}},
+        "category": {"type": "string", "minLength": 3},
+        "keywords": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "compatibility": {"type": "object"},
+        "operations": {"type": "object"},
+        "publication": {"$ref": "#/$defs/publication"}
       }
     }
   }

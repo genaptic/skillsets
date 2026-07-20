@@ -5,10 +5,17 @@ import json
 import sys
 from pathlib import Path
 
+from .checks import check as run_check
+from .checks import check_pack as run_check_pack
+from .checks import lint as run_lint
+from .checks import lock as run_lock
+from .checks import test as run_test
 from .configure import configure_repository
 from .evals import eval_report, run_structural_evals
 from .generate import apply_generated_files
+from .lifecycle_commands import apply_lifecycle_plan, build_lifecycle_plan, plan_text
 from .models import get_pack
+from .publication import load_publication_record, prepare_publication_update
 from .release import build_release
 from .util import SkillpackError, atomic_write, find_repository_root
 from .validate import (
@@ -65,6 +72,8 @@ def build_parser() -> argparse.ArgumentParser:
     configure.add_argument("--copyright-owner")
     configure.add_argument("--maintainer-name")
     configure.add_argument("--maintainer-github")
+    configure.add_argument("--maintainer-github-id", type=int)
+    configure.add_argument("--trusted-ssh-fingerprint")
     configure.add_argument("--security-channel", choices=["github-private-vulnerability-reporting"])
     configure.add_argument("--security-email")
     configure.add_argument("--marketplace-name")
@@ -80,6 +89,45 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Build a clearly marked rehearsal without Git/tag/evidence release gates.",
     )
+    release.add_argument(
+        "--policy-root",
+        help="Protected-main policy checkout; required for a publishable release.",
+    )
+
+    prepare_release = subparsers.add_parser(
+        "prepare-release", help="Preview or apply an atomic stable release transition."
+    )
+    prepare_release.add_argument("pack_id")
+    prepare_release.add_argument("--release-date", required=True)
+    prepare_release.add_argument("--version")
+    prepare_release.add_argument("--apply", action="store_true")
+    prepare_release.add_argument("--plan-digest")
+
+    begin_development = subparsers.add_parser(
+        "begin-development", help="Start a higher candidate without losing the public release."
+    )
+    begin_development.add_argument("pack_id")
+    begin_development.add_argument("--next-version", required=True)
+    begin_development.add_argument("--apply", action="store_true")
+    begin_development.add_argument("--plan-digest")
+
+    publication = subparsers.add_parser(
+        "prepare-publication-update",
+        help="Preview or apply canonical metadata from an immutable release record.",
+    )
+    publication.add_argument("record")
+    publication.add_argument("--apply", action="store_true")
+    publication.add_argument("--plan-digest")
+
+    subparsers.add_parser("check", help="Run the complete non-mutating repository gate.")
+    check_pack = subparsers.add_parser(
+        "check-pack", help="Run focused checks while retaining global graph validation."
+    )
+    check_pack.add_argument("pack_id")
+    subparsers.add_parser("lint", help="Run repository linters.")
+    subparsers.add_parser("test", help="Run the complete Python test suite.")
+    lock = subparsers.add_parser("lock", help="Regenerate or verify the hash-locked dependencies.")
+    lock.add_argument("--check", action="store_true")
     release.add_argument(
         "--report",
         action="append",
@@ -136,7 +184,9 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"Eval specifications passed: {totals['skills']} skills, "
                 f"{totals['routingCases']} routing cases, "
-                f"{totals['behaviorCases']} behavior cases."
+                f"{totals['behaviorCases']} behavior cases, "
+                f"{totals['routingBoundaries']} routing boundaries, and "
+                f"{totals['boundaryCases']} boundary cases."
             )
             return 0
 
@@ -171,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
                 copyright_owner=args.copyright_owner,
                 maintainer_name=args.maintainer_name,
                 maintainer_github=args.maintainer_github,
+                maintainer_github_id=args.maintainer_github_id,
+                trusted_ssh_fingerprint=args.trusted_ssh_fingerprint,
                 security_channel=args.security_channel,
                 security_email=args.security_email,
                 marketplace_name=args.marketplace_name,
@@ -194,10 +246,73 @@ def main(argv: list[str] | None = None) -> int:
                 args.pack_id,
                 draft=args.draft,
                 reports=[Path(path).resolve() for path in args.report],
+                policy_root=Path(args.policy_root).resolve() if args.policy_root else None,
             )
             print(f"Archive: {archive.relative_to(root)}")
             print(f"Checksum: {checksum.relative_to(root)}")
             print(f"Release notes: {notes.relative_to(root)}")
+            return 0
+
+        if args.command in {"prepare-release", "begin-development"}:
+            operation = args.command
+            release_date = args.release_date if operation == "prepare-release" else None
+            version = args.version if operation == "prepare-release" else args.next_version
+            if args.apply:
+                plan = apply_lifecycle_plan(
+                    root,
+                    args.pack_id,
+                    operation=operation,
+                    plan_digest=args.plan_digest,
+                    release_date=release_date,
+                    version=version,
+                )
+            else:
+                if args.plan_digest:
+                    raise SkillpackError("--plan-digest is only valid with --apply.")
+                plan = build_lifecycle_plan(
+                    root,
+                    args.pack_id,
+                    operation=operation,
+                    release_date=release_date,
+                    version=version,
+                )
+            print(plan_text(plan), end="")
+            if not args.apply:
+                print("No files changed. Re-run with --apply --plan-digest DIGEST after review.")
+            return 0
+
+        if args.command == "prepare-publication-update":
+            record = load_publication_record(root, Path(args.record))
+            plan = prepare_publication_update(
+                root,
+                record,
+                apply=args.apply,
+                plan_digest=args.plan_digest,
+            )
+            print(json.dumps(plan, indent=2, ensure_ascii=False))
+            if not args.apply:
+                print("No files changed. Re-run with --apply --plan-digest DIGEST after review.")
+            return 0
+
+        if args.command == "check":
+            run_check(root)
+            print("Complete repository check passed.")
+            return 0
+
+        if args.command == "check-pack":
+            run_check_pack(root, args.pack_id)
+            return 0
+
+        if args.command == "lint":
+            run_lint(root)
+            return 0
+
+        if args.command == "test":
+            run_test(root)
+            return 0
+
+        if args.command == "lock":
+            run_lock(root, check=args.check)
             return 0
 
     except (SkillpackError, ValueError) as exc:

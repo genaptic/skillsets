@@ -30,9 +30,9 @@ EXPECTED_PACKS = {
         "postgres-migration-safety",
         "postgres-backup-recovery",
     ],
-    "repository-development": [
-        "create-new-skill",
-        "create-new-skillset",
+    "genaptic-skillsets-development": [
+        "genaptic-skillsets-create-skill",
+        "genaptic-skillsets-create-skillpack",
     ],
     "rust-best-practices": [
         "rust-core-best-practices",
@@ -96,8 +96,10 @@ def test_structural_eval_totals() -> None:
     report = eval_report(run_structural_evals(ROOT))
     assert report["totals"] == {
         "skills": 26,
-        "routingCases": 182,
+        "routingCases": 156,
         "behaviorCases": 52,
+        "routingBoundaries": 18,
+        "boundaryCases": 72,
     }
 
 
@@ -121,21 +123,34 @@ def test_generated_hash_manifest_matches_files() -> None:
         assert digest == item["sha256"], item["path"]
 
 
-def test_marketplaces_and_catalog_cover_every_pack() -> None:
+def test_public_marketplaces_are_empty_and_nonpublic_channels_are_isolated() -> None:
     catalog = json.loads((ROOT / "catalog.json").read_text(encoding="utf-8"))
     claude = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
     codex = json.loads(
         (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8")
     )
-    expected = set(EXPECTED_PACKS)
-    assert {item["id"] for item in catalog["packs"]} == expected
-    assert all(
-        item["publication"] == {"state": "unpublished", "sourceType": "repo-local"}
-        for item in catalog["packs"]
-    )
-    assert {item["name"] for item in claude["plugins"]} == expected
-    assert {item["name"] for item in codex["plugins"]} == expected
+    assert catalog["packs"] == []
+    assert claude["plugins"] == []
+    assert codex["plugins"] == []
+
+    preview = json.loads((ROOT / "dist/preview/catalog.json").read_text(encoding="utf-8"))
+    development = json.loads((ROOT / "dist/dev/catalog.json").read_text(encoding="utf-8"))
+    public_ids = {pack.id for pack in discover_packs(ROOT) if pack.visibility == "public"}
+    assert {item["id"] for item in preview["packs"]} == public_ids
+    assert {item["id"] for item in development["packs"]} == set(EXPECTED_PACKS)
     for pack in discover_packs(ROOT):
-        index = ROOT / "dist" / "opencode" / pack.language / pack.subject / "index.json"
+        index = ROOT / "dist/dev/opencode" / pack.language / pack.subject / "index.json"
         data = json.loads(index.read_text(encoding="utf-8"))
         assert [item["name"] for item in data["skills"]] == pack.skills
+
+
+def test_root_readme_is_filtered_and_within_the_size_budget() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert len(readme.splitlines()) <= 120
+    assert len(readme.split()) <= 800
+    assert "No stable releases are currently published" in readme
+    assert "codex plugin add" not in readme
+    generated = readme.split("<!-- BEGIN GENERATED PACK CATALOG -->", 1)[1].split(
+        "<!-- END GENERATED PACK CATALOG -->", 1
+    )[0]
+    assert "genaptic-skillsets-development" not in generated

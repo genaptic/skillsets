@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python CLI Testing"
+  short_description: "Test Python CLIs across real interfaces"
+  default_prompt: "Use $python-cli-testing to build a realistic test matrix for this Python command-line interface."

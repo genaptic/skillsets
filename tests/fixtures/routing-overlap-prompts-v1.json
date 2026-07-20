@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "prompts": [
+    "A SELECT regressed, but we do not yet know whether the bottleneck is plan estimates, blocking, I/O, or a missing index.",
+    "Add a new independently installable rust-unsafe-code-audit pack containing exactly one skill, rust-unsafe-boundary-review. Security reviewers need that focused installation and release boundary; rust-core-best-practices owns the nearest excluded general Rust review outcome. Research and integrate the complete pack.",
+    "Add exactly one skill named python-logging-boundary-review to the existing python-best-practices pack, using these detailed requirements and exclusions.",
+    "Create a comprehensive test matrix for command help, stdout, stderr, exit codes, stdin, and shell invocation.",
+    "Create a risk-based unit, integration, and end-to-end test plan for this existing Python package.",
+    "Design the user-facing diagnostic format, debug traceback policy, and numeric exit-status mapping for existing commands.",
+    "Given this diagnosed filter and sort pattern, specify the exact PostgreSQL index definition, rollout, and redundancy plan.",
+    "In an existing Rust CLI, add exactly one `project archive` command while preserving the discovered grammar, dispatch, output, and test conventions.",
+    "Keep polymorphism and public errors unchanged; replace this string tag and optional-field struct with data-carrying enums, group repeated parameters, and place behavior on natural owners.",
+    "Our async gRPC client reconnects for every call and retries timed-out writes; fix channel reuse and per-request deadline behavior.",
+    "Plan a low-lock production rollout for these already approved constraint and index changes on a 2 TB table.",
+    "Reconcile all Rust workspace READMEs, architecture documents, runbooks, and AGENTS.md files with current code; mention rustdoc drift separately.",
+    "Redesign every command in this Rust CLI around a new grammar, runtime context, configuration model, output protocol, and error taxonomy.",
+    "Redesign fixture scopes, coverage goals, markers, and the full Python project's pull-request test selection.",
+    "Refactor internal exceptions, context-manager cleanup, retries, and logging before any CLI mapping is considered.",
+    "Refresh crate-level and item-level rustdoc plus all doctestable examples across the workspace; report Markdown drift separately without editing Markdown.",
+    "Refresh the public API prose, repair intra-doc links, and rewrite its examples so readers understand safety, errors, and platform behavior.",
+    "Review a Python command's messages, debug mode, stderr routing, and process exit status when exceptions occur.",
+    "Review these existing CREATE TABLE statements and catalog snapshots, rank defects, and propose minimal corrections.",
+    "Several HTTP and database background tasks ignore cancellation and prevent the Tokio process from shutting down; redesign their shared task lifecycle.",
+    "Split this Rust application into a library, two binaries, and workspace packages, deciding module ownership, dependency direction, and integration-test placement.",
+    "Split this Rust application into a thin binary and several library crates, deciding which dependencies each new boundary should own.",
+    "The type layout is already stable; choose whether three implementations should use generics, a trait object, or closed enum and define lifetimes and typed public errors.",
+    "We know the query is slow but have not chosen the exact access method, columns, order, or partial predicate.",
+    "We need an operational rollback and restore trigger for one approved high-risk schema migration next week.",
+    "Within the existing module tree, choose between a generic, trait object, and closed enum for three runtime-selectable implementations and design their error contract."
+  ]
+}

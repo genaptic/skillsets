@@ -43,14 +43,6 @@
       "prompt": "Design a reusable Rust library API for parsing a binary protocol; there is no command-line interface or process behavior in scope.",
       "shouldTrigger": false,
       "reason": "The requested outcome is a non-CLI library API and lacks a command-line application contract."
-    },
-    {
-      "id": "overlap-one-command",
-      "kind": "overlap",
-      "prompt": "In an existing Rust CLI, add exactly one `project archive` command while preserving the discovered grammar, dispatch, output, and test conventions.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-cli-command-development",
-      "reason": "The neighboring skill more narrowly owns adding or changing exactly one established CLI command."
     }
   ],
   "behavior": [

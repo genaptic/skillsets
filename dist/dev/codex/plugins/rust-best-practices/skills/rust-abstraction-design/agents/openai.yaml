@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Abstraction Design"
+  short_description: "Choose clear Rust traits, generics, and errors"
+  default_prompt: "Use $rust-abstraction-design to choose appropriate Rust traits, generics, lifetimes, and error boundaries."

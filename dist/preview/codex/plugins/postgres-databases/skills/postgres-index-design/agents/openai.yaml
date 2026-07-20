@@ -1,0 +1,4 @@
+interface:
+  display_name: "PostgreSQL Index Design"
+  short_description: "Design evidence-backed PostgreSQL indexes"
+  default_prompt: "Use $postgres-index-design to propose evidence-backed PostgreSQL indexes for this workload."

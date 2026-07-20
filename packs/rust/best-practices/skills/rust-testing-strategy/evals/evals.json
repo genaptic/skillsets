@@ -35,7 +35,6 @@
       "kind": "negative",
       "prompt": "Rewrite this library's public API documentation, repair intra-doc links, and add clear examples and safety sections.",
       "shouldTrigger": false,
-      "preferredSkill": "rustdoc-maintenance",
       "reason": "Public API documentation is the rustdoc skill's primary deliverable."
     },
     {
@@ -43,16 +42,7 @@
       "kind": "negative",
       "prompt": "Redesign production task ownership, bounded queues, cancellation propagation, and graceful shutdown in this Tokio service.",
       "shouldTrigger": false,
-      "preferredSkill": "rust-async-concurrency",
       "reason": "Production concurrency design is narrower than test strategy for this request."
-    },
-    {
-      "id": "overlap-doctest",
-      "kind": "overlap",
-      "prompt": "Refresh the public API prose, repair intra-doc links, and rewrite its examples so readers understand safety, errors, and platform behavior.",
-      "shouldTrigger": false,
-      "preferredSkill": "rustdoc-maintenance",
-      "reason": "Although examples may become doctests, the primary outcome is public API documentation."
     }
   ],
   "behavior": [

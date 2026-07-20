@@ -1,27 +1,30 @@
 # GitHub Pages
 
-GitHub Pages serves the deterministic `dist/` tree at
+GitHub Pages serves only the deterministic `dist/public/` tree at
 `https://genaptic.github.io/skillsets/`. It is a distribution surface, not a pack release or
 native-client compatibility result.
 
 ## Generated site
 
-`make generate` creates `dist/index.html` from the same discovered pack model used for
-`catalog.json`. The page lists every pack's display name, ID, version, description, publication
-state, supported targets, and repository-relative OpenCode index. Generation HTML-escapes
+`make generate` creates `dist/public/index.html` from the same public-release selector used for
+`catalog.json`. The page lists only published public packs and labels their generated adapter
+targets. Generation HTML-escapes
 metadata and uses no JavaScript, external resource, timestamp, or other nondeterministic input.
 `dist/generated-files.json` records the landing page's mode and checksum.
 
-All six current packs are version `1.0.0` and unpublished. The page must describe that state
-accurately; a hosted index does not create a pack tag or release and does not establish that a
-native client or model passed.
+Each published card uses the authored pack short description and links the derived tag, exact
+source commit, immutable release, direct `.zip.sha256` asset, and the repository attestation
+verification surface. Those provenance links are absent when the public catalog is empty.
+
+No current pack is published, so the Pages tree contains only the landing page and its “No stable
+releases” banner. Unpublished installers and OpenCode catalogs must be absent, not merely unlinked.
 
 ## Deployment contract
 
 The Pages workflow runs on pushes to `main` and manual dispatches from `main`. A preflight checks
 the exact source ref before any repository code runs. The workflow installs the fully hashed
-Python environment, checks generated output and strict repository validation, uploads all of
-`dist/`, and deploys through the secret-free `github-pages` environment.
+Python environment, checks generated output and strict repository validation, uploads exactly
+`dist/public/`, and deploys through the secret-free `github-pages` environment.
 
 Only the deploy job receives `pages: write` and `id-token: write`; all jobs otherwise need only
 `contents: read`. Pages concurrency does not cancel an in-progress production deployment. The
@@ -30,16 +33,12 @@ domain, and a deployment branch policy restricted to `main`.
 
 ## Verification
 
-After deployment, require HTTP 200 for `/` and valid JSON at:
-
-- `/opencode/python/best-practices/index.json`
-- `/opencode/python/cli-apps/index.json`
-- `/opencode/rust/best-practices/index.json`
-- `/opencode/rust/cli-apps/index.json`
-- `/opencode/shared/postgres-databases/index.json`
-- `/opencode/shared/repository-development/index.json`
-
-Also confirm that the landing page names all six packs, contains only relative repository links,
-and loads no external script or resource. Set the repository homepage only after this verification
-succeeds. A future OpenCode publication still requires a dated passing report for the exact pack
-source SHA.
+Before the first release, require HTTP 200 for `/` and HTTP 404 for every formerly exposed
+unpublished installer and OpenCode URL. The versioned denylist in
+`tests/fixtures/pages-legacy-public-urls-v1.json` preserves URLs whose pack identity has since
+changed, while the workflow adds every currently non-public pack dynamically. For each later
+published entry, verify its index and every
+declared file return 200. Distribution links stay relative to the Pages root; provenance links
+must use the configured GitHub repository and exact release identifiers. The page loads no
+external script or resource. Native compatibility still requires a fresh dated report for the
+exact release SHA.

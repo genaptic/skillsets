@@ -37,17 +37,15 @@ review.
 
 ## Install, update, and uninstall
 
-This pack is an unpublished release candidate. The generated section below must remain
-repository-local until protected Claude Code, Codex, and OpenCode evidence exists for the
-exact release SHA.
+The generated section below reflects the canonical lifecycle and publication metadata.
 
 <!-- BEGIN GENERATED INSTALL COMMANDS -->
-The marketplace source is repository-local and unpublished. Clone this repository and run these commands from its root; remote marketplace installation remains unavailable until the post-release source-SHA update. Run strict repository validation immediately before a local install so ignored cache files are not copied.
+The marketplace source is repository-local and unpublished. Clone this repository and run these commands from its root; remote marketplace installation remains unavailable until post-release publication reconciliation. Run strict repository validation immediately before a local install so ignored cache files are not copied.
 
 ### Claude Code
 
 ```bash
-claude plugin marketplace add .
+claude plugin marketplace add dist/dev/claude
 claude plugin install postgres-databases@genaptic-skillsets
 ```
 
@@ -67,7 +65,7 @@ claude plugin uninstall postgres-databases@genaptic-skillsets
 ### Codex
 
 ```bash
-codex plugin marketplace add .
+codex plugin marketplace add dist/dev/codex
 codex plugin add postgres-databases@genaptic-skillsets
 ```
 
@@ -91,23 +89,26 @@ The direct installer uses the public-preview `gh skill` interface. It checks the
 No executable remote install command is published before a release SHA is recorded. Inspect the future exact-path operations locally:
 
 ```bash
-bash dist/install/postgres-databases.sh --dry-run
+bash dist/dev/install/postgres-databases.sh --dry-run
 ```
 
 ```powershell
-.\dist\install\postgres-databases.ps1 -DryRun
+.\dist\dev\install\postgres-databases.ps1 -DryRun
 ```
 
 The dry run does not install skills or make a compatibility claim.
 <!-- END GENERATED INSTALL COMMANDS -->
 ## Version and compatibility
 
-Release-candidate manifest version: `1.0.0`.
+<!-- BEGIN GENERATED LIFECYCLE -->
+Current source version: `1.0.0`.
 
-Expected release tag (not yet created): `postgres-databases-v1.0.0`.
+Maturity: `release-candidate`. Distribution visibility: `public`. Publication state: `unpublished`.
+
+Current derived tag: `postgres-databases-v1.0.0`.
 
 No public installation or native-client/model compatibility is claimed yet.
-
+<!-- END GENERATED LIFECYCLE -->
 Confirm syntax, lock behavior, extensions, and managed-service restrictions against the deployed PostgreSQL major version and provider.
 
 See the root [`COMPATIBILITY.md`](../../../COMPATIBILITY.md) and this pack's compatibility

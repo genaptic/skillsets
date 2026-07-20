@@ -4,22 +4,34 @@
   "title": "Structural evaluation export",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "skills", "totals"],
+  "required": ["schemaVersion", "skills", "routingBoundaries", "totals"],
   "properties": {
-    "schemaVersion": {"const": 1},
+    "schemaVersion": {"const": 2},
     "skills": {
       "type": "array",
       "minItems": 1,
       "items": {"$ref": "#/$defs/skillReport"}
     },
+    "routingBoundaries": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/routingBoundary"}
+    },
     "totals": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["skills", "routingCases", "behaviorCases"],
+      "required": [
+        "skills",
+        "routingCases",
+        "behaviorCases",
+        "routingBoundaries",
+        "boundaryCases"
+      ],
       "properties": {
         "skills": {"type": "integer", "minimum": 1},
         "routingCases": {"type": "integer", "minimum": 1},
-        "behaviorCases": {"type": "integer", "minimum": 1}
+        "behaviorCases": {"type": "integer", "minimum": 1},
+        "routingBoundaries": {"type": "integer", "minimum": 0},
+        "boundaryCases": {"type": "integer", "minimum": 0}
       }
     }
   },
@@ -33,11 +45,11 @@
           "type": "string",
           "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
-        "routingCases": {"type": "integer", "minimum": 7},
+        "routingCases": {"type": "integer", "minimum": 6},
         "behaviorCases": {"type": "integer", "minimum": 2},
         "routing": {
           "type": "array",
-          "minItems": 7,
+          "minItems": 6,
           "items": {"$ref": "#/$defs/routingCase"}
         },
         "behavior": {
@@ -61,16 +73,11 @@
             "explicit-positive",
             "implicit-positive",
             "contextual-positive",
-            "negative",
-            "overlap"
+            "negative"
           ]
         },
         "prompt": {"type": "string", "minLength": 20},
         "shouldTrigger": {"type": "boolean"},
-        "preferredSkill": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-        },
         "reason": {"type": "string", "minLength": 20}
       }
     },
@@ -97,6 +104,81 @@
           "uniqueItems": true,
           "items": {"type": "string", "minLength": 10}
         }
+      }
+    },
+    "routingBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "skills",
+        "sharedVocabulary",
+        "outcomeExplanations",
+        "cases"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "skills": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "sharedVocabulary": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 2, "maxLength": 60}
+        },
+        "outcomeExplanations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["a-only", "b-only", "both", "neither"],
+          "properties": {
+            "a-only": {"type": "string", "minLength": 20},
+            "b-only": {"type": "string", "minLength": 20},
+            "both": {"type": "string", "minLength": 20},
+            "neither": {"type": "string", "minLength": 20}
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {"$ref": "#/$defs/boundaryCase"}
+        }
+      }
+    },
+    "boundaryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "outcome", "prompt", "expectedSkills", "reason"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "outcome": {"enum": ["a-only", "b-only", "both", "neither"]},
+        "prompt": {"type": "string", "minLength": 20},
+        "expectedSkills": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "reason": {"type": "string", "minLength": 20}
       }
     }
   }

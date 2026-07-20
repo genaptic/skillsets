@@ -1,0 +1,1284 @@
+name: Recover an interrupted skillpack release
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Inspect by default; draft removal guidance is read-only.
+        required: true
+        default: inspect-only
+        type: choice
+        options:
+          - inspect-only
+          - resume-verified-draft
+          - prepare-draft-removal
+      pack_id:
+        description: Exact lowercase pack ID.
+        required: true
+        type: string
+      tag:
+        description: Exact existing signed annotated release tag.
+        required: true
+        type: string
+      release_id:
+        description: Exact numeric GitHub release ID; drafts are deliberately looked up by ID.
+        required: true
+        type: string
+      claude_evidence_run:
+        description: Protected Claude evidence run ID; required only for resume.
+        required: false
+        type: string
+      codex_evidence_run:
+        description: Protected Codex evidence run ID; required only for resume.
+        required: false
+        type: string
+      opencode_evidence_run:
+        description: Protected OpenCode evidence run ID; required only for resume.
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.pack_id }}
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    name: inspect exact release without mutation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Validate recovery identifiers before checkout
+        env:
+          MODE: ${{ inputs.mode }}
+          PACK_ID: ${{ inputs.pack_id }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: python
+        run: |
+          import os
+          import re
+
+          pack = os.environ["PACK_ID"]
+          tag = os.environ["RELEASE_TAG"]
+          if os.environ["GITHUB_REF"] != "refs/heads/main":
+              raise SystemExit("release recovery must be dispatched from refs/heads/main")
+          if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", pack):
+              raise SystemExit("pack_id must be lowercase kebab-case")
+          if not re.fullmatch(r"[1-9][0-9]*", os.environ["RELEASE_ID"]):
+              raise SystemExit("release_id must be a positive integer")
+          semver = r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
+          if not re.fullmatch(re.escape(pack) + r"-v" + semver, tag):
+              raise SystemExit("tag must be the requested pack ID plus a Semantic Version")
+      - name: Check out protected recovery tooling without credentials
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out the exact tag as inert inspection source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          path: release-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install hash-locked inspection tooling
+        run: |
+          python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
+          python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e .
+      - name: Verify and describe the inert annotated tag with protected tooling
+        id: inspected-source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          POLICY_ROOT: ${{ github.workspace }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C "$RELEASE_ROOT" cat-file -t "refs/tags/$RELEASE_TAG")" = tag
+          source_sha=$(git -C "$RELEASE_ROOT" rev-parse HEAD)
+          test "$(git -C "$RELEASE_ROOT" rev-list -n 1 "refs/tags/$RELEASE_TAG")" = "$source_sha"
+          tag_object=$(git -C "$RELEASE_ROOT" rev-parse "refs/tags/$RELEASE_TAG")
+          test "$(gh api "/repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')" = true
+          tag_payload=$(git -C "$RELEASE_ROOT" cat-file -p "refs/tags/$RELEASE_TAG")
+          if grep -q -- '-----BEGIN PGP SIGNATURE-----' <<< "$tag_payload"; then
+            signing_home="$RUNNER_TEMP/genaptic-inspection-gnupg"
+            key_bundle="$RUNNER_TEMP/genaptic-inspection-signing-keys.asc"
+            mkdir -p "$signing_home"
+            chmod 700 "$signing_home"
+            : > "$key_bundle"
+            mapfile -t signer_logins < <(python -c 'import os; from pathlib import Path; from skillpack_tools.models import load_repository; print("\n".join(sorted({s.github for s in load_repository(Path(os.environ["POLICY_ROOT"])).trusted_signers if s.kind == "openpgp"})))')
+            test "${#signer_logins[@]}" -gt 0
+            test -n "${signer_logins[0]}"
+            for signer_login in "${signer_logins[@]}"; do
+              gh api --paginate "/users/$signer_login/gpg_keys" --jq '.[].raw_key' >> "$key_bundle"
+            done
+            test -s "$key_bundle"
+            export GNUPGHOME="$signing_home"
+            gpg --batch --import "$key_bundle"
+            printf 'GNUPGHOME=%s\n' "$signing_home" >> "$GITHUB_ENV"
+          elif grep -q -- '-----BEGIN SSH SIGNATURE-----' <<< "$tag_payload"; then
+            allowed_signers="$RUNNER_TEMP/genaptic-inspection-allowed-signers"
+            : > "$allowed_signers"
+            mapfile -t signer_logins < <(python -c 'import os; from pathlib import Path; from skillpack_tools.models import load_repository; print("\n".join(sorted({s.github for s in load_repository(Path(os.environ["POLICY_ROOT"])).trusted_signers if s.kind == "ssh"})))')
+            test "${#signer_logins[@]}" -gt 0
+            test -n "${signer_logins[0]}"
+            for signer_login in "${signer_logins[@]}"; do
+              gh api --paginate "/users/$signer_login/ssh_signing_keys" \
+                --jq '.[] | "signer " + .key' >> "$allowed_signers"
+            done
+            test -s "$allowed_signers"
+            git -C "$RELEASE_ROOT" config --local gpg.format ssh
+            git -C "$RELEASE_ROOT" config --local gpg.ssh.allowedSignersFile "$allowed_signers"
+          else
+            echo "The tag does not contain a supported OpenPGP or SSH signature." >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+
+          from skillpack_tools.lifecycle import validate_pack_lifecycle
+          from skillpack_tools.models import get_pack, load_repository
+          from skillpack_tools.signing import verify_tag
+
+          policy_root = Path(os.environ["POLICY_ROOT"])
+          release_root = Path(os.environ["RELEASE_ROOT"])
+          verified = verify_tag(
+              release_root,
+              os.environ["RELEASE_TAG"],
+              load_repository(policy_root).trusted_signers,
+          )
+          pack = get_pack(release_root, os.environ["PACK_ID"])
+          errors = validate_pack_lifecycle(pack)
+          if errors or pack.tag != os.environ["RELEASE_TAG"]:
+              raise SystemExit("invalid canonical tagged pack: " + "; ".join(errors))
+          tag_object = subprocess.check_output(
+              ["git", "-C", str(release_root), "rev-parse", f"refs/tags/{pack.tag}"],
+              text=True,
+          ).strip()
+          release_title = f"{pack.display_name} {pack.version}"
+          if "\n" in release_title or "\r" in release_title:
+              raise SystemExit("release title cannot contain line breaks")
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write(f"source_sha={verified.source_sha}\n")
+              handle.write(f"tag_object_sha={tag_object}\n")
+              handle.write(f"signer_type={verified.kind}\n")
+              handle.write(f"signer_fingerprint={verified.fingerprint}\n")
+              handle.write(f"release_title={release_title}\n")
+          PY
+      - name: Read the exact release by numeric ID
+        env:
+          EXPECTED_TITLE: ${{ steps.inspected-source.outputs.release_title }}
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+          SIGNER_FINGERPRINT: ${{ steps.inspected-source.outputs.signer_fingerprint }}
+          SIGNER_TYPE: ${{ steps.inspected-source.outputs.signer_type }}
+          SOURCE_SHA: ${{ steps.inspected-source.outputs.source_sha }}
+          TAG_OBJECT_SHA: ${{ steps.inspected-source.outputs.tag_object_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > "$RUNNER_TEMP/release.json"
+          python -m skillpack_tools.release_recovery expected-body \
+            --root "$RELEASE_ROOT" --pack "$PACK_ID" \
+            --release "$RUNNER_TEMP/release.json" --source-sha "$SOURCE_SHA" \
+            --signature-kind "$SIGNER_TYPE" --signer-fingerprint "$SIGNER_FINGERPRINT" \
+            --output "$RUNNER_TEMP/expected-release-notes.md"
+          python -m skillpack_tools.release_recovery inspect \
+            --release "$RUNNER_TEMP/release.json" \
+            --release-id "$RELEASE_ID" \
+            --tag "$RELEASE_TAG" \
+            --policy-sha "$GITHUB_SHA" \
+            --tag-object-sha "$TAG_OBJECT_SHA" \
+            --source-sha "$SOURCE_SHA" \
+            --signature-kind "$SIGNER_TYPE" \
+            --signer-fingerprint "$SIGNER_FINGERPRINT" \
+            --github-tag-verified \
+            --expected-title "$EXPECTED_TITLE" \
+            --expected-body-file "$RUNNER_TEMP/expected-release-notes.md" \
+            --expected-target-commitish main \
+            --output "$RUNNER_TEMP/release-inspection.json"
+      - name: Preserve deterministic inspection inventory
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-inspection-${{ inputs.release_id }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-inspection.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Prepare the read-only manual removal dossier
+        if: ${{ inputs.mode == 'prepare-draft-removal' }}
+        run: >-
+          python -m skillpack_tools.release_recovery prepare-removal-dossier
+          --inspection "$RUNNER_TEMP/release-inspection.json"
+          --output "$RUNNER_TEMP/removal-dossier.json"
+          --markdown-output "$RUNNER_TEMP/removal-dossier.md"
+      - name: Preserve manual removal guidance without mutation
+        if: ${{ inputs.mode == 'prepare-draft-removal' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-removal-dossier-${{ inputs.release_id }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/removal-dossier.json
+            ${{ runner.temp }}/removal-dossier.md
+          if-no-files-found: error
+          retention-days: 90
+      - name: Summarize the read-only result
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo '# Release recovery inspection'
+            echo
+            echo 'No release, asset, or tag was mutated.'
+            echo
+            echo '```json'
+            cat "$RUNNER_TEMP/release-inspection.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  resume-build:
+    name: read-only rebuild and recovery plan
+    if: ${{ inputs.mode == 'resume-verified-draft' }}
+    needs: inspect
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      attestations: read
+      contents: read
+    outputs:
+      artifact_digest: ${{ steps.recovery-bundle.outputs.artifact-digest }}
+      artifact_id: ${{ steps.recovery-bundle.outputs.artifact-id }}
+      artifact_name: recovery-build-${{ inputs.pack_id }}-${{ inputs.release_id }}-${{ github.run_id }}
+    steps:
+      - name: Require all protected evidence run IDs before checkout
+        env:
+          CLAUDE_RUN: ${{ inputs.claude_evidence_run }}
+          CODEX_RUN: ${{ inputs.codex_evidence_run }}
+          OPENCODE_RUN: ${{ inputs.opencode_evidence_run }}
+        shell: python
+        run: |
+          import os
+          import re
+
+          for variable in ("CLAUDE_RUN", "CODEX_RUN", "OPENCODE_RUN"):
+              if not re.fullmatch(r"[1-9][0-9]*", os.environ[variable]):
+                  raise SystemExit(f"{variable} must be a positive evidence run ID")
+      - name: Check out protected recovery policy without credentials
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: policy-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out the exact existing tag as inert release source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          path: release-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up protected policy Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: policy-source/requirements-dev.txt
+      - name: Install only protected-main recovery tooling
+        run: |
+          python -m pip install --disable-pip-version-check --require-hashes -r policy-source/requirements-dev.txt
+          python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e policy-source
+      - name: Verify inert annotated-tag structure and GitHub signature signal
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        working-directory: release-source
+        run: |
+          set -euo pipefail
+          test "$(git cat-file -t "refs/tags/$RELEASE_TAG")" = tag
+          test "$(git rev-list -n 1 "refs/tags/$RELEASE_TAG")" = "$(git rev-parse HEAD)"
+          tag_object=$(git rev-parse "refs/tags/$RELEASE_TAG")
+          test "$(gh api "/repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')" = true
+      - name: Verify signer, lifecycle, and exact source with protected code
+        id: verified-source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          POLICY_ROOT: ${{ github.workspace }}/policy-source
+          PROTECTED_MAIN_SHA: ${{ github.sha }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$POLICY_ROOT/src"
+          tag_payload=$(git -C "$RELEASE_ROOT" cat-file -p "refs/tags/$RELEASE_TAG")
+          if grep -q -- '-----BEGIN PGP SIGNATURE-----' <<< "$tag_payload"; then
+            signing_home="$RUNNER_TEMP/genaptic-recovery-gnupg"
+            key_bundle="$RUNNER_TEMP/genaptic-maintainer-signing-keys.asc"
+            mkdir -p "$signing_home"
+            chmod 700 "$signing_home"
+            : > "$key_bundle"
+            mapfile -t signer_logins < <(python -c 'import os; from pathlib import Path; from skillpack_tools.models import load_repository; print("\n".join(sorted({s.github for s in load_repository(Path(os.environ["POLICY_ROOT"])).trusted_signers if s.kind == "openpgp"})))')
+            test "${#signer_logins[@]}" -gt 0
+            test -n "${signer_logins[0]}"
+            for signer_login in "${signer_logins[@]}"; do
+              gh api --paginate "/users/$signer_login/gpg_keys" --jq '.[].raw_key' >> "$key_bundle"
+            done
+            test -s "$key_bundle"
+            export GNUPGHOME="$signing_home"
+            gpg --batch --import "$key_bundle"
+            printf 'GNUPGHOME=%s\n' "$signing_home" >> "$GITHUB_ENV"
+          elif grep -q -- '-----BEGIN SSH SIGNATURE-----' <<< "$tag_payload"; then
+            allowed_signers="$RUNNER_TEMP/genaptic-recovery-allowed-signers"
+            : > "$allowed_signers"
+            mapfile -t signer_logins < <(python -c 'import os; from pathlib import Path; from skillpack_tools.models import load_repository; print("\n".join(sorted({s.github for s in load_repository(Path(os.environ["POLICY_ROOT"])).trusted_signers if s.kind == "ssh"})))')
+            test "${#signer_logins[@]}" -gt 0
+            test -n "${signer_logins[0]}"
+            for signer_login in "${signer_logins[@]}"; do
+              gh api --paginate "/users/$signer_login/ssh_signing_keys" \
+                --jq '.[] | "signer " + .key' >> "$allowed_signers"
+            done
+            test -s "$allowed_signers"
+            git -C "$RELEASE_ROOT" config --local gpg.format ssh
+            git -C "$RELEASE_ROOT" config --local gpg.ssh.allowedSignersFile "$allowed_signers"
+          else
+            echo "The tag does not contain a supported OpenPGP or SSH signature." >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+
+          from skillpack_tools.lifecycle import semantic_version_key, validate_pack_lifecycle
+          from skillpack_tools.models import get_pack, load_repository
+          from skillpack_tools.signing import verify_tag
+
+          policy_root = Path(os.environ["POLICY_ROOT"])
+          release_root = Path(os.environ["RELEASE_ROOT"])
+          config = load_repository(policy_root)
+          verified = verify_tag(
+              release_root, os.environ["RELEASE_TAG"], config.trusted_signers
+          )
+          subprocess.run(
+              [
+                  "git",
+                  "-C",
+                  str(policy_root),
+                  "cat-file",
+                  "-e",
+                  f"{verified.source_sha}^{{commit}}",
+              ],
+              check=True,
+          )
+          if subprocess.run(
+              [
+                  "git",
+                  "-C",
+                  str(policy_root),
+                  "merge-base",
+                  "--is-ancestor",
+                  verified.source_sha,
+                  os.environ["PROTECTED_MAIN_SHA"],
+              ],
+              check=False,
+          ).returncode:
+              raise SystemExit("signed release source is not an ancestor of protected main")
+          pack = get_pack(release_root, os.environ["PACK_ID"])
+          errors = validate_pack_lifecycle(pack)
+          if errors:
+              raise SystemExit("Invalid release lifecycle:\n" + "\n".join(errors))
+          if pack.tag != os.environ["RELEASE_TAG"]:
+              raise SystemExit("tag does not match the selected canonical pack")
+          if pack.maturity != "stable" or pack.visibility != "public":
+              raise SystemExit("recovery requires a stable public pack")
+          if pack.publication_state == "withdrawn":
+              raise SystemExit("withdrawn packs cannot be recovered")
+          if pack.published_version is not None and semantic_version_key(
+              pack.version
+          ) <= semantic_version_key(pack.published_version):
+              raise SystemExit("release version must be newer than latest-release")
+          tag_object = subprocess.check_output(
+              ["git", "-C", str(release_root), "rev-parse", f"refs/tags/{pack.tag}"],
+              text=True,
+          ).strip()
+          release_title = f"{pack.display_name} {pack.version}"
+          if "\n" in release_title or "\r" in release_title:
+              raise SystemExit("release title cannot contain line breaks")
+          output = Path(os.environ["GITHUB_OUTPUT"])
+          with output.open("a", encoding="utf-8") as handle:
+              handle.write(f"source_sha={verified.source_sha}\n")
+              handle.write(f"tag_object_sha={tag_object}\n")
+              handle.write(f"signer_type={verified.kind}\n")
+              handle.write(f"signer_fingerprint={verified.fingerprint}\n")
+              handle.write(f"release_title={release_title}\n")
+          print(f"Verified {verified.kind} signer {verified.fingerprint} at {verified.source_sha}")
+          PY
+      - name: Re-read and inspect the exact mutable draft with protected tooling
+        env:
+          EXPECTED_TITLE: ${{ steps.verified-source.outputs.release_title }}
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+          SIGNER_FINGERPRINT: ${{ steps.verified-source.outputs.signer_fingerprint }}
+          SIGNER_TYPE: ${{ steps.verified-source.outputs.signer_type }}
+          SOURCE_SHA: ${{ steps.verified-source.outputs.source_sha }}
+          TAG_OBJECT_SHA: ${{ steps.verified-source.outputs.tag_object_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > "$RUNNER_TEMP/release.json"
+          PYTHONPATH="$GITHUB_WORKSPACE/policy-source/src" \
+            python -m skillpack_tools.release_recovery expected-body \
+              --root "$RELEASE_ROOT" --pack "$PACK_ID" \
+              --release "$RUNNER_TEMP/release.json" --source-sha "$SOURCE_SHA" \
+              --signature-kind "$SIGNER_TYPE" --signer-fingerprint "$SIGNER_FINGERPRINT" \
+              --output "$RUNNER_TEMP/expected-release-notes.md"
+          PYTHONPATH="$GITHUB_WORKSPACE/policy-source/src" \
+            python -m skillpack_tools.release_recovery inspect \
+              --release "$RUNNER_TEMP/release.json" --release-id "$RELEASE_ID" \
+              --tag "$RELEASE_TAG" --policy-sha "$GITHUB_SHA" \
+              --tag-object-sha "$TAG_OBJECT_SHA" \
+              --source-sha "$SOURCE_SHA" --signature-kind "$SIGNER_TYPE" \
+              --signer-fingerprint "$SIGNER_FINGERPRINT" --github-tag-verified \
+              --expected-title "$EXPECTED_TITLE" \
+              --expected-body-file "$RUNNER_TEMP/expected-release-notes.md" \
+              --expected-target-commitish main \
+              --output "$RUNNER_TEMP/release-inspection.json"
+      - name: Install signed tag tooling only after trust verification
+        working-directory: release-source
+        run: |
+          python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
+          python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e .
+      - name: Run all immutable-source repository checks
+        working-directory: release-source
+        run: |
+          python tools/check-dependency-lock
+          python -m ruff check .
+          python -m ruff format --check .
+          python tools/generate-all --check
+          python tools/validate-repository --check-generated --strict-placeholders
+          python tools/run-evals
+          python -m pytest --no-cov -m "not rust_repository_contract"
+      - name: Download exact protected evidence artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          SOURCE_SHA: ${{ steps.verified-source.outputs.source_sha }}
+          PROTECTED_MAIN_SHA: ${{ github.sha }}
+          CLAUDE_RUN: ${{ inputs.claude_evidence_run }}
+          CODEX_RUN: ${{ inputs.codex_evidence_run }}
+          OPENCODE_RUN: ${{ inputs.opencode_evidence_run }}
+        shell: bash
+        working-directory: policy-source
+        run: |
+          set -euo pipefail
+          reports_dir="$RUNNER_TEMP/compatibility-reports"
+          mkdir -p "$reports_dir"
+          repository_id=$(gh api "/repos/$GITHUB_REPOSITORY" --jq '.id')
+          for client in claude-code codex opencode; do
+            case "$client" in
+              claude-code) run_id="$CLAUDE_RUN" ;;
+              codex) run_id="$CODEX_RUN" ;;
+              opencode) run_id="$OPENCODE_RUN" ;;
+            esac
+            run=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$run_id")
+            test "$(jq -r '.conclusion' <<< "$run")" = success
+            test "$(jq -r '.event' <<< "$run")" = workflow_dispatch
+            test "$(jq -r '.head_branch' <<< "$run")" = main
+            test "$(jq -r '.path' <<< "$run")" = .github/workflows/native-compatibility.yml
+            artifact_name="compatibility-report-$client-$PACK_ID-$SOURCE_SHA"
+            artifacts=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts?per_page=100")
+            count=$(jq --arg name "$artifact_name" '[.artifacts[] | select(.name == $name and .expired == false)] | length' <<< "$artifacts")
+            test "$count" = 1
+            artifact_id=$(jq -r --arg name "$artifact_name" '.artifacts[] | select(.name == $name and .expired == false) | .id' <<< "$artifacts")
+            artifact_digest=$(jq -r --arg name "$artifact_name" '.artifacts[] | select(.name == $name and .expired == false) | .digest' <<< "$artifacts")
+            if [[ ! "$artifact_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "Artifact $artifact_name has an invalid API digest: $artifact_digest" >&2
+              exit 1
+            fi
+            mkdir -p "$reports_dir/$client"
+            gh api "/repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" > "$reports_dir/$client.zip"
+            downloaded_digest=$(python -c 'import hashlib,sys; print("sha256:" + hashlib.file_digest(open(sys.argv[1], "rb"), "sha256").hexdigest())' "$reports_dir/$client.zip")
+            if [[ "$downloaded_digest" != "$artifact_digest" ]]; then
+              echo "Downloaded artifact $artifact_name digest $downloaded_digest does not match API digest $artifact_digest." >&2
+              exit 1
+            fi
+            unzip -q "$reports_dir/$client.zip" -d "$reports_dir/$client"
+            envelope="$reports_dir/$client/$client.envelope.json"
+            test "$(jq -r '.workflow.runId' "$envelope")" = "$run_id"
+            test "$(jq -r '.workflow.runAttempt' "$envelope")" = "$(jq -r '.run_attempt' <<< "$run")"
+            test "$(jq -r '.workflow.workflowRef' "$envelope")" = "$GITHUB_REPOSITORY/.github/workflows/native-compatibility.yml@refs/heads/main"
+            test "$(jq -r '.workflow.workflowSha' "$envelope")" = "$(jq -r '.head_sha' <<< "$run")"
+            test "$(jq -r '.workflow.event' "$envelope")" = workflow_dispatch
+            test "$(jq -r '.workflow.actor.github' "$envelope")" = "$(jq -r '.actor.login' <<< "$run")"
+            test "$(jq -r '.workflow.actor.githubId' "$envelope")" = "$(jq -r '.actor.id' <<< "$run")"
+            test "$(jq -r '.workflow.triggeringActor.github' "$envelope")" = "$(jq -r '.triggering_actor.login' <<< "$run")"
+            test "$(jq -r '.workflow.triggeringActor.githubId' "$envelope")" = "$(jq -r '.triggering_actor.id' <<< "$run")"
+            test "$(jq -r '.repository.slug' "$envelope")" = "$GITHUB_REPOSITORY"
+            test "$(jq -r '.repository.id' "$envelope")" = "$repository_id"
+            test "$(jq -r '.source.sha' "$envelope")" = "$SOURCE_SHA"
+            evidence_sha=$(jq -r '.evidence.commitSha' "$envelope")
+            [[ "$evidence_sha" =~ ^[0-9a-f]{40}$ ]]
+            git cat-file -e "$SOURCE_SHA^{commit}"
+            git cat-file -e "$evidence_sha^{commit}"
+            git merge-base --is-ancestor "$SOURCE_SHA" "$evidence_sha"
+            git merge-base --is-ancestor "$evidence_sha" "$PROTECTED_MAIN_SHA"
+            test "$(jq -r '.client' "$envelope")" = "$client"
+            test "$(jq -r '.packId' "$envelope")" = "$PACK_ID"
+            for subject in \
+              "$reports_dir/$client/$client.json" \
+              "$reports_dir/$client/$client.envelope.json"; do
+              gh attestation verify "$subject" \
+                --repo "$GITHUB_REPOSITORY" \
+                --bundle "$reports_dir/$client/$client.attestation.jsonl" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/native-compatibility.yml" \
+                --source-ref refs/heads/main \
+                --deny-self-hosted-runners
+            done
+            python - "$reports_dir/$client/$client.artifact.json" "$run_id" "$artifact_id" "$artifact_digest" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          Path(sys.argv[1]).write_text(
+              json.dumps(
+                  {
+                      "ingestionRunId": int(sys.argv[2]),
+                      "ingestionArtifactId": int(sys.argv[3]),
+                      "ingestionArtifactDigest": sys.argv[4],
+                  },
+                  indent=2,
+              ) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          done
+      - name: Rebuild the deterministic release and exact asset set
+        env:
+          PACK_ID: ${{ inputs.pack_id }}
+        shell: bash
+        working-directory: release-source
+        run: |
+          set -euo pipefail
+          reports_dir="$RUNNER_TEMP/compatibility-reports"
+          python tools/release-pack "$PACK_ID" \
+            --policy-root "$GITHUB_WORKSPACE/policy-source" \
+            --report "$reports_dir/claude-code/claude-code.json" \
+            --report "$reports_dir/codex/codex.json" \
+            --report "$reports_dir/opencode/opencode.json"
+      - name: Require original release-workflow ZIP attestation
+        env:
+          ARCHIVE: dist/releases/${{ inputs.tag }}.zip
+          GH_TOKEN: ${{ github.token }}
+          SIGNER_WORKFLOW: ${{ github.repository }}/.github/workflows/release.yml
+        working-directory: release-source
+        run: >-
+          gh attestation verify "$ARCHIVE"
+          --repo "$GITHUB_REPOSITORY"
+          --signer-workflow "$SIGNER_WORKFLOW"
+          --source-ref refs/heads/main
+          --deny-self-hosted-runners
+      - name: Compare the draft with locally rebuilt bytes
+        env:
+          EXPECTED_TITLE: ${{ steps.verified-source.outputs.release_title }}
+          PACK_ID: ${{ inputs.pack_id }}
+          PYTHONPATH: ${{ github.workspace }}/policy-source/src
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          SIGNER_FINGERPRINT: ${{ steps.verified-source.outputs.signer_fingerprint }}
+          SIGNER_TYPE: ${{ steps.verified-source.outputs.signer_type }}
+          SOURCE_SHA: ${{ steps.verified-source.outputs.source_sha }}
+          TAG_OBJECT_SHA: ${{ steps.verified-source.outputs.tag_object_sha }}
+        shell: bash
+        working-directory: release-source
+        run: |
+          set -euo pipefail
+          reports_dir="$RUNNER_TEMP/compatibility-reports"
+          python -m skillpack_tools.release_recovery inspect \
+            --release "$RUNNER_TEMP/release.json" --release-id "$RELEASE_ID" \
+            --tag "$RELEASE_TAG" --policy-sha "$GITHUB_SHA" \
+            --tag-object-sha "$TAG_OBJECT_SHA" \
+            --source-sha "$SOURCE_SHA" --signature-kind "$SIGNER_TYPE" \
+            --signer-fingerprint "$SIGNER_FINGERPRINT" --github-tag-verified \
+            --expected-title "$EXPECTED_TITLE" \
+            --expected-body-file "dist/releases/$RELEASE_TAG-release-notes.md" \
+            --expected-target-commitish main \
+            --output "$RUNNER_TEMP/release-inspection.json"
+          mapfile -t assets < <(
+            printf '%s\n' \
+              "dist/releases/$RELEASE_TAG.zip" \
+              "dist/releases/$RELEASE_TAG.zip.sha256" \
+              "$reports_dir/claude-code/claude-code.json" \
+              "$reports_dir/claude-code/claude-code.envelope.json" \
+              "$reports_dir/claude-code/claude-code.attestation.jsonl" \
+              "$reports_dir/codex/codex.json" \
+              "$reports_dir/codex/codex.envelope.json" \
+              "$reports_dir/codex/codex.attestation.jsonl" \
+              "$reports_dir/opencode/opencode.json" \
+              "$reports_dir/opencode/opencode.envelope.json" \
+              "$reports_dir/opencode/opencode.attestation.jsonl"
+          )
+          printf '%s\n' "${assets[@]}" > "$RUNNER_TEMP/expected-assets.txt"
+          python -m skillpack_tools.release_recovery plan-resume \
+            --inspection "$RUNNER_TEMP/release-inspection.json" \
+            --expected "${assets[@]}" --output "$RUNNER_TEMP/recovery-plan.json"
+      - name: Assemble the deterministic recovery-build bundle
+        env:
+          ARCHIVE: ${{ github.workspace }}/release-source/dist/releases/${{ inputs.tag }}.zip
+          CHECKSUM: ${{ github.workspace }}/release-source/dist/releases/${{ inputs.tag }}.zip.sha256
+          NOTES: ${{ github.workspace }}/release-source/dist/releases/${{ inputs.tag }}-release-notes.md
+          PACK_ID: ${{ inputs.pack_id }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_TITLE: ${{ steps.verified-source.outputs.release_title }}
+          SIGNER_FINGERPRINT: ${{ steps.verified-source.outputs.signer_fingerprint }}
+          SIGNER_TYPE: ${{ steps.verified-source.outputs.signer_type }}
+          SOURCE_SHA: ${{ steps.verified-source.outputs.source_sha }}
+          TAG_OBJECT_SHA: ${{ steps.verified-source.outputs.tag_object_sha }}
+        shell: python
+        run: |
+          import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          output = Path(os.environ["RUNNER_TEMP"], "recovery-build-bundle")
+          output.mkdir(mode=0o700)
+          reports = Path(os.environ["RUNNER_TEMP"], "compatibility-reports")
+          source_files = [
+              Path(os.environ["ARCHIVE"]),
+              Path(os.environ["CHECKSUM"]),
+              Path(os.environ["NOTES"]),
+              Path(os.environ["RUNNER_TEMP"], "release-inspection.json"),
+              Path(os.environ["RUNNER_TEMP"], "recovery-plan.json"),
+              *(
+                  reports / client / f"{client}.{suffix}"
+                  for client in ("claude-code", "codex", "opencode")
+                  for suffix in ("json", "envelope.json", "attestation.jsonl")
+              ),
+          ]
+          copied: list[Path] = []
+          for source in source_files:
+              if not source.is_file() or source.is_symlink():
+                  raise SystemExit(f"recovery-build input must be a regular file: {source}")
+              destination = output / source.name
+              if destination.exists():
+                  raise SystemExit(f"duplicate recovery-build basename: {source.name}")
+              shutil.copyfile(source, destination)
+              destination.chmod(0o644)
+              copied.append(destination)
+
+          plan = json.loads((output / "recovery-plan.json").read_text(encoding="utf-8"))
+          asset_names = sorted(
+              [
+                  Path(os.environ["ARCHIVE"]).name,
+                  Path(os.environ["CHECKSUM"]).name,
+                  *(
+                      f"{client}.{suffix}"
+                      for client in ("claude-code", "codex", "opencode")
+                      for suffix in ("json", "envelope.json", "attestation.jsonl")
+                  ),
+              ]
+          )
+          manifest = {
+              "schemaVersion": 1,
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "packId": os.environ["PACK_ID"],
+              "releaseId": int(os.environ["RELEASE_ID"]),
+              "tag": os.environ["RELEASE_TAG"],
+              "tagObjectSha": os.environ["TAG_OBJECT_SHA"],
+              "sourceSha": os.environ["SOURCE_SHA"],
+              "title": os.environ["RELEASE_TITLE"],
+              "archive": Path(os.environ["ARCHIVE"]).name,
+              "checksum": Path(os.environ["CHECKSUM"]).name,
+              "releaseNotes": Path(os.environ["NOTES"]).name,
+              "buildInspection": "release-inspection.json",
+              "buildPlan": "recovery-plan.json",
+              "releaseAssets": asset_names,
+              "missingAssets": sorted(item["name"] for item in plan["missing"]),
+              "signer": {
+                  "type": os.environ["SIGNER_TYPE"],
+                  "fingerprint": os.environ["SIGNER_FINGERPRINT"],
+              },
+              "files": [
+                  {
+                      "name": path.name,
+                      "size": path.stat().st_size,
+                      "sha256": hashlib.file_digest(path.open("rb"), "sha256").hexdigest(),
+                  }
+                  for path in sorted(copied, key=lambda item: item.name)
+              ],
+          }
+          (output / "recovery-build-manifest.json").write_text(
+              json.dumps(manifest, sort_keys=True, separators=(",", ":")) + "\n",
+              encoding="utf-8",
+          )
+      - name: Upload the authenticated recovery-build bundle
+        id: recovery-bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: recovery-build-${{ inputs.pack_id }}-${{ inputs.release_id }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/recovery-build-bundle
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  resume:
+    name: resume only the authenticated recovery build
+    if: ${{ inputs.mode == 'resume-verified-draft' }}
+    needs:
+      - inspect
+      - resume-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: release
+    permissions:
+      actions: read
+      attestations: read
+      contents: write
+    steps:
+      - name: Validate recovery publication identifiers before checkout
+        env:
+          PACK_ID: ${{ inputs.pack_id }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: python
+        run: |
+          import os
+          import re
+
+          pack = os.environ["PACK_ID"]
+          if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", pack):
+              raise SystemExit("pack_id must be lowercase kebab-case")
+          if not re.fullmatch(r"[1-9][0-9]*", os.environ["RELEASE_ID"]):
+              raise SystemExit("release_id must be a positive integer")
+          semver = (
+              r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+              r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+              r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+              r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+          )
+          if not re.fullmatch(re.escape(pack) + r"-v" + semver, os.environ["RELEASE_TAG"]):
+              raise SystemExit("tag must be the requested pack ID followed by a valid SemVer")
+      - name: Check out protected recovery policy without credentials
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: policy-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out the exact tag as inert release data
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          path: release-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up protected recovery Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: policy-source/requirements-dev.txt
+      - name: Install only protected-main recovery dependencies
+        run: >-
+          python -m pip install --disable-pip-version-check --require-hashes
+          -r policy-source/requirements-dev.txt
+      - name: Download and digest-verify the exact recovery-build artifact
+        env:
+          EXPECTED_ARTIFACT_DIGEST: ${{ needs.resume-build.outputs.artifact_digest }}
+          EXPECTED_ARTIFACT_ID: ${{ needs.resume-build.outputs.artifact_id }}
+          EXPECTED_ARTIFACT_NAME: ${{ needs.resume-build.outputs.artifact_name }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]
+          [[ "$EXPECTED_ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]
+          artifacts=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100")
+          count=$(jq --arg id "$EXPECTED_ARTIFACT_ID" --arg name "$EXPECTED_ARTIFACT_NAME" \
+            '[.artifacts[] | select((.id | tostring) == $id and .name == $name and .expired == false)] | length' \
+            <<< "$artifacts")
+          test "$count" = 1
+          api_digest=$(jq -r --arg id "$EXPECTED_ARTIFACT_ID" \
+            '.artifacts[] | select((.id | tostring) == $id) | .digest' <<< "$artifacts")
+          test "$api_digest" = "sha256:$EXPECTED_ARTIFACT_DIGEST"
+          gh api "/repos/$GITHUB_REPOSITORY/actions/artifacts/$EXPECTED_ARTIFACT_ID/zip" \
+            > "$RUNNER_TEMP/recovery-build.zip"
+          downloaded_digest=$(python -c 'import hashlib,sys; print(hashlib.file_digest(open(sys.argv[1], "rb"), "sha256").hexdigest())' "$RUNNER_TEMP/recovery-build.zip")
+          test "$downloaded_digest" = "$EXPECTED_ARTIFACT_DIGEST"
+          mkdir -p "$RUNNER_TEMP/recovery-build-bundle"
+          python - <<'PY'
+          import os
+          import stat
+          import zipfile
+          from pathlib import Path
+
+          tag = os.environ["RELEASE_TAG"]
+          expected = {
+              f"{tag}.zip",
+              f"{tag}.zip.sha256",
+              f"{tag}-release-notes.md",
+              "release-inspection.json",
+              "recovery-plan.json",
+              "recovery-build-manifest.json",
+              *(
+                  f"{client}.{suffix}"
+                  for client in ("claude-code", "codex", "opencode")
+                  for suffix in ("json", "envelope.json", "attestation.jsonl")
+              ),
+          }
+          archive = Path(os.environ["RUNNER_TEMP"], "recovery-build.zip")
+          destination = Path(os.environ["RUNNER_TEMP"], "recovery-build-bundle")
+          with zipfile.ZipFile(archive) as bundle:
+              infos = bundle.infolist()
+              names = [info.filename for info in infos]
+              if len(names) != len(set(names)) or set(names) != expected:
+                  raise SystemExit(f"recovery-build artifact has an unexpected inventory: {names}")
+              for info in infos:
+                  mode = info.external_attr >> 16
+                  if (
+                      info.is_dir()
+                      or info.filename != Path(info.filename).name
+                      or info.flag_bits & 0x1
+                      or (mode and not stat.S_ISREG(mode))
+                  ):
+                      raise SystemExit(f"unsafe recovery-build artifact member: {info.filename}")
+                  target = destination / info.filename
+                  target.write_bytes(bundle.read(info))
+                  target.chmod(0o644)
+          PY
+      - name: Revalidate source, signer, lifecycle, and sealed recovery build
+        id: verified-source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          POLICY_ROOT: ${{ github.workspace }}/policy-source
+          PROTECTED_MAIN_SHA: ${{ github.sha }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$POLICY_ROOT/src"
+          test "$(git -C "$RELEASE_ROOT" cat-file -t "refs/tags/$RELEASE_TAG")" = tag
+          source_sha=$(git -C "$RELEASE_ROOT" rev-parse HEAD)
+          test "$(git -C "$RELEASE_ROOT" rev-list -n 1 "refs/tags/$RELEASE_TAG")" = "$source_sha"
+          git -C "$POLICY_ROOT" cat-file -e "$source_sha^{commit}"
+          git -C "$POLICY_ROOT" merge-base --is-ancestor "$source_sha" "$PROTECTED_MAIN_SHA"
+          tag_object=$(git -C "$RELEASE_ROOT" rev-parse "refs/tags/$RELEASE_TAG")
+          test "$(gh api "/repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')" = true
+          tag_payload=$(git -C "$RELEASE_ROOT" cat-file -p "refs/tags/$RELEASE_TAG")
+          if grep -q -- '-----BEGIN PGP SIGNATURE-----' <<< "$tag_payload"; then
+            signing_home="$RUNNER_TEMP/genaptic-resume-publication-gnupg"
+            key_bundle="$RUNNER_TEMP/genaptic-resume-publication-signing-keys.asc"
+            mkdir -p "$signing_home"
+            chmod 700 "$signing_home"
+            : > "$key_bundle"
+            mapfile -t signer_logins < <(python -c 'import os; from pathlib import Path; from skillpack_tools.models import load_repository; print("\n".join(sorted({s.github for s in load_repository(Path(os.environ["POLICY_ROOT"])).trusted_signers if s.kind == "openpgp"})))')
+            test "${#signer_logins[@]}" -gt 0
+            test -n "${signer_logins[0]}"
+            for signer_login in "${signer_logins[@]}"; do
+              gh api --paginate "/users/$signer_login/gpg_keys" --jq '.[].raw_key' >> "$key_bundle"
+            done
+            test -s "$key_bundle"
+            export GNUPGHOME="$signing_home"
+            gpg --batch --import "$key_bundle"
+          elif grep -q -- '-----BEGIN SSH SIGNATURE-----' <<< "$tag_payload"; then
+            allowed_signers="$RUNNER_TEMP/genaptic-resume-publication-allowed-signers"
+            : > "$allowed_signers"
+            mapfile -t signer_logins < <(python -c 'import os; from pathlib import Path; from skillpack_tools.models import load_repository; print("\n".join(sorted({s.github for s in load_repository(Path(os.environ["POLICY_ROOT"])).trusted_signers if s.kind == "ssh"})))')
+            test "${#signer_logins[@]}" -gt 0
+            test -n "${signer_logins[0]}"
+            for signer_login in "${signer_logins[@]}"; do
+              gh api --paginate "/users/$signer_login/ssh_signing_keys" \
+                --jq '.[] | "signer " + .key' >> "$allowed_signers"
+            done
+            test -s "$allowed_signers"
+            git -C "$RELEASE_ROOT" config --local gpg.format ssh
+            git -C "$RELEASE_ROOT" config --local gpg.ssh.allowedSignersFile "$allowed_signers"
+          else
+            echo "The tag does not contain a supported OpenPGP or SSH signature." >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import hashlib
+          import os
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          from skillpack_tools.lifecycle import semantic_version_key, validate_pack_lifecycle
+          from skillpack_tools.models import get_pack, load_repository
+          from skillpack_tools.publication import strict_json_bytes
+          from skillpack_tools.signing import verify_tag
+
+          policy_root = Path(os.environ["POLICY_ROOT"])
+          release_root = Path(os.environ["RELEASE_ROOT"])
+          bundle = Path(os.environ["RUNNER_TEMP"], "recovery-build-bundle")
+          config = load_repository(policy_root)
+          verified = verify_tag(release_root, os.environ["RELEASE_TAG"], config.trusted_signers)
+          if verified.source_sha != subprocess.check_output(
+              ["git", "-C", str(release_root), "rev-parse", "HEAD"], text=True
+          ).strip():
+              raise SystemExit("verified signer source differs from the inert tag checkout")
+          pack = get_pack(release_root, os.environ["PACK_ID"])
+          errors = validate_pack_lifecycle(pack)
+          if errors or pack.tag != os.environ["RELEASE_TAG"]:
+              raise SystemExit("invalid canonical tagged pack: " + "; ".join(errors))
+          if pack.visibility != "public" or pack.maturity != "stable":
+              raise SystemExit("recovery publication requires a public stable pack")
+          if pack.publication_state == "withdrawn":
+              raise SystemExit("withdrawn packs cannot be recovered")
+          if pack.published_version is not None and semantic_version_key(pack.version) <= semantic_version_key(pack.published_version):
+              raise SystemExit("release version must be newer than latest-release")
+          tag_object = subprocess.check_output(
+              ["git", "-C", str(release_root), "rev-parse", f"refs/tags/{pack.tag}"], text=True
+          ).strip()
+          manifest = strict_json_bytes(
+              (bundle / "recovery-build-manifest.json").read_bytes(),
+              label="recovery-build-manifest.json",
+          )
+          if not isinstance(manifest, dict) or manifest.get("schemaVersion") != 1:
+              raise SystemExit("recovery-build manifest must be a schema-version-1 object")
+          expected_identity = {
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "packId": pack.id,
+              "releaseId": int(os.environ["RELEASE_ID"]),
+              "tag": pack.tag,
+              "tagObjectSha": tag_object,
+              "sourceSha": verified.source_sha,
+              "title": f"{pack.display_name} {pack.version}",
+              "archive": f"{pack.tag}.zip",
+              "checksum": f"{pack.tag}.zip.sha256",
+              "releaseNotes": f"{pack.tag}-release-notes.md",
+              "buildInspection": "release-inspection.json",
+              "buildPlan": "recovery-plan.json",
+              "signer": {"type": verified.kind, "fingerprint": verified.fingerprint},
+          }
+          for field, expected in expected_identity.items():
+              if manifest.get(field) != expected:
+                  raise SystemExit(f"recovery-build manifest field {field!r} is not bound to the verified release")
+          expected_assets = sorted(
+              [
+                  expected_identity["archive"],
+                  expected_identity["checksum"],
+                  *(
+                      f"{client}.{suffix}"
+                      for client in ("claude-code", "codex", "opencode")
+                      for suffix in ("json", "envelope.json", "attestation.jsonl")
+                  ),
+              ]
+          )
+          if manifest.get("releaseAssets") != expected_assets:
+              raise SystemExit("recovery-build manifest has an unexpected release asset set")
+          expected_files = sorted(
+              [
+                  *expected_assets,
+                  expected_identity["releaseNotes"],
+                  expected_identity["buildInspection"],
+                  expected_identity["buildPlan"],
+              ]
+          )
+          file_records = manifest.get("files")
+          if not isinstance(file_records, list):
+              raise SystemExit("recovery-build manifest files must be an array")
+          names = [record.get("name") for record in file_records if isinstance(record, dict)]
+          if names != expected_files or len(names) != len(file_records):
+              raise SystemExit("recovery-build manifest has an unexpected file inventory")
+          records = {record["name"]: record for record in file_records}
+          for name in expected_files:
+              path = bundle / name
+              digest = hashlib.file_digest(path.open("rb"), "sha256").hexdigest()
+              if records[name].get("size") != path.stat().st_size or records[name].get("sha256") != digest:
+                  raise SystemExit(f"recovery-build file failed its sealed digest: {name}")
+          build_plan = strict_json_bytes(
+              (bundle / expected_identity["buildPlan"]).read_bytes(), label="recovery-plan.json"
+          )
+          build_inspection = strict_json_bytes(
+              (bundle / expected_identity["buildInspection"]).read_bytes(),
+              label="release-inspection.json",
+          )
+          if not isinstance(build_plan, dict) or not isinstance(build_inspection, dict):
+              raise SystemExit("sealed recovery inspection and plan must be objects")
+          if (
+              build_plan.get("releaseId") != int(os.environ["RELEASE_ID"])
+              or build_plan.get("tag") != pack.tag
+              or build_inspection.get("releaseId") != int(os.environ["RELEASE_ID"])
+              or build_inspection.get("tag") != pack.tag
+          ):
+              raise SystemExit("sealed recovery inspection/plan identity is invalid")
+          missing = build_plan.get("missing")
+          if not isinstance(missing, list):
+              raise SystemExit("sealed recovery plan missing-assets value must be an array")
+          missing_names = sorted(item.get("name") for item in missing if isinstance(item, dict))
+          if len(missing_names) != len(missing) or missing_names != manifest.get("missingAssets"):
+              raise SystemExit("sealed recovery plan does not match the manifest missing assets")
+          for item in missing:
+              record = records.get(item["name"])
+              if (
+                  record is None
+                  or item.get("size") != record["size"]
+                  or item.get("digest") != f"sha256:{record['sha256']}"
+              ):
+                  raise SystemExit("sealed recovery plan has a mismatched missing asset")
+
+          releases = release_root / "dist" / "releases"
+          releases.mkdir(parents=True, exist_ok=True)
+          for name in (
+              expected_identity["archive"],
+              expected_identity["checksum"],
+              expected_identity["releaseNotes"],
+          ):
+              shutil.copyfile(bundle / name, releases / name)
+          reports = Path(os.environ["RUNNER_TEMP"], "compatibility-reports")
+          for client in ("claude-code", "codex", "opencode"):
+              destination = reports / client
+              destination.mkdir(parents=True, exist_ok=True)
+              for suffix in ("json", "envelope.json", "attestation.jsonl"):
+                  name = f"{client}.{suffix}"
+                  shutil.copyfile(bundle / name, destination / name)
+          output = Path(os.environ["GITHUB_OUTPUT"])
+          with output.open("a", encoding="utf-8") as handle:
+              handle.write(f"source_sha={verified.source_sha}\n")
+              handle.write(f"tag_object_sha={tag_object}\n")
+              handle.write(f"signer_type={verified.kind}\n")
+              handle.write(f"signer_fingerprint={verified.fingerprint}\n")
+              handle.write(f"release_title={pack.display_name} {pack.version}\n")
+          PY
+      - name: Re-read the draft and recompute the exact recovery plan
+        env:
+          EXPECTED_TITLE: ${{ steps.verified-source.outputs.release_title }}
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          PYTHONPATH: ${{ github.workspace }}/policy-source/src
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+          SIGNER_FINGERPRINT: ${{ steps.verified-source.outputs.signer_fingerprint }}
+          SIGNER_TYPE: ${{ steps.verified-source.outputs.signer_type }}
+          SOURCE_SHA: ${{ steps.verified-source.outputs.source_sha }}
+          TAG_OBJECT_SHA: ${{ steps.verified-source.outputs.tag_object_sha }}
+        shell: bash
+        working-directory: policy-source
+        run: |
+          set -euo pipefail
+          gh api "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > "$RUNNER_TEMP/release-current.json"
+          python -m skillpack_tools.release_recovery expected-body \
+            --root "$RELEASE_ROOT" --pack "$PACK_ID" \
+            --release "$RUNNER_TEMP/release-current.json" --source-sha "$SOURCE_SHA" \
+            --signature-kind "$SIGNER_TYPE" --signer-fingerprint "$SIGNER_FINGERPRINT" \
+            --output "$RUNNER_TEMP/current-expected-release-notes.md"
+          cmp "$RUNNER_TEMP/current-expected-release-notes.md" \
+            "$RELEASE_ROOT/dist/releases/$RELEASE_TAG-release-notes.md"
+          python -m skillpack_tools.release_recovery inspect \
+            --release "$RUNNER_TEMP/release-current.json" --release-id "$RELEASE_ID" \
+            --tag "$RELEASE_TAG" --policy-sha "$GITHUB_SHA" \
+            --tag-object-sha "$TAG_OBJECT_SHA" \
+            --source-sha "$SOURCE_SHA" --signature-kind "$SIGNER_TYPE" \
+            --signer-fingerprint "$SIGNER_FINGERPRINT" --github-tag-verified \
+            --expected-title "$EXPECTED_TITLE" \
+            --expected-body-file "$RELEASE_ROOT/dist/releases/$RELEASE_TAG-release-notes.md" \
+            --expected-target-commitish main \
+            --output "$RUNNER_TEMP/current-release-inspection.json"
+          reports_dir="$RUNNER_TEMP/compatibility-reports"
+          mapfile -t assets < <(
+            printf '%s\n' \
+              "$RELEASE_ROOT/dist/releases/$RELEASE_TAG.zip" \
+              "$RELEASE_ROOT/dist/releases/$RELEASE_TAG.zip.sha256" \
+              "$reports_dir/claude-code/claude-code.json" \
+              "$reports_dir/claude-code/claude-code.envelope.json" \
+              "$reports_dir/claude-code/claude-code.attestation.jsonl" \
+              "$reports_dir/codex/codex.json" \
+              "$reports_dir/codex/codex.envelope.json" \
+              "$reports_dir/codex/codex.attestation.jsonl" \
+              "$reports_dir/opencode/opencode.json" \
+              "$reports_dir/opencode/opencode.envelope.json" \
+              "$reports_dir/opencode/opencode.attestation.jsonl"
+          )
+          printf '%s\n' "${assets[@]}" > "$RUNNER_TEMP/expected-assets.txt"
+          python -m skillpack_tools.release_recovery plan-resume \
+            --inspection "$RUNNER_TEMP/current-release-inspection.json" \
+            --expected "${assets[@]}" --output "$RUNNER_TEMP/recovery-plan.json"
+      - name: Reverify the original normal-release ZIP attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+        working-directory: policy-source
+        run: >-
+          gh attestation verify "$RELEASE_ROOT/dist/releases/$RELEASE_TAG.zip"
+          --repo "$GITHUB_REPOSITORY"
+          --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml"
+          --source-ref refs/heads/main
+          --deny-self-hosted-runners
+      - name: Upload only missing assets without replacement
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        working-directory: policy-source
+        run: |
+          set -euo pipefail
+          while IFS= read -r asset_name; do
+            asset=""
+            while IFS= read -r candidate; do
+              if [[ "$(basename "$candidate")" = "$asset_name" ]]; then
+                test -z "$asset"
+                asset="$candidate"
+              fi
+            done < "$RUNNER_TEMP/expected-assets.txt"
+            test -n "$asset"
+            gh release upload "$RELEASE_TAG" "$asset" --repo "$GITHUB_REPOSITORY"
+          done < <(jq -r '.missing[].name' "$RUNNER_TEMP/recovery-plan.json")
+      - name: Seal the exact recovered draft before publication
+        env:
+          EXPECTED_TITLE: ${{ steps.verified-source.outputs.release_title }}
+          GH_TOKEN: ${{ github.token }}
+          PACK_ID: ${{ inputs.pack_id }}
+          PYTHONPATH: ${{ github.workspace }}/policy-source/src
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+          SIGNER_FINGERPRINT: ${{ steps.verified-source.outputs.signer_fingerprint }}
+          SIGNER_TYPE: ${{ steps.verified-source.outputs.signer_type }}
+          SOURCE_SHA: ${{ steps.verified-source.outputs.source_sha }}
+          TAG_OBJECT_SHA: ${{ steps.verified-source.outputs.tag_object_sha }}
+        shell: bash
+        working-directory: policy-source
+        run: |
+          set -euo pipefail
+          gh api "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > "$RUNNER_TEMP/release-after.json"
+          python -m skillpack_tools.release_recovery inspect \
+            --release "$RUNNER_TEMP/release-after.json" --release-id "$RELEASE_ID" \
+            --tag "$RELEASE_TAG" --policy-sha "$GITHUB_SHA" \
+            --tag-object-sha "$TAG_OBJECT_SHA" \
+            --source-sha "$SOURCE_SHA" --signature-kind "$SIGNER_TYPE" \
+            --signer-fingerprint "$SIGNER_FINGERPRINT" --github-tag-verified \
+            --expected-title "$EXPECTED_TITLE" \
+            --expected-body-file "$RELEASE_ROOT/dist/releases/$RELEASE_TAG-release-notes.md" \
+            --expected-target-commitish main \
+            --output "$RUNNER_TEMP/inspection-after.json"
+          mapfile -t assets < "$RUNNER_TEMP/expected-assets.txt"
+          python -m skillpack_tools.release_recovery plan-resume \
+            --inspection "$RUNNER_TEMP/inspection-after.json" \
+            --expected "${assets[@]}" --output "$RUNNER_TEMP/final-plan.json"
+          test "$(jq -r '.complete' "$RUNNER_TEMP/final-plan.json")" = true
+          gh api "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+            > "$RUNNER_TEMP/sealed-recovery-draft.json"
+          gh api --paginate --slurp \
+            "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" \
+            --jq 'add' > "$RUNNER_TEMP/sealed-recovery-assets.json"
+          jq --slurpfile assets "$RUNNER_TEMP/sealed-recovery-assets.json" \
+            '.assets = $assets[0]' "$RUNNER_TEMP/sealed-recovery-draft.json" \
+            > "$RUNNER_TEMP/exact-recovery-draft.json"
+          python -m skillpack_tools.release_recovery seal-intent \
+            --root "$GITHUB_WORKSPACE/policy-source" \
+            --release "$RUNNER_TEMP/exact-recovery-draft.json" \
+            --mode sealed-draft \
+            --repository "$GITHUB_REPOSITORY" \
+            --policy-sha "$GITHUB_SHA" \
+            --workflow-name "$GITHUB_WORKFLOW" \
+            --workflow-run-id "$GITHUB_RUN_ID" \
+            --workflow-run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --pack "$PACK_ID" --release-id "$RELEASE_ID" --tag "$RELEASE_TAG" \
+            --tag-object-sha "$TAG_OBJECT_SHA" --source-sha "$SOURCE_SHA" \
+            --signature-kind "$SIGNER_TYPE" --signer-fingerprint "$SIGNER_FINGERPRINT" \
+            --github-tag-verified --expected-title "$EXPECTED_TITLE" \
+            --expected-body-file "$RELEASE_ROOT/dist/releases/$RELEASE_TAG-release-notes.md" \
+            --expected-target-commitish main \
+            --output "$RUNNER_TEMP/release-intent.json"
+      - name: Preserve the sealed recovery intent before publication
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-intent-${{ inputs.release_id }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/release-intent.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
+      - name: Publish and verify the exact recovered release by numeric ID
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ github.workspace }}/release-source/dist/releases/${{ inputs.tag }}-release-notes.md
+          PYTHONPATH: ${{ github.workspace }}/policy-source/src
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_ROOT: ${{ github.workspace }}/release-source
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_TITLE: ${{ steps.verified-source.outputs.release_title }}
+        shell: bash
+        working-directory: policy-source
+        run: |
+          set -euo pipefail
+          jq -n --arg name "$RELEASE_TITLE" --rawfile body "$NOTES" \
+            '{name: $name, body: $body, draft: false, prerelease: false}' \
+            > "$RUNNER_TEMP/publish-recovered-release.json"
+          gh api --method PATCH "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+            --input "$RUNNER_TEMP/publish-recovered-release.json" \
+            > "$RUNNER_TEMP/publish-recovered-response.json"
+          for attempt in {1..12}; do
+            if gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null; then
+              break
+            fi
+            if [[ "$attempt" = 12 ]]; then
+              echo "Immutable-release attestation was unavailable after 12 attempts." >&2
+              exit 1
+            fi
+            sleep 10
+          done
+          gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+          gh api "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+            > "$RUNNER_TEMP/recovered-publication.json"
+          gh api --paginate --slurp \
+            "/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?per_page=100" \
+            --jq 'add' > "$RUNNER_TEMP/recovered-publication-assets.json"
+          jq --slurpfile assets "$RUNNER_TEMP/recovered-publication-assets.json" \
+            '.assets = $assets[0]' "$RUNNER_TEMP/recovered-publication.json" \
+            > "$RUNNER_TEMP/exact-recovered-publication.json"
+          python -m skillpack_tools.release_recovery verify-published \
+            --root "$GITHUB_WORKSPACE/policy-source" \
+            --release "$RUNNER_TEMP/exact-recovered-publication.json" \
+            --intent "$RUNNER_TEMP/release-intent.json" \
+            --output "$RUNNER_TEMP/verified-publication.json"
+          while IFS= read -r asset; do
+            gh release verify-asset "$RELEASE_TAG" "$asset" --repo "$GITHUB_REPOSITORY"
+          done < "$RUNNER_TEMP/expected-assets.txt"
+          gh attestation verify "$RELEASE_ROOT/dist/releases/$RELEASE_TAG.zip" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+            --source-ref refs/heads/main \
+            --deny-self-hosted-runners
+      - name: State the retryable recovered-publication boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "# Recovered immutable release verified"
+            echo
+            echo "The exact release matches its sealed recovery intent."
+            echo "publication-handoff.yml performs retryable canonical metadata reconciliation."
+          } >> "$GITHUB_STEP_SUMMARY"

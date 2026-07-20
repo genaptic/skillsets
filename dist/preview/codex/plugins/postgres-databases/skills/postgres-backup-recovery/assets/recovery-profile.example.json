@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "system": {
+    "name": "billing-postgres",
+    "environment": "production",
+    "postgresVersion": "18",
+    "provider": "self-managed example"
+  },
+  "scenario": {
+    "id": "pitr-bad-migration",
+    "title": "Point-in-time recovery before an incorrect migration",
+    "description": "Recover an isolated copy to a target immediately before a recorded bad migration, validate business invariants, and measure end-to-end readiness.",
+    "scope": "cluster",
+    "rpoMinutes": 5,
+    "rtoMinutes": 120,
+    "recoveryTarget": "time selected by exercise controller",
+    "failureInjection": "migration marker only; no production action"
+  },
+  "backup": {
+    "method": "physical base backup plus continuous WAL archive",
+    "sourceLocationClass": "cross-account immutable object storage",
+    "maximumBackupAgeHours": 48,
+    "verification": [
+      "base backup manifest passes approved verification",
+      "required WAL chain is present through the target",
+      "backup and WAL encryption keys are accessible to recovery role"
+    ]
+  },
+  "target": {
+    "isolation": "private recovery network with no production write endpoints",
+    "version": "18",
+    "capacity": "production-equivalent storage and representative compute",
+    "extensions": ["pg_stat_statements"],
+    "tablespaces": ["pg_default", "pg_global"]
+  },
+  "validation": {
+    "technical": [
+      "PostgreSQL reaches consistent recovery target and accepts read-only checks",
+      "expected databases, schemas, extensions, roles, and constraints exist",
+      "backup recovery target and timeline evidence are recorded"
+    ],
+    "business": [
+      "billing totals reconcile to control values",
+      "no migration-created marker row exists",
+      "sample customer and invoice workflows pass in read-only test mode"
+    ]
+  },
+  "roles": [
+    {"role": "exercise lead", "responsibility": "authorize stages and record timeline"},
+    {"role": "database operator", "responsibility": "provision and restore"},
+    {"role": "security observer", "responsibility": "validate access and redaction"},
+    {"role": "business validator", "responsibility": "approve domain checks"}
+  ],
+  "observability": [
+    "artifact transfer throughput",
+    "WAL replay progress",
+    "storage utilization",
+    "PostgreSQL logs",
+    "stage timestamps"
+  ],
+  "stopConditions": [
+    "backup integrity cannot be established",
+    "required key access violates the approved recovery path",
+    "target isolation is not in place",
+    "exercise exceeds the authorized window without extension"
+  ],
+  "evidence": {
+    "directory": "evidence/pitr-bad-migration",
+    "redactionPolicy": "no credentials, literal customer data, or unredacted connection strings"
+  }
+}

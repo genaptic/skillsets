@@ -74,7 +74,7 @@ narrative with the same stem uses `.md`. Record:
 - Client and model versions plus the exact install command.
 - Pack version, release tag, and full 40-character source SHA.
 - Discovered skill names.
-- Every executed case, assertion, forbidden behavior, and overlap expectation.
+- Every executed case, assertion, forbidden behavior, and applicable routing-boundary selection.
 - Permissions, network endpoints, filesystem effects, and unexpected behavior.
 - Reviewer identity and explicit pass/fail verdict.
 
@@ -88,5 +88,7 @@ runs.
 
 A publishable pack release requires dated passing native-client and model-backed evidence
 for Claude Code, Codex, and OpenCode against the exact release SHA. Draft release rehearsals
-may be built without that evidence but are not publishable compatibility claims. The initial
-six `1.0.0` pack manifests remain release candidates until this protected gate passes.
+may be built without that evidence but are not publishable compatibility claims. Five reusable
+public `1.0.0` manifests remain release candidates until this protected gate passes. The
+maintainer-only Genaptic Skillsets development pack is unpublished and cannot enter a formal
+release.

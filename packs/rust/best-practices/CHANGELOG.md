@@ -23,5 +23,7 @@
 - Corrected graceful-shutdown guidance so producer admission ends before `TaskTracker` close and a
   timed-out wait is never treated as task termination.
 
+<!-- BEGIN RELEASE PREPARATION NOTE -->
 `1.0.0` has not been published. Freeze the candidate and collect exact-SHA
 native/model compatibility evidence before creating a release.
+<!-- END RELEASE PREPARATION NOTE -->

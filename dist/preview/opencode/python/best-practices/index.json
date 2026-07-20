@@ -1,0 +1,43 @@
+{
+  "skills": [
+    {
+      "name": "python-project-layout",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/layout-review-template.md",
+        "assets/pyproject-src-layout.example.toml",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "scripts/inspect_layout.py"
+      ]
+    },
+    {
+      "name": "python-testing-strategy",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/pytest-config.example.toml",
+        "assets/test-strategy-template.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "scripts/inventory_tests.py"
+      ]
+    },
+    {
+      "name": "python-error-handling",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/exception-hierarchy.example.py",
+        "assets/exception-policy-template.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "scripts/audit_exception_handlers.py"
+      ]
+    }
+  ]
+}

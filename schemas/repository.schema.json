@@ -4,7 +4,7 @@
   "title": "Genaptic Skillsets repository configuration",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema-version", "project", "repository", "publisher", "maintainer", "security", "marketplace", "release"],
+  "required": ["schema-version", "project", "repository", "publisher", "maintainer", "security", "marketplace", "compatibility-evidence", "release"],
   "properties": {
     "schema-version": {"const": 1},
     "project": {
@@ -68,13 +68,66 @@
         "description": {"type": "string", "minLength": 20, "maxLength": 300, "pattern": "^(?=.*\\S)[^\\x00-\\x1F\\x7F]+(?![\\s\\S])"}
       }
     },
+    "compatibility-evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max-age-days", "future-skew-minutes", "independent-review-required", "authorized-reviewers"],
+      "properties": {
+        "max-age-days": {"type": "integer", "minimum": 1, "maximum": 365},
+        "future-skew-minutes": {"type": "integer", "minimum": 0, "maximum": 60},
+        "independent-review-required": {"type": "boolean"},
+        "authorized-reviewers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["github", "github-id"],
+            "properties": {
+              "github": {"type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$", "maxLength": 39},
+              "github-id": {"type": "integer", "minimum": 1}
+            }
+          }
+        }
+      }
+    },
     "release": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["license", "initial-year"],
+      "required": ["license", "initial-year", "trusted-signers"],
       "properties": {
         "license": {"type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[A-Za-z0-9][A-Za-z0-9.+-]{2,63}(?![\\s\\S])"},
-        "initial-year": {"type": "integer", "minimum": 2000, "maximum": 2100}
+        "initial-year": {"type": "integer", "minimum": 2000, "maximum": 2100},
+        "trusted-signers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "github", "fingerprint"],
+                "properties": {
+                  "type": {"const": "ssh"},
+                  "github": {"type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$", "maxLength": 39},
+                  "fingerprint": {"type": "string", "pattern": "^SHA256:[A-Za-z0-9+/]{43}$"}
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "github", "fingerprint"],
+                "properties": {
+                  "type": {"const": "openpgp"},
+                  "github": {"type": "string", "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$", "maxLength": 39},
+                  "fingerprint": {"type": "string", "pattern": "^(?:[0-9A-F]{40}|[0-9A-F]{64})$"}
+                }
+              }
+            ]
+          }
+        }
       }
     }
   }

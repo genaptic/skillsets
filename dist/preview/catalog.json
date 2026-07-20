@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 2,
+  "project": "Genaptic Skillsets",
+  "repository": "genaptic/skillsets",
+  "marketplace": "genaptic-skillsets",
+  "packs": [
+    {
+      "id": "python-best-practices",
+      "displayName": "Python Best Practices",
+      "shortDescription": "Structure, test, and harden production Python projects.",
+      "description": "Reusable workflows for structuring, testing, and handling failures in production-quality Python projects.",
+      "language": "python",
+      "subject": "best-practices",
+      "version": "1.0.0",
+      "tag": "python-best-practices-v1.0.0",
+      "path": "packs/python/best-practices",
+      "license": "Apache-2.0",
+      "skills": [
+        "python-project-layout",
+        "python-testing-strategy",
+        "python-error-handling"
+      ],
+      "targets": [
+        "claude-code",
+        "codex",
+        "opencode"
+      ],
+      "category": "Developer Tools",
+      "keywords": [
+        "agent-skills",
+        "python",
+        "packaging",
+        "testing",
+        "exceptions"
+      ],
+      "compatibility": {
+        "runtimes": {
+          "python": ">=3.11 for optional helpers"
+        },
+        "notes": "Core guidance is framework-neutral. Packaging and test commands must be adapted to the repository's selected build backend and test runner."
+      },
+      "operations": {
+        "network": "none",
+        "filesystem": "project-write",
+        "command-execution": "optional-explicit",
+        "external-writes": "none"
+      },
+      "publication": {
+        "state": "unpublished",
+        "visibility": "public",
+        "maturity": "release-candidate",
+        "sourceType": "repo-local"
+      }
+    },
+    {
+      "id": "python-cli-apps",
+      "displayName": "Python CLI Applications",
+      "shortDescription": "Design and test reliable Python command-line interfaces.",
+      "description": "Design, failure-contract, and test workflows for reliable Python command-line applications.",
+      "language": "python",
+      "subject": "cli-apps",
+      "version": "1.0.0",
+      "tag": "python-cli-apps-v1.0.0",
+      "path": "packs/python/cli-apps",
+      "license": "Apache-2.0",
+      "skills": [
+        "python-cli-command-design",
+        "python-cli-error-output",
+        "python-cli-testing"
+      ],
+      "targets": [
+        "claude-code",
+        "codex",
+        "opencode"
+      ],
+      "category": "Developer Tools",
+      "keywords": [
+        "agent-skills",
+        "python",
+        "cli",
+        "testing",
+        "ux"
+      ],
+      "compatibility": {
+        "runtimes": {
+          "python": ">=3.11 for optional helpers"
+        },
+        "notes": "Guidance applies to argparse, Click, Typer, and similar frameworks. Framework-specific APIs must be confirmed against the version in the target project."
+      },
+      "operations": {
+        "network": "none",
+        "filesystem": "project-write",
+        "command-execution": "optional-explicit",
+        "external-writes": "none"
+      },
+      "publication": {
+        "state": "unpublished",
+        "visibility": "public",
+        "maturity": "release-candidate",
+        "sourceType": "repo-local"
+      }
+    },
+    {
+      "id": "rust-best-practices",
+      "displayName": "Rust Best Practices",
+      "shortDescription": "Design, review, and maintain repository-aware Rust systems.",
+      "description": "Repository-aware workflows for designing, reviewing, testing, documenting, and maintaining production Rust systems.",
+      "language": "rust",
+      "subject": "best-practices",
+      "version": "1.0.0",
+      "tag": "rust-best-practices-v1.0.0",
+      "path": "packs/rust/best-practices",
+      "license": "Apache-2.0",
+      "skills": [
+        "rust-core-best-practices",
+        "rust-project-architecture",
+        "rust-code-structure",
+        "rust-abstraction-design",
+        "rust-async-concurrency",
+        "rust-networking",
+        "rust-testing-strategy",
+        "rust-dependency-portability",
+        "rust-workspace-documentation",
+        "rustdoc-maintenance"
+      ],
+      "targets": [
+        "claude-code",
+        "codex",
+        "opencode"
+      ],
+      "category": "Developer Tools",
+      "keywords": [
+        "agent-skills",
+        "rust",
+        "cargo",
+        "architecture",
+        "async",
+        "testing",
+        "networking",
+        "portability"
+      ],
+      "compatibility": {
+        "runtimes": {
+          "cargo": "bundled with the target repository's selected Rust toolchain",
+          "rust": "target repository toolchain and MSRV; Edition 2024 examples require >=1.85"
+        },
+        "notes": "Guidance honors repository-declared editions, features, lockfiles, targets, and CI. Crate-specific APIs must be checked against locked versions."
+      },
+      "operations": {
+        "network": "optional",
+        "filesystem": "project-write",
+        "command-execution": "optional-explicit",
+        "external-writes": "none"
+      },
+      "publication": {
+        "state": "unpublished",
+        "visibility": "public",
+        "maturity": "release-candidate",
+        "sourceType": "repo-local"
+      }
+    },
+    {
+      "id": "rust-cli-apps",
+      "displayName": "Rust CLI Applications",
+      "shortDescription": "Design portable Rust CLIs and evolve commands safely.",
+      "description": "Portable workflows for designing stable Rust CLI applications and safely developing commands in existing CLIs.",
+      "language": "rust",
+      "subject": "cli-apps",
+      "version": "1.0.0",
+      "tag": "rust-cli-apps-v1.0.0",
+      "path": "packs/rust/cli-apps",
+      "license": "Apache-2.0",
+      "skills": [
+        "rust-cli-application-design",
+        "rust-cli-command-development"
+      ],
+      "targets": [
+        "claude-code",
+        "codex",
+        "opencode"
+      ],
+      "category": "Developer Tools",
+      "keywords": [
+        "agent-skills",
+        "rust",
+        "cli",
+        "clap",
+        "command-line",
+        "cross-platform"
+      ],
+      "compatibility": {
+        "runtimes": {
+          "cargo": "bundled with the target repository's selected Rust toolchain",
+          "rust": "target repository toolchain and MSRV; Edition 2024 examples require >=1.85"
+        },
+        "notes": "Guidance discovers the target parser, dispatch, runtime, output, and test architecture. Clap examples apply only when clap is already selected."
+      },
+      "operations": {
+        "network": "optional",
+        "filesystem": "project-write",
+        "command-execution": "optional-explicit",
+        "external-writes": "none"
+      },
+      "publication": {
+        "state": "unpublished",
+        "visibility": "public",
+        "maturity": "release-candidate",
+        "sourceType": "repo-local"
+      }
+    },
+    {
+      "id": "postgres-databases",
+      "displayName": "PostgreSQL Databases",
+      "shortDescription": "Design and review safe, evidence-backed PostgreSQL changes.",
+      "description": "Schema, query, index, migration, and recovery workflows for safe, evidence-based PostgreSQL engineering.",
+      "language": "shared",
+      "subject": "postgres-databases",
+      "version": "1.0.0",
+      "tag": "postgres-databases-v1.0.0",
+      "path": "packs/shared/postgres-databases",
+      "license": "Apache-2.0",
+      "skills": [
+        "postgres-schema-design",
+        "postgres-schema-review",
+        "postgres-query-performance-review",
+        "postgres-index-design",
+        "postgres-migration-safety",
+        "postgres-backup-recovery"
+      ],
+      "targets": [
+        "claude-code",
+        "codex",
+        "opencode"
+      ],
+      "category": "Data & Databases",
+      "keywords": [
+        "agent-skills",
+        "postgresql",
+        "schema",
+        "performance",
+        "migrations",
+        "recovery"
+      ],
+      "compatibility": {
+        "runtimes": {
+          "python": ">=3.11 for optional helpers",
+          "postgresql": "12–18; references target 18"
+        },
+        "notes": "Confirm syntax, lock behavior, extensions, and managed-service restrictions against the deployed PostgreSQL major version and provider."
+      },
+      "operations": {
+        "network": "optional",
+        "filesystem": "explicit-output",
+        "command-execution": "optional-explicit",
+        "external-writes": "optional-explicit"
+      },
+      "publication": {
+        "state": "unpublished",
+        "visibility": "public",
+        "maturity": "release-candidate",
+        "sourceType": "repo-local"
+      }
+    }
+  ]
+}

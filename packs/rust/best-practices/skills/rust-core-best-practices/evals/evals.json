@@ -43,14 +43,6 @@
       "prompt": "Refresh only the public rustdoc and doctests for this stable crate API, preserving implementation and package structure exactly.",
       "shouldTrigger": false,
       "reason": "A focused public API documentation outcome belongs to rustdoc-maintenance."
-    },
-    {
-      "id": "overlap-project-architecture",
-      "kind": "overlap",
-      "prompt": "Split this Rust application into a library, two binaries, and workspace packages, deciding module ownership, dependency direction, and integration-test placement.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-project-architecture",
-      "reason": "Crate, target, module, and test boundaries dominate, so the specialized architecture skill should win."
     }
   ],
   "behavior": [

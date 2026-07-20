@@ -47,12 +47,12 @@ pattern, or companion skills from another pack. General Rust engineering work re
 ## Install, update, and uninstall
 
 <!-- BEGIN GENERATED INSTALL COMMANDS -->
-The marketplace source is repository-local and unpublished. Clone this repository and run these commands from its root; remote marketplace installation remains unavailable until the post-release source-SHA update. Run strict repository validation immediately before a local install so ignored cache files are not copied.
+The marketplace source is repository-local and unpublished. Clone this repository and run these commands from its root; remote marketplace installation remains unavailable until post-release publication reconciliation. Run strict repository validation immediately before a local install so ignored cache files are not copied.
 
 ### Claude Code
 
 ```bash
-claude plugin marketplace add .
+claude plugin marketplace add dist/dev/claude
 claude plugin install rust-cli-apps@genaptic-skillsets
 ```
 
@@ -72,7 +72,7 @@ claude plugin uninstall rust-cli-apps@genaptic-skillsets
 ### Codex
 
 ```bash
-codex plugin marketplace add .
+codex plugin marketplace add dist/dev/codex
 codex plugin add rust-cli-apps@genaptic-skillsets
 ```
 
@@ -96,23 +96,26 @@ The direct installer uses the public-preview `gh skill` interface. It checks the
 No executable remote install command is published before a release SHA is recorded. Inspect the future exact-path operations locally:
 
 ```bash
-bash dist/install/rust-cli-apps.sh --dry-run
+bash dist/dev/install/rust-cli-apps.sh --dry-run
 ```
 
 ```powershell
-.\dist\install\rust-cli-apps.ps1 -DryRun
+.\dist\dev\install\rust-cli-apps.ps1 -DryRun
 ```
 
 The dry run does not install skills or make a compatibility claim.
 <!-- END GENERATED INSTALL COMMANDS -->
 ## Version and compatibility
 
-Current pack version: `1.0.0`.
+<!-- BEGIN GENERATED LIFECYCLE -->
+Current source version: `1.0.0`.
 
-Release state: unpublished release candidate.
+Maturity: `release-candidate`. Distribution visibility: `public`. Publication state: `unpublished`.
 
-Expected future tag (not yet created): `rust-cli-apps-v1.0.0`.
+Current derived tag: `rust-cli-apps-v1.0.0`.
 
+No public installation or native-client/model compatibility is claimed yet.
+<!-- END GENERATED LIFECYCLE -->
 Guidance discovers the target parser, dispatch, runtime, output, and test architecture. Clap
 examples apply only when clap is already selected.
 

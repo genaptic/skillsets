@@ -1,4 +1,4 @@
-schema-version: 1
+schema-version: 2
 id: language-subject
 display-name: Language Subject
 description: >
@@ -6,6 +6,21 @@ description: >
 language: language
 subject: subject
 version: "0.1.0"
+maturity: release-candidate
+distribution:
+  visibility: public
+publication:
+  state: unpublished
+release-gates:
+  - native-evidence
+  - deterministic-archive
+interface:
+  short-description: "Describe this pack in concise authored installation copy."
+  starter-prompts:
+    - skill: globally-unique-skill-one
+      prompt: "Use $globally-unique-skill-one to complete this pack's primary focused workflow."
+    - skill: globally-unique-skill-one
+      prompt: "Use $globally-unique-skill-one to review an existing result against this pack's contract."
 license: Apache-2.0
 maintainers:
   - github: jecsand838

@@ -43,14 +43,6 @@
       "prompt": "Design continuous archiving, backup retention, restore verification, and a quarterly PITR exercise.",
       "shouldTrigger": false,
       "reason": "This is backup and recovery rather than change rollout."
-    },
-    {
-      "id": "overlap-index-design",
-      "kind": "overlap",
-      "prompt": "We know the query is slow but have not chosen the exact access method, columns, order, or partial predicate.",
-      "shouldTrigger": false,
-      "reason": "The change is not yet designed; focused index design should happen before rollout.",
-      "preferredSkill": "postgres-index-design"
     }
   ],
   "behavior": [

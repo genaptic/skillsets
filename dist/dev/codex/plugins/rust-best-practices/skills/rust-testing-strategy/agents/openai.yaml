@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Testing Strategy"
+  short_description: "Plan reliable Rust tests across all boundaries"
+  default_prompt: "Use $rust-testing-strategy to plan reliable unit, integration, doctest, CLI, and end-to-end coverage."

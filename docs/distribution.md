@@ -20,8 +20,9 @@ pack/.codex-plugin/plugin.json
 .claude-plugin/marketplace.json
 .agents/plugins/marketplace.json
 catalog.json
-dist/install/
-dist/opencode/
+dist/public/
+dist/preview/
+dist/dev/
 ```
 
 Run `python3 tools/generate-all` after any manifest, identity, version, or skill-membership
@@ -30,34 +31,31 @@ Do not hand-edit an adapter.
 
 ## Publication state
 
-`source-sha` is the publication switch. When it is absent, root marketplaces use the
-repository-local source string `./packs/<language>/<subject>` and `catalog.json` records:
+The manifest separates current development from the last immutable public release. Current
+`version` and `maturity` describe the source tree; `distribution.visibility` controls public or
+maintainer use; and `publication.latest-release` preserves the last released version, SHA,
+release ID, and timestamp. The legacy top-level `source-sha` is invalid.
 
-```json
-{"state": "unpublished", "sourceType": "repo-local"}
-```
+One selector feeds every adapter. Root marketplaces and `catalog.json` contain only public packs
+whose publication state is `published`. `dist/preview/` contains current public candidates for CI
+artifacts, while `dist/dev/` contains all non-withdrawn packs in self-contained trees. Pages
+uploads only `dist/public/`. With no published release, all root marketplaces are empty and the
+Pages artifact contains no installer or remote skill catalog.
 
-This is the correct state for local development and release candidates. It must not be
-presented as a public installation source.
-
-After a protected pack release succeeds, record its exact 40-character released SHA as
-`source-sha` and regenerate. The marketplace source becomes `git-subdir`, pinned by the
-pack-specific tag and full SHA, and the catalog state becomes `published`. Never add a SHA
-before the corresponding release exists.
+Published Pages cards use `interface.short-description`, while Codex also receives the full pack
+description and the authored starter prompts. A published card links the release tag, exact source
+commit, checksum asset, and repository attestation-verification surface.
 
 ## Claude Code
 
-In the unpublished state, the root Claude marketplace resolves each pack locally. The pack
-directory is the plugin root, with `.claude-plugin/plugin.json` and `skills/` as siblings.
-
-Published entries use a Git `git-subdir` source with the pack-specific release tag and exact
-released SHA. Public add/install/update/uninstall commands are generated only for that state.
+Published entries use a Git `git-subdir` source with the derived release tag and exact released
+SHA. Development and preview marketplaces use contained `./plugins/<pack-id>` sources, so no
+relative path escapes its generated channel root.
 
 ## Codex
 
-The root Codex marketplace uses the same local-versus-published source policy but
-Codex-specific marketplace metadata. Each pack has `.codex-plugin/plugin.json`; the `skills`
-field points to `./skills/`.
+The root Codex marketplace uses the same published-only policy but Codex-specific marketplace
+metadata. Each pack has `.codex-plugin/plugin.json`; the `skills` field points to `./skills/`.
 
 The marketplace declares installation availability and the required authentication policy.
 These entries use `ON_INSTALL`, matching the documented Git-backed marketplace example. The
@@ -81,7 +79,7 @@ The installer accepts:
 - `--force`/`-Force`.
 - `--dry-run`/`-DryRun`.
 
-For a published pack, the default direct-installer pin is the exact released `source-sha`;
+For a published pack, the default direct-installer pin is the exact latest-release source SHA;
 marketplace metadata separately retains the pack-specific tag. An unpublished release candidate
 has no public default install claim: use dry-run and explicit repository/ref overrides only in a
 controlled fixture. A dry run validates arguments and prints exact commands without finding or
@@ -106,44 +104,40 @@ variables nor install or upgrade GitHub CLI, and they never run skill helper scr
 Each pack generates:
 
 ```text
-dist/opencode/<language>/<subject>/
+dist/<channel>/opencode/<language>/<subject>/
 ├── index.json
 └── <skill-name>/
-    ├── <skill-name>.md
+    ├── SKILL.md
     ├── references/
     ├── assets/
     └── scripts/
 ```
 
-The named Markdown file is a generated copy of canonical `SKILL.md`. Evals are not shipped in
-the runtime catalog. Bump the pack version whenever shipped files change.
+The literal `SKILL.md` is a generated copy of canonical content. Every index entry lists that
+exact filename followed by its runtime resources; only `name`, `version`, and `files` are emitted.
+Evals are not shipped. Increment a public pack version whenever remotely cached content changes.
 
-The `pages.yml` workflow publishes the complete generated `dist/` tree from `main` through the
-secret-free `github-pages` environment. Its generated landing page discovers packs from the same
-catalog model, and each OpenCode directory remains available at a repository-relative path.
-After a successful deployment and HTTP verification, the canonical shape is:
+The `pages.yml` workflow publishes only `dist/public/` from `main`. Configure released OpenCode
+v1.18.3 or newer with this canonical shape:
 
 ```jsonc
 {
-  "$schema": "https://opencode.ai/config.json",
-  "skills": [
-    "https://genaptic.github.io/skillsets/opencode/python/best-practices/"
-  ]
+  "skills": {
+    "urls": [
+      "https://genaptic.github.io/skillsets/opencode/python/best-practices/"
+    ]
+  }
 }
 ```
 
-The current six catalogs are hosted under the two Python paths, two Rust paths,
-`opencode/shared/postgres-databases/`, and
-`opencode/shared/repository-development/`. Hosting an unpublished catalog does not publish its
-pack or prove OpenCode compatibility. Do not present any catalog as a validated public install
-source until its `index.json` resolves and the exact candidate has a passing native OpenCode
-report. See `docs/github-pages.md` for deployment and verification details.
+The HTTP protocol is pinned in tests to OpenCode v1.18.3 commit
+`127bdb30784d508cc556c71a0f32b508a3061517`. Structural conformance is not native compatibility;
+the exact released client still needs a fresh exact-SHA canary report. See `docs/github-pages.md`.
 
 ## Local development
 
-Committed marketplaces remain repository-local while packs are unpublished. Test them from
-the repository root so `./packs/<language>/<subject>` resolves correctly. A release
-regeneration switches only the released pack to its pinned Git source.
+Use the self-contained `dist/dev/claude` and `dist/dev/codex` marketplaces for local adapter
+testing. Candidate previews under `dist/preview/` are CI artifacts and never Pages content.
 
 Current Codex CLI commands for a configured published marketplace are explicit:
 
