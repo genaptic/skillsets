@@ -79,8 +79,13 @@ def test_python_current_probe_and_required_validation_are_fail_closed(
     workflow = yaml.safe_load(_workflow("validate.yml"))
     jobs = workflow["jobs"]
 
+    repository = jobs["repository"]
+    assert repository["timeout-minutes"] == 30
+    assert repository["strategy"]["fail-fast"] is False
+
     current = jobs["python-current"]
     assert current["name"] == "Python 3.14 current compatibility"
+    assert current["timeout-minutes"] == 20
     setup = next(step for step in current["steps"] if step["name"] == "Set up Python 3.14")
     assert setup["with"]["python-version"] == "3.14"
     commands = "\n".join(str(step.get("run", "")) for step in current["steps"])
