@@ -6,13 +6,17 @@ import shutil
 import subprocess
 from copy import deepcopy
 from html import escape as html_escape
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 import yaml
 from jsonschema import Draft202012Validator
 
-from skillpack_tools.generate import apply_generated_files, build_generated_files
+from skillpack_tools.generate import (
+    _skill_relative_posix,
+    apply_generated_files,
+    build_generated_files,
+)
 from skillpack_tools.lifecycle import (
     pages_absent_paths,
     select_packs,
@@ -190,6 +194,27 @@ def test_pages_legacy_denylist_excludes_a_newly_published_pack() -> None:
     assert "opencode/shared/repository-development/index.json" in absent
 
 
+@pytest.mark.parametrize("path_type", [PurePosixPath, PureWindowsPath])
+def test_skill_resource_order_is_independent_of_path_flavor(
+    path_type: type[PurePosixPath] | type[PureWindowsPath],
+) -> None:
+    skill_dir = path_type("skills/rust-project-architecture")
+    resources = [
+        skill_dir / "assets/templates/workspace-root/apps/tool/Cargo.toml",
+        skill_dir / "assets/templates/workspace-root/Cargo.toml",
+    ]
+
+    ordered = sorted(
+        resources,
+        key=lambda resource: _skill_relative_posix(resource, skill_dir),
+    )
+
+    assert [resource.relative_to(skill_dir).as_posix() for resource in ordered] == [
+        "assets/templates/workspace-root/Cargo.toml",
+        "assets/templates/workspace-root/apps/tool/Cargo.toml",
+    ]
+
+
 def test_opencode_v1_18_3_protocol_and_self_contained_marketplaces() -> None:
     protocol = json.loads(
         (ROOT / "tests/fixtures/opencode-v1.18.3-protocol.json").read_text(encoding="utf-8")
@@ -208,9 +233,14 @@ def test_opencode_v1_18_3_protocol_and_self_contained_marketplaces() -> None:
         for entry in index["skills"]:
             assert sorted(entry) == protocol["indexEntryKeys"]
             assert entry["files"][0] == protocol["requiredSkillFile"]
+            assert entry["files"][1:] == sorted(entry["files"][1:])
             for relative in entry["files"]:
                 assert f"{base}/{entry['name']}/{relative}" in generated
             assert not any(relative.endswith(f"{entry['name']}.md") for relative in entry["files"])
+            if pack.id == "rust-best-practices" and entry["name"] == "rust-project-architecture":
+                root_manifest = "assets/templates/workspace-root/Cargo.toml"
+                nested_manifest = "assets/templates/workspace-root/apps/tool/Cargo.toml"
+                assert entry["files"].index(root_manifest) < entry["files"].index(nested_manifest)
 
     for channel in ("preview", "dev"):
         for client, marketplace_suffix in (

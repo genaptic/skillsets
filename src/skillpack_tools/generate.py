@@ -4,7 +4,7 @@ import os
 import subprocess
 import textwrap
 from html import escape
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import yaml
 
@@ -1045,6 +1045,12 @@ def _is_runtime_file(path: Path, skill_dir: Path) -> bool:
     return runtime_resource_is_allowed(relative)
 
 
+def _skill_relative_posix(path: PurePath, skill_dir: PurePath) -> str:
+    """Return a platform-independent ordering key for one skill resource."""
+
+    return path.relative_to(skill_dir).as_posix()
+
+
 def _runtime_files(root: Path, skill_dir: Path) -> list[Path]:
     paths: list[Path] = []
     for subdir in ("references", "assets", "scripts"):
@@ -1053,7 +1059,7 @@ def _runtime_files(root: Path, skill_dir: Path) -> list[Path]:
         paths.extend(
             path for path, _metadata in snapshot.files if _is_runtime_file(path, skill_dir)
         )
-    return paths
+    return sorted(paths, key=lambda path: _skill_relative_posix(path, skill_dir))
 
 
 def _released_skill_files(root: Path, pack: Pack, skill: str) -> list[tuple[Path, bytes, int]]:
@@ -1169,7 +1175,10 @@ def _add_skill_tree(
         inputs = [skill_dir / "SKILL.md", *_runtime_files(root, skill_dir)]
         if include_openai_sidecar:
             inputs.append(skill_dir / "agents" / "openai.yaml")
-        for source in sorted(inputs):
+        for source in sorted(
+            inputs,
+            key=lambda source: _skill_relative_posix(source, skill_dir),
+        ):
             relative = source.relative_to(skill_dir)
             files.add(
                 (destination / skill / relative).as_posix(),
@@ -1285,7 +1294,7 @@ def _add_opencode_catalogs(
                             read_regular_bytes(resource, root),
                             _portable_source_mode(root, resource, tracked_modes),
                         )
-                        for resource in sorted(_runtime_files(root, skill_dir))
+                        for resource in _runtime_files(root, skill_dir)
                     ],
                 ]
             listed_files: list[str] = []
