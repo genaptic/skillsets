@@ -636,7 +636,7 @@ jobs:
           body="$RUNNER_TEMP/publication-handoff.md"
           {
             printf '%s\n' "$marker"
-            printf 'Immutable release `%s` for `%s` was independently reverified.\n\n' \
+            printf 'Immutable release \140%s\140 for \140%s\140 was independently reverified.\n\n' \
               "$RELEASE_ID" "$RELEASE_TAG"
             printf '%s\n' \
               "- Pack: \`$PACK_ID\`" \

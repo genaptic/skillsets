@@ -708,6 +708,7 @@ def test_publication_handoff_issue_job_is_narrow_and_idempotent(tmp_path: Path) 
     assert 'test "${#matches[@]}" -le 1' in script
     assert 'if [[ "${#matches[@]}" = 1 ]]' in script
     assert 'elif [[ "${#matches[@]}" = 0 ]]' in script
+    assert r"Immutable release \140%s\140 for \140%s\140" in script
     assert 'MARKER="$marker" jq -r' in script
     assert "contains(env.MARKER)" in script
     assert "--method POST" in script

@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+import tomllib
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -141,6 +142,39 @@ def test_repository_behavior_workspace_has_one_member_per_rust_pack() -> None:
         "tests/rust-harness/rust-best-practices/Cargo.lock"
     )
     assert members["rust-cli-apps"].lockfile == ("tests/rust-harness/rust-cli-apps/Cargo.lock")
+
+
+def test_reqwest_pin_contains_the_windows_named_pipe_import_fix() -> None:
+    manifest = tomllib.loads((ROOT / "tests/rust-harness/Cargo.toml").read_text(encoding="utf-8"))
+    reqwest = manifest["workspace"]["dependencies"]["reqwest"]
+    assert reqwest == {
+        "version": "=0.12.28",
+        "default-features": False,
+        "features": ["json", "stream"],
+    }
+
+    locked_reqwest: list[tuple[str, str]] = []
+    for relative in (
+        "tests/rust-harness/Cargo.lock",
+        "tests/rust-harness/rust-best-practices/Cargo.lock",
+    ):
+        lock = tomllib.loads((ROOT / relative).read_text(encoding="utf-8"))
+        packages = [package for package in lock["package"] if package["name"] == "reqwest"]
+        assert len(packages) == 1
+        locked_reqwest.append((packages[0]["version"], packages[0]["checksum"]))
+
+    assert (
+        locked_reqwest
+        == [
+            ("0.12.28", "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"),
+        ]
+        * 2
+    )
+
+    cli_lock = tomllib.loads(
+        (ROOT / "tests/rust-harness/rust-cli-apps/Cargo.lock").read_text(encoding="utf-8")
+    )
+    assert all(package["name"] != "reqwest" for package in cli_lock["package"])
 
 
 def test_pack_selection_accepts_rust_and_rejects_unknown_or_non_rust() -> None:
