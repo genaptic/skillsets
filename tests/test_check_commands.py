@@ -116,11 +116,20 @@ def test_lock_writer_and_freshness_checker_share_the_canonical_command(
     monkeypatch.setattr(checks, "_run", run)
     checks.lock(ROOT, check=False)
     environment = invocation["environment"]
+    command = invocation["command"]
     assert isinstance(environment, dict)
+    assert isinstance(command, list)
     assert environment["CUSTOM_COMPILE_COMMAND"] == "skillpacks lock"
+    assert "--no-annotate" in command
+    assert "--newline=lf" in command
     assert "#    skillpacks lock\n" in (ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
+    lock_bytes = (ROOT / "requirements-dev.txt").read_bytes()
+    assert b"\r\n" not in lock_bytes
+    assert b"    # via " not in lock_bytes
     checker = (ROOT / "tools/check-dependency-lock").read_text(encoding="utf-8")
     assert 'environment["CUSTOM_COMPILE_COMMAND"] = "skillpacks lock"' in checker
+    assert '"--no-annotate"' in checker
+    assert '"--newline=lf"' in checker
     assert "run `skillpacks lock`." in checker
 
 

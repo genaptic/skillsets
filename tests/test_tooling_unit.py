@@ -72,8 +72,10 @@ def test_operational_section_validation_accepts_both_supported_heading_styles() 
     assert _missing_operational_sections(f"## Outcome\n{common}\n") == {"Safety"}
 
 
-def copy_ignore(_directory: str, names: list[str]) -> set[str]:
+def copy_ignore(directory: str, names: list[str]) -> set[str]:
     ignored = {".git", ".pytest_cache", "__pycache__", ".venv", "releases"} & set(names)
+    if Path(directory) == ROOT / "dist":
+        ignored.update({"install", "opencode"} & set(names))
     ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
     return ignored
 
@@ -500,6 +502,7 @@ def test_generation_ignores_legacy_sha_cleans_legacy_roots_and_handles_missing_p
 
     # Pre-v2 output roots are migration cleanup targets, never current generated surfaces.
     stale = repo_copy / "dist" / "install" / "stale.txt"
+    stale.parent.mkdir(parents=True)
     stale.write_text("stale\n", encoding="utf-8")
     changed = apply_generated_files(repo_copy)
     assert "dist/install/stale.txt" in changed

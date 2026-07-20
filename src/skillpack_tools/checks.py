@@ -42,6 +42,8 @@ def lock(root: Path, *, check: bool) -> None:
             "compile",
             "--allow-unsafe",
             "--generate-hashes",
+            "--no-annotate",
+            "--newline=lf",
             "--quiet",
             "--strip-extras",
             "--resolver=backtracking",

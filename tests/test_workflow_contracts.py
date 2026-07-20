@@ -603,6 +603,35 @@ def test_release_gate_aggregate_is_fail_closed(
                         exec(compile(script, "release.yml:release-gates", "exec"), {})
 
 
+def test_rust_jobs_install_hash_locked_python_dependencies_before_checker() -> None:
+    for workflow_name in ("validate.yml", "release.yml"):
+        workflow = yaml.safe_load(_workflow(workflow_name))
+        steps = workflow["jobs"]["rust-assets"]["steps"]
+        setup = next(
+            step for step in steps if str(step.get("uses", "")).startswith("actions/setup-python@")
+        )
+        assert setup["with"] == {
+            "python-version": "3.11",
+            "cache": "pip",
+            "cache-dependency-path": "requirements-dev.txt",
+        }
+
+        locked_install = (
+            "python -m pip install --disable-pip-version-check "
+            "--require-hashes -r requirements-dev.txt"
+        )
+        install_index = next(
+            index for index, step in enumerate(steps) if locked_install in str(step.get("run", ""))
+        )
+        checker_indexes = [
+            index
+            for index, step in enumerate(steps)
+            if "check-rust-assets" in str(step.get("run", ""))
+        ]
+        assert checker_indexes
+        assert install_index < min(checker_indexes)
+
+
 def test_release_publication_is_fail_closed_and_ordered() -> None:
     release = _workflow("release.yml")
     ordered_steps = (
@@ -679,6 +708,8 @@ def test_publication_handoff_issue_job_is_narrow_and_idempotent(tmp_path: Path) 
     assert 'test "${#matches[@]}" -le 1' in script
     assert 'if [[ "${#matches[@]}" = 1 ]]' in script
     assert 'elif [[ "${#matches[@]}" = 0 ]]' in script
+    assert 'MARKER="$marker" jq -r' in script
+    assert "contains(env.MARKER)" in script
     assert "--method POST" in script
     assert "--method PATCH" in script
     assert "-f state=open" in script
@@ -720,12 +751,16 @@ def test_publication_handoff_serializes_and_rebinds_the_exact_release() -> None:
     assert 'workflow.get("runAttempt")' in resolver
     assert 'data.get("repository", {}).get("policySha")' in resolver
     scripts = "\n".join(str(step.get("run", "")) for step in verify["steps"])
+    assert "| [.id, .digest] | @tsv" in scripts
+    assert "read -r artifact_id artifact_digest" in scripts
+    assert "read -r artifact_id artifact_name artifact_digest" not in scripts
     assert "validate_release_intent" in scripts
     assert 'merge-base --is-ancestor "$intent_policy_sha" "$GITHUB_SHA"' in scripts
     assert "'.tagObjectSha'" in scripts
     assert "_require_release_readiness" in scripts
     assert 'pack.publication_state == "published"' in scripts
     assert "pack.latest_release == expected_latest" in scripts
+    assert '${RELEASE_TAG#"$PACK_ID-v"}' in scripts
 
 
 def test_release_profiles_exclude_global_rust_contract_modules_exactly() -> None:

@@ -204,11 +204,11 @@ jobs:
             --jq '{artifacts: [.[].artifacts[]]}')
           mapfile -t matches < <(
             jq -r --arg run "$UPSTREAM_RUN_ID" \
-              '.artifacts[] | select(.expired == false) | select(.name | startswith("release-intent-") and endswith("-" + $run)) | [.id, .name, .digest] | @tsv' \
+              '.artifacts[] | select(.expired == false) | select(.name | startswith("release-intent-") and endswith("-" + $run)) | [.id, .digest] | @tsv' \
               <<< "$artifacts"
           )
           test "${#matches[@]}" = 1
-          IFS=$'\t' read -r artifact_id artifact_name artifact_digest <<< "${matches[0]}"
+          IFS=$'\t' read -r artifact_id artifact_digest <<< "${matches[0]}"
           test "$artifact_id" = "$EXPECTED_ARTIFACT_ID"
           test "$artifact_digest" = "$EXPECTED_ARTIFACT_DIGEST"
           [[ "$artifact_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
@@ -551,7 +551,7 @@ jobs:
           published_at=$(jq -r '.published_at' "$RUNNER_TEMP/exact-live-release.json")
           release_url=$(jq -r '.html_url' "$RUNNER_TEMP/exact-live-release.json")
           jq -n --arg repository "$GITHUB_REPOSITORY" --arg pack "$PACK_ID" \
-            --arg version "${RELEASE_TAG#${PACK_ID}-v}" --arg tag "$RELEASE_TAG" \
+            --arg version "${RELEASE_TAG#"$PACK_ID-v"}" --arg tag "$RELEASE_TAG" \
             --arg url "$release_url" --arg source "$source_sha" --arg base "$base_commit" \
             --arg published "$published_at" --argjson release_id "$RELEASE_ID" \
             '{schemaVersion:1,repository:$repository,packId:$pack,version:$version,releaseId:$release_id,tag:$tag,url:$url,sourceSha:$source,baseCommit:$base,publishedAt:$published,immutable:true,draft:false,prerelease:false}' \
@@ -646,7 +646,11 @@ jobs:
           } > "$body"
           gh api --paginate --slurp "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
             > "$RUNNER_TEMP/issues.json"
-          mapfile -t matches < <(jq -r --arg marker "$marker" '.[][] | select(.pull_request == null) | select((.body // "") | contains($marker)) | .number' "$RUNNER_TEMP/issues.json")
+          mapfile -t matches < <(
+            MARKER="$marker" jq -r \
+              '.[][] | select(.pull_request == null) | select((.body // "") | contains(env.MARKER)) | .number' \
+              "$RUNNER_TEMP/issues.json"
+          )
           test "${#matches[@]}" -le 1
           if [[ "$STATUS" = already-reconciled ]]; then
             if [[ "${#matches[@]}" = 1 ]]; then

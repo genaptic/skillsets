@@ -27,7 +27,7 @@ from skillpack_tools.validate import validate_repository
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
+def _copy_ignore(directory: str, names: list[str]) -> set[str]:
     ignored = {
         ".DS_Store",
         ".git",
@@ -39,6 +39,8 @@ def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
         "__pycache__",
         "releases",
     } & set(names)
+    if Path(directory) == ROOT / "dist":
+        ignored.update({"install", "opencode"} & set(names))
     ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
     return ignored
 
@@ -296,7 +298,7 @@ def test_generated_root_symlink_fails_before_any_repair(
     marketplace.write_bytes(b"stale but must remain unchanged\n")
     before = marketplace.read_bytes()
 
-    generated_root = repo_copy / "dist" / "opencode"
+    generated_root = repo_copy / "dist" / "dev"
     shutil.rmtree(generated_root)
     external = tmp_path / "outside"
     if not dangling:
@@ -329,7 +331,7 @@ def test_generation_refuses_destination_changed_after_global_preflight(
     def racing_walk(directory: Path, root: Path, **kwargs: object):
         nonlocal changed
         snapshot = original_walk(directory, root, **kwargs)
-        if directory == repo_copy / "dist" / "opencode" and not changed:
+        if directory == repo_copy / "dist" / "dev" and not changed:
             marketplace.write_bytes(b"concurrent edit\n")
             changed = True
         return snapshot
@@ -377,7 +379,7 @@ def test_stale_cleanup_refuses_file_replaced_after_preflight(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    stale = repo_copy / "dist" / "opencode" / "stale.txt"
+    stale = repo_copy / "dist" / "dev" / "stale.txt"
     stale.write_bytes(b"stale generated content\n")
     external = tmp_path / "outside.txt"
     external.write_bytes(b"outside must not change\n")
@@ -394,7 +396,7 @@ def test_stale_cleanup_refuses_file_replaced_after_preflight(
         nonlocal replaced
         if path == stale and not replaced:
             stale.unlink()
-            stale.symlink_to(external)
+            _symlink_or_skip(external, stale)
             replaced = True
         original_unlink(path, root, expected=expected)
 
