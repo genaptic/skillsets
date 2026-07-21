@@ -76,8 +76,16 @@ def test_required_check_contexts_are_stable() -> None:
 def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     workflow = yaml.safe_load(_workflow("compatibility.yml"))
     job = workflow["jobs"]["adapters-and-installers"]
-    assert job["timeout-minutes"] == 35
+    assert job["timeout-minutes"] == 20
     assert job["strategy"]["fail-fast"] is False
+    bytecode_cache = "${{ runner.temp }}/genaptic-structural-pycache"
+
+    windows_bootstrap = next(
+        step
+        for step in job["steps"]
+        if step["name"] == "Exercise the documented Windows bootstrap path"
+    )
+    assert windows_bootstrap["env"] == {"PYTHONPYCACHEPREFIX": bytecode_cache}
 
     windows_check = next(
         step
@@ -86,7 +94,16 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     )
     assert windows_check["if"] == "runner.os == 'Windows'"
     assert windows_check["run"] == "./scripts/check.ps1"
-    assert windows_check["env"] == {"PYTEST_ADDOPTS": "--no-cov --durations=25 --durations-min=1"}
+    assert windows_check["env"] == {
+        "PYTHONPYCACHEPREFIX": bytecode_cache,
+        "PYTEST_ADDOPTS": (
+            "--no-cov -n 2 --dist=loadscope --max-worker-restart=0 --durations=25 --durations-min=1"
+        ),
+    }
+    development_inputs = (ROOT / "requirements-dev.in").read_text(encoding="utf-8")
+    dependency_lock = (ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
+    assert development_inputs.splitlines().count("pytest-xdist==3.8.0") == 1
+    assert dependency_lock.splitlines().count("pytest-xdist==3.8.0 \\") == 1
     assert not any(
         step["name"] == "Exercise PowerShell GitHub CLI capability preflights"
         for step in job["steps"]

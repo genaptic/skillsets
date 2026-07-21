@@ -31,7 +31,7 @@ jobs:
   adapters-and-installers:
     name: adapters and installers (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 35
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -64,12 +64,17 @@ jobs:
       - name: Exercise the documented Windows bootstrap path
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-structural-pycache
         run: ./scripts/bootstrap.ps1
       - name: Exercise the documented Windows full-check path
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          PYTEST_ADDOPTS: --no-cov --durations=25 --durations-min=1
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-structural-pycache
+          PYTEST_ADDOPTS: >-
+            --no-cov -n 2 --dist=loadscope --max-worker-restart=0
+            --durations=25 --durations-min=1
         run: ./scripts/check.ps1
       - name: Run cross-platform filesystem safety fixtures
         if: runner.os != 'Windows'
