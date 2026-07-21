@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -19,6 +20,80 @@ from skillpack_tools.signing import SigningKeyCandidate
 from skillpack_tools.util import SkillpackError, sha256_bytes
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _openpgp_fixture_algorithm(configuration: str) -> str:
+    """Choose a signing algorithm from GnuPG's machine-readable capabilities."""
+
+    capabilities = {
+        capability.upper()
+        for line in configuration.splitlines()
+        if line.startswith("cfg:pubkeyname:")
+        for capability in line.removeprefix("cfg:pubkeyname:").split(";")
+    }
+    for capability, algorithm in (
+        ("RSA", "rsa2048"),
+        ("ECDSA", "nistp256"),
+        ("EDDSA", "ed25519"),
+    ):
+        if capability in capabilities:
+            return algorithm
+    raise AssertionError(
+        "GnuPG does not advertise an RSA, ECDSA, or EdDSA signing capability: "
+        f"{sorted(capabilities)}"
+    )
+
+
+def _generate_openpgp_fixture_key(gpg_program: str, home: Path, identity: str) -> str:
+    """Generate one unprotected signing key without assuming an ECC implementation."""
+
+    configuration = subprocess.run(
+        [
+            gpg_program,
+            "--batch",
+            "--no-tty",
+            "--homedir",
+            str(home),
+            "--with-colons",
+            "--list-config",
+            "pubkeyname",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if configuration.returncode:
+        detail = configuration.stderr.strip() or configuration.stdout.strip()
+        raise AssertionError(f"Could not read GnuPG public-key capabilities: {detail}")
+
+    algorithm = _openpgp_fixture_algorithm(configuration.stdout)
+    generated = subprocess.run(
+        [
+            gpg_program,
+            "--batch",
+            "--no-tty",
+            "--homedir",
+            str(home),
+            "--pinentry-mode",
+            "loopback",
+            "--passphrase",
+            "",
+            "--quick-generate-key",
+            identity,
+            algorithm,
+            "sign",
+            "1d",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if generated.returncode:
+        detail = generated.stderr.strip() or generated.stdout.strip()
+        raise AssertionError(
+            f"GnuPG could not generate the advertised {algorithm} signing key: {detail}"
+        )
+    return algorithm
 
 
 def _publication_record(**changes: object) -> dict[str, object]:
@@ -651,6 +726,32 @@ def test_verify_tag_enforces_signer_kind_discovery_and_commit_identity(
     assert verified.fingerprint == ssh.fingerprint
 
 
+@pytest.mark.parametrize(
+    ("configuration", "expected"),
+    [
+        ("cfg:pubkeyname:EDDSA;RSA;ECDSA\r\n", "rsa2048"),
+        ("cfg:pubkeyname:EDDSA;ECDSA\n", "nistp256"),
+        ("cfg:pubkeyname:EDDSA\n", "ed25519"),
+    ],
+)
+def test_openpgp_fixture_algorithm_prefers_portable_advertised_capabilities(
+    configuration: str, expected: str
+) -> None:
+    assert _openpgp_fixture_algorithm(configuration) == expected
+
+
+def test_openpgp_fixture_algorithm_rejects_missing_signing_capability() -> None:
+    with pytest.raises(AssertionError, match="does not advertise"):
+        _openpgp_fixture_algorithm("cfg:pubkeyname:ECDH;ELG\n")
+
+
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason=(
+        "ephemeral GnuPG key generation is covered on POSIX release runners; "
+        "the verifier itself is platform-neutral"
+    ),
+)
 @pytest.mark.skipif(
     shutil.which("gpg") is None or shutil.which("gpgconf") is None or shutil.which("git") is None,
     reason="GnuPG, gpgconf, and Git are required for the isolated OpenPGP integration test",
@@ -671,26 +772,7 @@ def test_real_openpgp_tag_verification_uses_an_isolated_full_fingerprint(
     original_failure: BaseException | None = None
     try:
         identity = "Release Fixture <release-fixture@example.com>"
-        subprocess.run(
-            [
-                gpg_program,
-                "--batch",
-                "--homedir",
-                str(home),
-                "--pinentry-mode",
-                "loopback",
-                "--passphrase",
-                "",
-                "--quick-generate-key",
-                identity,
-                "ed25519",
-                "sign",
-                "1d",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        _generate_openpgp_fixture_key(gpg_program, home, identity)
         inventory = subprocess.run(
             [
                 gpg_program,

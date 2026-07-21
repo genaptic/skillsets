@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,14 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+
+
+@dataclass(frozen=True)
+class _ReusableRepository:
+    root: Path
+    base_sha: str
+    hooks: Path
+    environment: dict[str, str]
 
 
 def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
@@ -47,6 +56,53 @@ def _isolated_git_environment() -> dict[str, str]:
     return environment
 
 
+def _configure_fixture_repository(root: Path, hooks: Path, environment: dict[str, str]) -> None:
+    for key, value in (
+        ("user.name", "Fixture"),
+        ("user.email", "fixture@example.invalid"),
+        ("commit.gpgsign", "false"),
+        ("core.autocrlf", "false"),
+        ("core.hooksPath", str(hooks)),
+        ("core.longpaths", "true"),
+    ):
+        subprocess.run(
+            ["git", "-C", str(root), "config", key, value],
+            check=True,
+            env=environment,
+        )
+
+
+def _restore_reusable_repository(repository: _ReusableRepository) -> None:
+    """Restore a module checkout without paying for another full clone."""
+
+    command = ["git", "-c", "core.longpaths=true", "-C", str(repository.root)]
+    subprocess.run(
+        [*command, "checkout", "-q", "-f", "--detach", repository.base_sha],
+        check=True,
+        env=repository.environment,
+    )
+    subprocess.run(
+        [*command, "clean", "-q", "-ffdx"],
+        check=True,
+        env=repository.environment,
+    )
+    _configure_fixture_repository(
+        repository.root,
+        repository.hooks,
+        repository.environment,
+    )
+    status_command = [*command, "status", "--porcelain=v1", "--untracked-files=all"]
+    status = subprocess.run(
+        status_command,
+        check=True,
+        capture_output=True,
+        text=True,
+        env=repository.environment,
+    ).stdout
+    if status:
+        raise AssertionError(f"reusable repository fixture was not restored:\n{status}")
+
+
 @pytest.fixture(scope="session")
 def generated_repository_template(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Materialize the expensive generated repository fixture once per test session."""
@@ -64,19 +120,7 @@ def generated_repository_template(tmp_path_factory: pytest.TempPathFactory) -> P
     )
     empty_hooks = fixture_root / "h"
     empty_hooks.mkdir()
-    for key, value in (
-        ("user.name", "Fixture"),
-        ("user.email", "fixture@example.invalid"),
-        ("commit.gpgsign", "false"),
-        ("core.autocrlf", "false"),
-        ("core.hooksPath", str(empty_hooks)),
-        ("core.longpaths", "true"),
-    ):
-        subprocess.run(
-            ["git", "-C", str(root), "config", key, value],
-            check=True,
-            env=environment,
-        )
+    _configure_fixture_repository(root, empty_hooks, environment)
     subprocess.run(
         ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "-A"],
         check=True,
@@ -144,11 +188,11 @@ def generated_repository_template(tmp_path_factory: pytest.TempPathFactory) -> P
     return root
 
 
-@pytest.fixture()
-def generated_repo_copy(
+@pytest.fixture(scope="module")
+def reusable_generated_repository(
     tmp_path_factory: pytest.TempPathFactory, generated_repository_template: Path
-) -> Path:
-    """Create an isolated local clone without rebuilding every generated surface."""
+) -> _ReusableRepository:
+    """Create one isolated checkout per test module."""
 
     fixture_root = tmp_path_factory.mktemp("r")
     root = fixture_root / "w"
@@ -170,17 +214,22 @@ def generated_repo_copy(
         check=True,
         env=environment,
     )
-    for key, value in (
-        ("user.name", "Fixture"),
-        ("user.email", "fixture@example.invalid"),
-        ("commit.gpgsign", "false"),
-        ("core.autocrlf", "false"),
-        ("core.hooksPath", str(empty_hooks)),
-        ("core.longpaths", "true"),
-    ):
-        subprocess.run(
-            ["git", "-C", str(root), "config", key, value],
-            check=True,
-            env=environment,
-        )
-    return root
+    _configure_fixture_repository(root, empty_hooks, environment)
+    base_sha = subprocess.run(
+        ["git", "-c", "core.longpaths=true", "-C", str(root), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    ).stdout.strip()
+    return _ReusableRepository(root, base_sha, empty_hooks, environment)
+
+
+@pytest.fixture()
+def generated_repo_copy(
+    reusable_generated_repository: _ReusableRepository,
+) -> Path:
+    """Return a clean checkout while amortizing setup across one test module."""
+
+    _restore_reusable_repository(reusable_generated_repository)
+    return reusable_generated_repository.root

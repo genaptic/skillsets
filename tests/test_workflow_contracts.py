@@ -86,6 +86,11 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     )
     assert windows_check["if"] == "runner.os == 'Windows'"
     assert windows_check["run"] == "./scripts/check.ps1"
+    assert windows_check["env"] == {"PYTEST_ADDOPTS": "--no-cov --durations=25 --durations-min=1"}
+    assert not any(
+        step["name"] == "Exercise PowerShell GitHub CLI capability preflights"
+        for step in job["steps"]
+    )
 
     path_safety = next(
         step

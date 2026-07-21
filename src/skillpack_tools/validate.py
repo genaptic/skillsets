@@ -152,13 +152,15 @@ def _tracked_repository_paths(root: Path) -> set[Path] | None:
             ["git", "-C", str(root), "ls-files", "-z"],
             check=False,
             capture_output=True,
-            text=True,
         )
     except OSError:
         return None
     if completed.returncode != 0:
         return None
-    return {Path(value) for value in completed.stdout.split("\0") if value}
+    try:
+        return {Path(os.fsdecode(value)) for value in completed.stdout.split(b"\0") if value}
+    except UnicodeError:
+        return None
 
 
 @dataclass

@@ -1091,12 +1091,13 @@ def test_publishable_git_gate_verifies_signed_annotated_tag(
 
 def test_unpublished_installer_allows_safe_dry_run_and_codex_update_is_single(
     repo_copy: Path,
+    tmp_path: Path,
 ) -> None:
     apply_generated_files(repo_copy)
     installer = repo_copy / "dist/dev/install/python-best-practices.sh"
     bash = shutil.which("bash")
     assert bash is not None
-    empty_path = repo_copy.parent / "empty-path"
+    empty_path = tmp_path / "empty-path"
     empty_path.mkdir()
     dry_run_environment = os.environ.copy()
     dry_run_environment["PATH"] = str(empty_path)
@@ -1129,6 +1130,7 @@ def test_unpublished_installer_allows_safe_dry_run_and_codex_update_is_single(
 
 def test_bash_installer_probes_preview_commands_and_scopes_gh_environment(
     repo_copy: Path,
+    tmp_path: Path,
 ) -> None:
     if os.name == "nt":
         pytest.skip("generated Bash installer is exercised on Unix-like runners")
@@ -1139,7 +1141,7 @@ def test_bash_installer_probes_preview_commands_and_scopes_gh_environment(
     pin = "a" * 40
     arguments = [bash, str(installer), "--pin", pin]
 
-    empty_path = repo_copy.parent / "missing-gh"
+    empty_path = tmp_path / "missing-gh"
     empty_path.mkdir()
     missing_environment = os.environ.copy()
     missing_environment["PATH"] = str(empty_path)
@@ -1153,9 +1155,9 @@ def test_bash_installer_probes_preview_commands_and_scopes_gh_environment(
     assert missing.returncode == 127
     assert "not installed" in missing.stderr
 
-    fake_bin = repo_copy.parent / "fake-gh-bin"
+    fake_bin = tmp_path / "fake-gh-bin"
     _write_fake_gh(fake_bin)
-    log = repo_copy.parent / "fake-gh.log"
+    log = tmp_path / "fake-gh.log"
     environment = os.environ.copy()
     environment.update(
         {
@@ -1223,6 +1225,7 @@ def test_bash_installer_probes_preview_commands_and_scopes_gh_environment(
 
 def test_powershell_installer_has_distinct_preflight_and_restores_environment_when_available(
     repo_copy: Path,
+    tmp_path: Path,
 ) -> None:
     apply_generated_files(repo_copy)
     installer = repo_copy / "dist/dev/install/python-best-practices.ps1"
@@ -1242,7 +1245,7 @@ def test_powershell_installer_has_distinct_preflight_and_restores_environment_wh
         return
 
     pin = "b" * 40
-    empty_path = repo_copy.parent / "powershell-missing-gh"
+    empty_path = tmp_path / "powershell-missing-gh"
     empty_path.mkdir()
     missing_environment = os.environ.copy()
     missing_environment["PATH"] = str(empty_path)
@@ -1256,9 +1259,9 @@ def test_powershell_installer_has_distinct_preflight_and_restores_environment_wh
     assert missing.returncode == 127
     assert "not installed" in _normalized_process_output(missing)
 
-    fake_bin = repo_copy.parent / "powershell-fake-gh-bin"
+    fake_bin = tmp_path / "powershell-fake-gh-bin"
     _write_fake_gh(fake_bin)
-    log = repo_copy.parent / "powershell-fake-gh.log"
+    log = tmp_path / "powershell-fake-gh.log"
     environment = os.environ.copy()
     environment.update(
         {
@@ -1299,7 +1302,7 @@ def test_powershell_installer_has_distinct_preflight_and_restores_environment_wh
 
     log.write_text("", encoding="utf-8")
     environment["GH_FAKE_MODE"] = "supported"
-    harness = repo_copy.parent / "invoke-installer.ps1"
+    harness = tmp_path / "invoke-installer.ps1"
     escaped_installer = str(installer).replace("'", "''")
     harness.write_text(
         f"""$env:GH_TELEMETRY = 'inherited-telemetry'

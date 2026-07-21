@@ -68,6 +68,8 @@ jobs:
       - name: Exercise the documented Windows full-check path
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          PYTEST_ADDOPTS: --no-cov --durations=25 --durations-min=1
         run: ./scripts/check.ps1
       - name: Run cross-platform filesystem safety fixtures
         if: runner.os != 'Windows'
@@ -122,13 +124,6 @@ jobs:
           $scripts = Get-ChildItem dist/dev/install/*.ps1
           if (-not $scripts) { throw "No PowerShell installers found" }
           $scripts | ForEach-Object { & $_.FullName -DryRun }
-      - name: Exercise PowerShell GitHub CLI capability preflights
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: >-
-          ./.venv/Scripts/python.exe -m pytest tests/test_tooling_hardening.py
-          -k powershell_installer_has_distinct_preflight_and_restores_environment_when_available
-          --no-cov
       - name: Record the structural-only evidence boundary
         shell: python
         run: |

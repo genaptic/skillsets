@@ -10,6 +10,7 @@ import pytest
 from skillpack_tools import generate as generate_module
 from skillpack_tools import path_safety as path_safety_module
 from skillpack_tools import release as release_module
+from skillpack_tools import validate as validate_module
 from skillpack_tools.generate import apply_generated_files, build_generated_files
 from skillpack_tools.models import Pack, get_pack
 from skillpack_tools.path_safety import (
@@ -501,8 +502,13 @@ def test_runtime_special_node_is_rejected(repo_copy: Path) -> None:
     fifo = pack.path / "skills" / "python-project-layout" / "assets" / "runtime.fifo"
     os.mkfifo(fifo)
 
-    with pytest.raises(SkillpackError, match="special filesystem nodes are not allowed"):
-        build_generated_files(repo_copy)
+    try:
+        with pytest.raises(SkillpackError, match="special filesystem nodes are not allowed"):
+            build_generated_files(repo_copy)
+    finally:
+        # Git does not inventory special nodes consistently enough for generic
+        # checkout cleanup, so the fixture that creates one owns its removal.
+        fifo.unlink(missing_ok=True)
 
 
 def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
@@ -598,3 +604,26 @@ def test_repository_validation_reports_normalized_residue_directories(
     combined = "\n".join(result.errors)
     assert residue.parent.relative_to(repo_copy).as_posix() in combined
     assert "must not be committed" in combined
+
+
+def test_tracked_repository_paths_decodes_verbatim_git_paths_as_filesystem_names(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    # Git's NUL-delimited output is a byte-oriented pathname protocol. Decode it with
+    # the filesystem codec rather than the locale-dependent subprocess text codec.
+    compatibility_name = "ＣＲＥＤＥＮＴＩＡＬＳ"  # noqa: RUF001 - Unicode spoof fixture
+    relative = Path("docs") / compatibility_name / "hidden.txt"
+    payload = os.fsencode(relative.as_posix()) + b"\0"
+    observed: dict[str, object] = {}
+
+    def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[bytes]:
+        observed.update(kwargs)
+        return subprocess.CompletedProcess(command, 0, payload, b"")
+
+    monkeypatch.setattr(validate_module.subprocess, "run", run)
+
+    assert validate_module._tracked_repository_paths(tmp_path) == {relative}
+    assert observed["capture_output"] is True
+    assert "text" not in observed
+    assert "encoding" not in observed
