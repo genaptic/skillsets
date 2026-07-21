@@ -384,6 +384,27 @@ def test_prepare_release_rolls_back_canonical_and_generated_files(
     assert _status(root) == ""
 
 
+def test_lifecycle_preview_plain_list_generation_fallback_is_not_forwarded_as_snapshot(
+    monkeypatch: pytest.MonkeyPatch,
+    generated_repo_copy: Path,
+) -> None:
+    root = generated_repo_copy
+    original = lifecycle_commands.apply_generated_files
+
+    def plain_list_result(candidate_root: Path, *, check: bool = False) -> list[str]:
+        return list(original(candidate_root, check=check))
+
+    monkeypatch.setattr(lifecycle_commands, "apply_generated_files", plain_list_result)
+    plan = build_lifecycle_plan(
+        root,
+        "python-best-practices",
+        operation="prepare-release",
+        release_date=dt.date.today().isoformat(),
+    )
+    assert plan["pack"] == "python-best-practices"
+    assert plan["maturity"] == "stable"
+
+
 @pytest.mark.parametrize("failure", [KeyboardInterrupt(), SystemExit(23)])
 def test_prepare_release_rolls_back_process_interrupts(
     monkeypatch: pytest.MonkeyPatch,

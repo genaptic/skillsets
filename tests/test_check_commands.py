@@ -14,6 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_complete_check_order_and_fail_fast(monkeypatch: pytest.MonkeyPatch) -> None:
     events: list[str] = []
+    snapshot = object()
+
+    class GeneratedResult(list[str]):
+        generated_files = snapshot
 
     monkeypatch.setattr(checks, "lock", lambda _root, *, check: events.append(f"lock:{check}"))
     monkeypatch.setattr(
@@ -26,14 +30,18 @@ def test_complete_check_order_and_fail_fast(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(
         checks,
         "apply_generated_files",
-        lambda _root, *, check: events.append(f"generate:{check}"),
+        lambda _root, *, check: events.append(f"generate:{check}") or GeneratedResult(),
     )
+
+    def validate(*_args: object, **kwargs: object) -> SimpleNamespace:
+        assert kwargs["_generated_files"] is snapshot
+        events.append("validate")
+        return SimpleNamespace(ok=True, errors=[], warnings=[])
+
     monkeypatch.setattr(
         checks,
         "validate_repository",
-        lambda *_args, **_kwargs: (
-            events.append("validate") or SimpleNamespace(ok=True, errors=[], warnings=[])
-        ),
+        validate,
     )
     monkeypatch.setattr(checks, "raise_for_result", lambda _result: events.append("raise"))
     monkeypatch.setattr(checks, "run_structural_evals", lambda _root: events.append("eval"))
@@ -137,10 +145,15 @@ def test_check_pack_retains_global_validation_and_selects_rust_member(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     events: list[object] = []
+    snapshot = object()
+
+    class GeneratedResult(list[str]):
+        generated_files = snapshot
+
     monkeypatch.setattr(
         checks,
         "apply_generated_files",
-        lambda _root, *, check: events.append(("generate", check)),
+        lambda _root, *, check: events.append(("generate", check)) or GeneratedResult(),
     )
 
     def validate(_root: Path, **kwargs: object) -> SimpleNamespace:
@@ -163,6 +176,7 @@ def test_check_pack_retains_global_validation_and_selects_rust_member(
     checks.check_pack(ROOT, "rust-cli-apps")
     validation = next(item for item in events if isinstance(item, tuple) and item[0] == "validate")
     assert validation[1]["pack_filter"] == "rust-cli-apps"
+    assert validation[1]["_generated_files"] is snapshot
     rust_commands = [item[1] for item in events if isinstance(item, tuple) and item[0] == "run"]
     assert any(
         any(part.endswith("check-rust-assets") for part in command)

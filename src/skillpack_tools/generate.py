@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import textwrap
+from dataclasses import dataclass
 from html import escape
 from pathlib import Path, PurePath
 
@@ -41,6 +42,16 @@ BOUNDARY_MATRIX_BEGIN = "<!-- BEGIN GENERATED ROUTING BOUNDARY MATRIX -->"
 BOUNDARY_MATRIX_END = "<!-- END GENERATED ROUTING BOUNDARY MATRIX -->"
 
 GeneratedContent = str | bytes
+GenerationInputRecord = tuple[str, str, str]
+GenerationInputState = tuple[GenerationInputRecord, ...]
+
+
+@dataclass(frozen=True)
+class _GenerationInputCapture:
+    """Logical generator inputs plus exact preimages held across reconciliation."""
+
+    state: GenerationInputState
+    preimages: tuple[tuple[Path, os.stat_result], ...]
 
 
 class GeneratedFiles(dict[str, GeneratedContent]):
@@ -49,10 +60,264 @@ class GeneratedFiles(dict[str, GeneratedContent]):
     def __init__(self) -> None:
         super().__init__()
         self.modes: dict[str, int] = {}
+        self._source_root: Path | None = None
+        self._source_state: GenerationInputState | None = None
 
     def add(self, path: str, content: GeneratedContent, *, mode: int = 0o644) -> None:
         self[path] = content
         self.modes[path] = mode
+
+
+class GeneratedChanges(list[str]):
+    """List-compatible reconciliation result carrying its authoritative snapshot."""
+
+    def __init__(self, changed: list[str], generated_files: GeneratedFiles) -> None:
+        super().__init__(changed)
+        self.generated_files = generated_files
+
+
+def _isolated_git_environment() -> dict[str, str]:
+    """Return a non-interactive Git environment with no inherited Git controls."""
+
+    environment = {
+        key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")
+    }
+    environment.update(
+        {
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_LITERAL_PATHSPECS": "1",
+            "GIT_LFS_SKIP_SMUDGE": "1",
+            "GIT_NO_LAZY_FETCH": "1",
+            "GIT_NO_REPLACE_OBJECTS": "1",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+    )
+    return environment
+
+
+def _exact_git(root: Path, *arguments: str) -> subprocess.CompletedProcess[bytes]:
+    """Run one local-only Git object query without replacement-object semantics."""
+
+    try:
+        return subprocess.run(
+            [
+                "git",
+                "--no-replace-objects",
+                "--no-lazy-fetch",
+                "-c",
+                "core.longpaths=true",
+                "-c",
+                "core.useReplaceRefs=false",
+                "-C",
+                str(root),
+                *arguments,
+            ],
+            check=False,
+            capture_output=True,
+            env=_isolated_git_environment(),
+        )
+    except OSError as exc:
+        raise SkillpackError("Git is required to render a published release snapshot.") from exc
+
+
+def _require_object_id(value: str, *, label: str) -> str:
+    if len(value) != 40 or any(character not in "0123456789abcdef" for character in value):
+        raise SkillpackError(f"{label} must be an exact lowercase 40-character object ID.")
+    return value
+
+
+def _exact_commit(root: Path, source_sha: str) -> tuple[bytes, str]:
+    """Read a raw commit and return its exact tree, bypassing graft ancestry."""
+
+    source_sha = _require_object_id(source_sha, label="Published source SHA")
+    completed = _exact_git(root, "cat-file", "commit", source_sha)
+    if completed.returncode:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise SkillpackError(
+            f"Could not read published commit {source_sha}: {detail or 'missing object'}"
+        )
+    first_line = completed.stdout.partition(b"\n")[0]
+    if not first_line.startswith(b"tree "):
+        raise SkillpackError(f"Published object {source_sha} is not a canonical commit object.")
+    try:
+        tree_oid = first_line.removeprefix(b"tree ").decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise SkillpackError(
+            f"Published commit {source_sha} has a malformed tree object ID."
+        ) from exc
+    return completed.stdout, _require_object_id(
+        tree_oid,
+        label=f"Published commit {source_sha} tree",
+    )
+
+
+def _parse_tree_records(
+    payload: bytes,
+    *,
+    label: str,
+) -> list[tuple[str, str, str, str]]:
+    """Parse NUL-delimited ls-tree records as path, mode, kind, and exact object ID."""
+
+    entries: list[tuple[str, str, str, str]] = []
+    for record in payload.split(b"\0"):
+        if not record:
+            continue
+        try:
+            metadata, raw_path = record.split(b"\t", 1)
+            mode, kind, object_id = metadata.decode("ascii").split(" ", 2)
+            relative = raw_path.decode("utf-8")
+        except (UnicodeDecodeError, ValueError) as exc:
+            raise SkillpackError(f"{label}: malformed released Git tree entry.") from exc
+        if kind not in {"blob", "tree"}:
+            raise SkillpackError(f"{label}: unsupported released Git object kind {kind!r}.")
+        entries.append(
+            (
+                relative,
+                mode,
+                kind,
+                _require_object_id(object_id, label=f"{label} object"),
+            )
+        )
+    return entries
+
+
+def _released_pack_input_state(root: Path, pack: Pack) -> GenerationInputState:
+    """Fingerprint exact immutable objects used to generate one published pack."""
+
+    source_sha = pack.source_sha
+    if not source_sha:
+        raise SkillpackError(f"{pack.id}: published generation requires a source SHA.")
+    commit, tree_oid = _exact_commit(root, source_sha)
+    completed = _exact_git(
+        root,
+        "ls-tree",
+        "-r",
+        "-t",
+        "-z",
+        "--full-tree",
+        tree_oid,
+        "--",
+        pack.relative_path,
+    )
+    if completed.returncode:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise SkillpackError(
+            f"Could not enumerate released objects for {pack.id}: {detail or 'missing object'}"
+        )
+    prefix = f"@git/{pack.id}/{source_sha}"
+    records: list[GenerationInputRecord] = [
+        (f"{prefix}/commit", source_sha, f"git:commit:{sha256_bytes(commit)}"),
+        (f"{prefix}/tree", tree_oid, "git:tree"),
+    ]
+    pack_prefix = f"{pack.relative_path}/"
+    pack_tree_found = False
+    for relative, mode, kind, object_id in _parse_tree_records(
+        completed.stdout,
+        label=f"{pack.id} released tree",
+    ):
+        if relative == pack.relative_path:
+            pack_tree_found = kind == "tree"
+        elif not relative.startswith(pack_prefix):
+            continue
+        records.append((f"{prefix}/{relative}", object_id, f"git:{kind}:{mode}"))
+    if not pack_tree_found:
+        raise SkillpackError(f"{pack.id}: released source has no exact pack tree.")
+    return tuple(sorted(records))
+
+
+def _capture_generation_inputs(root: Path) -> _GenerationInputCapture:
+    """Fingerprint every mutable and immutable input affecting generated bytes."""
+
+    candidates: dict[Path, os.stat_result] = {}
+    for path in (
+        root / "repository.yaml",
+        root / "README.md",
+        root / "docs" / "evals.md",
+        root / "evals" / "routing-boundaries.json",
+        root / "schemas" / "routing-boundaries.schema.json",
+    ):
+        metadata = inspect_path(path, root, leaf_kind="file")
+        assert metadata is not None
+        candidates[path] = metadata
+    pack_snapshot = walk_tree(root / "packs", root)
+    for path, metadata in pack_snapshot.files:
+        relative_to_packs = path.relative_to(root / "packs")
+        if any(part in {".claude-plugin", ".codex-plugin"} for part in relative_to_packs.parts):
+            continue
+        candidates[path] = metadata
+
+    tracked_modes = _tracked_source_modes(root)
+    records: list[GenerationInputRecord] = []
+    for path in sorted(candidates, key=lambda item: repository_relative(item, root).as_posix()):
+        relative = repository_relative(path, root).as_posix()
+        metadata = candidates[path]
+        content = read_regular_bytes(path, root, expected=metadata)
+        mode = tracked_modes.get(relative)
+        mode_record = (
+            f"tracked:{mode:04o}"
+            if mode is not None
+            else f"filesystem:{metadata.st_mode & 0o777:04o}"
+        )
+        records.append((relative, sha256_bytes(content), mode_record))
+    packs = discover_packs(root)
+    for pack in select_packs(packs, "public"):
+        records.extend(_released_pack_input_state(root, pack))
+    return _GenerationInputCapture(
+        state=tuple(sorted(records)),
+        preimages=tuple(
+            sorted(
+                candidates.items(),
+                key=lambda item: repository_relative(item[0], root).as_posix(),
+            )
+        ),
+    )
+
+
+def _generation_input_state(root: Path) -> GenerationInputState:
+    return _capture_generation_inputs(root).state
+
+
+def _bind_generation_snapshot(
+    root: Path,
+    generated: GeneratedFiles,
+    source_state: GenerationInputState | None = None,
+) -> None:
+    generated._source_root = root
+    generated._source_state = (
+        source_state if source_state is not None else _generation_input_state(root)
+    )
+
+
+def _verify_generation_snapshot(
+    root: Path,
+    generated: GeneratedFiles,
+    source_state: GenerationInputState | None = None,
+) -> None:
+    if generated._source_root != root or generated._source_state is None:
+        raise SkillpackError("Generated snapshot is not bound to this repository checkout.")
+    current_state = source_state if source_state is not None else _generation_input_state(root)
+    if current_state != generated._source_state:
+        raise SkillpackError(
+            "Generated snapshot inputs changed; rebuild generated files before validation."
+        )
+
+
+def _expected_post_reconciliation_state(
+    source_state: GenerationInputState,
+    generated: GeneratedFiles,
+) -> GenerationInputState:
+    """Derive intended post-write input state without trusting post-write source bytes."""
+
+    records = {relative: (digest, mode) for relative, digest, mode in source_state}
+    for relative in records.keys() & generated.keys():
+        digest = sha256_bytes(_as_bytes(generated[relative]))
+        _old_digest, mode = records[relative]
+        if mode.startswith("filesystem:"):
+            mode = f"filesystem:{generated.modes[relative]:04o}"
+        records[relative] = (digest, mode)
+    return tuple((relative, digest, mode) for relative, (digest, mode) in sorted(records.items()))
 
 
 def _as_bytes(content: GeneratedContent) -> bytes:
@@ -78,27 +343,47 @@ def _channel_source_sha(pack: Pack, channel: DistributionChannel) -> str | None:
 def _git_object(root: Path, revision: str, relative: str) -> bytes:
     """Read one immutable Git blob without checking out or executing tree content."""
 
-    try:
-        completed = subprocess.run(
-            [
-                "git",
-                "-c",
-                "core.longpaths=true",
-                "-C",
-                str(root),
-                "show",
-                f"{revision}:{relative}",
-            ],
-            check=False,
-            capture_output=True,
-        )
-    except OSError as exc:
-        raise SkillpackError("Git is required to render a published release snapshot.") from exc
+    _commit, tree_oid = _exact_commit(root, revision)
+    completed = _exact_git(
+        root,
+        "ls-tree",
+        "-z",
+        "--full-tree",
+        tree_oid,
+        "--",
+        relative,
+    )
     if completed.returncode:
         detail = completed.stderr.decode("utf-8", errors="replace").strip()
         raise SkillpackError(
             f"Could not read published blob {revision}:{relative}: {detail or 'missing object'}"
         )
+    entries = _parse_tree_records(
+        completed.stdout,
+        label=f"Published blob {revision}:{relative}",
+    )
+    matching = [entry for entry in entries if entry[0] == relative]
+    if (
+        len(matching) != 1
+        or matching[0][2] != "blob"
+        or matching[0][1]
+        not in {
+            "100644",
+            "100755",
+        }
+    ):
+        raise SkillpackError(
+            f"Published path {revision}:{relative} is not one exact regular-file blob."
+        )
+    return _git_blob(root, matching[0][3], label=f"Published blob {revision}:{relative}")
+
+
+def _git_blob(root: Path, object_id: str, *, label: str) -> bytes:
+    object_id = _require_object_id(object_id, label=f"{label} object")
+    completed = _exact_git(root, "cat-file", "blob", object_id)
+    if completed.returncode:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise SkillpackError(f"Could not read {label}: {detail or 'missing object'}")
     return completed.stdout
 
 
@@ -1077,26 +1362,17 @@ def _released_skill_files(root: Path, pack: Pack, skill: str) -> list[tuple[Path
     if not source_sha:
         raise SkillpackError(f"{pack.id}: released skill files require a source SHA.")
     skill_prefix = f"{pack.relative_path}/skills/{skill}"
-    try:
-        completed = subprocess.run(
-            [
-                "git",
-                "-c",
-                "core.longpaths=true",
-                "-C",
-                str(root),
-                "ls-tree",
-                "-r",
-                "-z",
-                source_sha,
-                "--",
-                skill_prefix,
-            ],
-            check=False,
-            capture_output=True,
-        )
-    except OSError as exc:
-        raise SkillpackError("Git is required to render released skill files.") from exc
+    _commit, tree_oid = _exact_commit(root, source_sha)
+    completed = _exact_git(
+        root,
+        "ls-tree",
+        "-r",
+        "-z",
+        "--full-tree",
+        tree_oid,
+        "--",
+        skill_prefix,
+    )
     if completed.returncode:
         detail = completed.stderr.decode("utf-8", errors="replace").strip()
         raise SkillpackError(
@@ -1105,15 +1381,14 @@ def _released_skill_files(root: Path, pack: Pack, skill: str) -> list[tuple[Path
         )
 
     entries: list[tuple[Path, bytes, int]] = []
-    for record in completed.stdout.split(b"\0"):
-        if not record:
-            continue
+    for raw_path, mode, kind, object_id in _parse_tree_records(
+        completed.stdout,
+        label=f"{pack.id}/{skill} released tree",
+    ):
         try:
-            metadata, raw_path = record.split(b"\t", 1)
-            mode, kind, _object_id = metadata.decode("ascii").split(" ", 2)
-            repository_path = Path(raw_path.decode("utf-8"))
+            repository_path = Path(raw_path)
             relative = repository_path.relative_to(skill_prefix)
-        except (UnicodeDecodeError, ValueError) as exc:
+        except ValueError as exc:
             raise SkillpackError(
                 f"{pack.id}/{skill}: malformed or unsafe released Git tree entry."
             ) from exc
@@ -1131,7 +1406,11 @@ def _released_skill_files(root: Path, pack: Pack, skill: str) -> list[tuple[Path
         entries.append(
             (
                 relative,
-                _git_object(root, source_sha, repository_path.as_posix()),
+                _git_blob(
+                    root,
+                    object_id,
+                    label=f"{pack.id}/{skill}:{repository_path.as_posix()}",
+                ),
                 0o755 if mode == "100755" else 0o644,
             )
         )
@@ -1506,14 +1785,28 @@ def build_generated_files(root: Path) -> GeneratedFiles:
     return files
 
 
-def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
+def _reconcile_generated_files(
+    root: Path,
+    *,
+    check: bool = False,
+    expected: GeneratedFiles | None = None,
+) -> tuple[list[str], GeneratedFiles]:
+    """Reconcile generated files and return the authoritative generated snapshot."""
+
     root = Path(os.path.abspath(os.fspath(root)))
+    if expected is not None and not check:
+        raise SkillpackError("Generated snapshots may be reused only for read-only verification.")
+    reusing_snapshot = expected is not None
+    generation_inputs_before = _capture_generation_inputs(root)
     canonical_before = walk_tree(root / "packs", root)
     root_source_preimages = {
         path: inspect_path(path, root, leaf_kind="file")
         for path in (root / "repository.yaml", root / "README.md", root / "docs" / "evals.md")
     }
-    expected = build_generated_files(root)
+    if expected is None:
+        expected = build_generated_files(root)
+    else:
+        _verify_generation_snapshot(root, expected, generation_inputs_before.state)
     changed: list[str] = []
 
     canonical_after = walk_tree(root / "packs", root)
@@ -1529,6 +1822,18 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
         not same_identity(metadata, after_nodes[path]) for path, metadata in before_nodes.items()
     ):
         raise SkillpackError("Canonical pack content changed during generation preflight.")
+    generation_inputs_after = generation_inputs_before
+    if not reusing_snapshot:
+        generation_inputs_after = _capture_generation_inputs(root)
+        if generation_inputs_after.state != generation_inputs_before.state:
+            raise SkillpackError("Generation inputs changed during generation preflight.")
+        before_preimages = dict(generation_inputs_before.preimages)
+        after_preimages = dict(generation_inputs_after.preimages)
+        if set(before_preimages) != set(after_preimages) or any(
+            not same_identity(metadata, after_preimages[path])
+            for path, metadata in before_preimages.items()
+        ):
+            raise SkillpackError("Generation input identities changed during generation preflight.")
     for path, preimage in root_source_preimages.items():
         assert preimage is not None
         verify_preimage(path, root, preimage)
@@ -1547,6 +1852,7 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
         *(pack.path / ".codex-plugin" for pack in packs),
     ]
 
+    input_preimages = dict(generation_inputs_after.preimages)
     expected_paths: dict[str, tuple[Path, os.stat_result | None]] = {}
     for relative in expected:
         raw_relative = Path(relative)
@@ -1556,7 +1862,9 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
         normalized = repository_relative(path, root).as_posix()
         if normalized != raw_relative.as_posix():
             raise SkillpackError(f"Generated destination is not normalized: {relative!r}.")
-        preimage = inspect_path(path, root, leaf_kind="file", allow_missing=True)
+        preimage = input_preimages.get(path)
+        if preimage is None:
+            preimage = inspect_path(path, root, leaf_kind="file", allow_missing=True)
         expected_paths[relative] = (path, preimage)
 
     cleanup_files: dict[Path, os.stat_result] = {}
@@ -1575,6 +1883,7 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
     if legacy_index_metadata is not None:
         cleanup_files[legacy_index] = legacy_index_metadata
 
+    rewritten_inputs: set[Path] = set()
     for relative, content in expected.items():
         path, preimage = expected_paths[relative]
         wanted = _as_bytes(content)
@@ -1586,6 +1895,8 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
         if actual != wanted or mode_mismatch:
             changed.append(relative)
             if not check:
+                if path in input_preimages:
+                    rewritten_inputs.add(path)
                 safe_atomic_write_bytes(
                     path,
                     wanted,
@@ -1617,4 +1928,32 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
         raise SkillpackError(
             "Generated files are missing or stale. Run `python3 tools/generate-all`:\n" + detail
         )
-    return sorted(set(changed))
+    intended_final_state = _expected_post_reconciliation_state(
+        generation_inputs_after.state,
+        expected,
+    )
+    final_inputs = _capture_generation_inputs(root)
+    if final_inputs.state != intended_final_state:
+        raise SkillpackError("Generation inputs changed during generated-file reconciliation.")
+    final_preimages = dict(final_inputs.preimages)
+    preserved_preimages = dict(generation_inputs_after.preimages)
+    for path, metadata in preserved_preimages.items():
+        if path in rewritten_inputs:
+            continue
+        final_metadata = final_preimages.get(path)
+        if final_metadata is None or not same_identity(metadata, final_metadata):
+            relative = repository_relative(path, root).as_posix()
+            raise SkillpackError(
+                f"Generation input identity changed during reconciliation: {relative}."
+            )
+    if reusing_snapshot:
+        _verify_generation_snapshot(root, expected, final_inputs.state)
+    _bind_generation_snapshot(root, expected, final_inputs.state)
+    return sorted(set(changed)), expected
+
+
+def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
+    """Write or check generated files while preserving the established list-returning API."""
+
+    changed, generated = _reconcile_generated_files(root, check=check)
+    return GeneratedChanges(changed, generated)

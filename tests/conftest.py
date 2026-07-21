@@ -6,6 +6,9 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -160,13 +163,56 @@ def _restore_reusable_repository(repository: _ReusableRepository) -> None:
         raise AssertionError(f"reusable repository fixture was not restored:\n{status}")
 
 
-@pytest.fixture(scope="session")
-def generated_repository_template(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Materialize the expensive generated repository fixture once per test session."""
+@contextmanager
+def _exclusive_file_lock(path: Path, *, timeout_seconds: float = 120.0) -> Iterator[None]:
+    """Hold a cross-platform advisory lock for cross-worker fixture setup."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+b") as stream:
+        if os.fstat(stream.fileno()).st_size == 0:
+            stream.write(b"\0")
+            stream.flush()
+        stream.seek(0)
+        deadline = time.monotonic() + timeout_seconds
+        if os.name == "nt":
+            import msvcrt
+
+            while True:
+                stream.seek(0)
+                try:
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError as error:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(f"timed out waiting for fixture lock {path}") from error
+                    time.sleep(0.05)
+            try:
+                yield
+            finally:
+                stream.seek(0)
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            while True:
+                try:
+                    fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError as error:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(f"timed out waiting for fixture lock {path}") from error
+                    time.sleep(0.05)
+            try:
+                yield
+            finally:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def _materialize_generated_repository_template(fixture_root: Path) -> Path:
+    """Build the immutable generated template under an already-owned directory."""
 
     from skillpack_tools.generate import apply_generated_files
 
-    fixture_root = tmp_path_factory.mktemp("g")
     root = fixture_root / "w"
     shutil.copytree(ROOT, root, ignore=_copy_ignore)
     environment = _isolated_git_environment()
@@ -243,6 +289,81 @@ def generated_repository_template(tmp_path_factory: pytest.TempPathFactory) -> P
         env=environment,
     )
     return root
+
+
+def _template_head(root: Path) -> str:
+    environment = _isolated_git_environment()
+    return subprocess.run(
+        ["git", "-c", "core.longpaths=true", "-C", str(root), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    ).stdout.strip()
+
+
+def _require_ready_generated_template(fixture_root: Path) -> Path:
+    root = fixture_root / "w"
+    expected_head = (fixture_root / ".ready").read_text(encoding="utf-8").strip()
+    actual_head = _template_head(root)
+    if not expected_head or actual_head != expected_head:
+        raise AssertionError("shared generated repository template does not match its ready marker")
+    status = subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(root),
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=_isolated_git_environment(),
+    ).stdout
+    if status:
+        raise AssertionError(f"shared generated repository template is dirty:\n{status}")
+    return root
+
+
+def _materialize_shared_generated_template(fixture_root: Path) -> Path:
+    """Build once, publish readiness last, and reject later template mutation."""
+
+    ready = fixture_root / ".ready"
+    if ready.is_file():
+        return _require_ready_generated_template(fixture_root)
+    if fixture_root.exists():
+        shutil.rmtree(fixture_root)
+    fixture_root.mkdir(parents=True)
+    try:
+        root = _materialize_generated_repository_template(fixture_root)
+        temporary_ready = fixture_root / ".ready.tmp"
+        temporary_ready.write_text(_template_head(root) + "\n", encoding="utf-8")
+        os.replace(temporary_ready, ready)
+    except BaseException:
+        shutil.rmtree(fixture_root, ignore_errors=True)
+        raise
+    return _require_ready_generated_template(fixture_root)
+
+
+@pytest.fixture(scope="session")
+def generated_repository_template(
+    tmp_path_factory: pytest.TempPathFactory,
+    worker_id: str,
+) -> Path:
+    """Materialize one immutable template across all pytest workers."""
+
+    if worker_id == "master":
+        fixture_root = tmp_path_factory.mktemp("g")
+        return _materialize_shared_generated_template(fixture_root)
+
+    shared_root = tmp_path_factory.getbasetemp().parent
+    fixture_root = shared_root / "g-shared"
+    with _exclusive_file_lock(shared_root / "g-shared.lock"):
+        return _materialize_shared_generated_template(fixture_root)
 
 
 @pytest.fixture(scope="session")

@@ -370,8 +370,14 @@ def build_release(
     resolved_policy_root = (
         Path(os.path.abspath(os.fspath(policy_root))) if policy_root is not None else None
     )
-    apply_generated_files(root, check=True)
-    result = validate_repository(root, check_generated=True, strict_placeholders=True)
+    generated_result = apply_generated_files(root, check=True)
+    generated = getattr(generated_result, "generated_files", None)
+    result = validate_repository(
+        root,
+        check_generated=True,
+        strict_placeholders=True,
+        _generated_files=generated,
+    )
     raise_for_result(result)
 
     try:

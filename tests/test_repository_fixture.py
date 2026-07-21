@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 import subprocess
+from pathlib import Path
 
-from conftest import _restore_reusable_repository, _ReusableRepository
+import pytest
+from conftest import (
+    _require_ready_generated_template,
+    _restore_reusable_repository,
+    _ReusableRepository,
+)
 
 GIT = ("git", "-c", "core.longpaths=true")
 
@@ -15,6 +21,93 @@ def _git(repository: _ReusableRepository, *arguments: str) -> str:
         text=True,
         env=repository.environment,
     ).stdout.strip()
+
+
+def _initialize_ready_template(tmp_path: Path) -> tuple[Path, Path]:
+    fixture_root = tmp_path / "template"
+    root = fixture_root / "w"
+    root.mkdir(parents=True)
+    subprocess.run([*GIT, "init", "-q", str(root)], check=True)
+    subprocess.run([*GIT, "-C", str(root), "config", "user.name", "Fixture"], check=True)
+    subprocess.run(
+        [
+            *GIT,
+            "-C",
+            str(root),
+            "config",
+            "user.email",
+            "fixture@example.invalid",
+        ],
+        check=True,
+    )
+    tracked = root / "tracked.txt"
+    tracked.write_text("tracked\n", encoding="utf-8")
+    subprocess.run([*GIT, "-C", str(root), "add", "tracked.txt"], check=True)
+    subprocess.run(
+        [
+            *GIT,
+            "-C",
+            str(root),
+            "commit",
+            "-q",
+            "--no-gpg-sign",
+            "-m",
+            "template",
+        ],
+        check=True,
+    )
+    head = subprocess.run(
+        [*GIT, "-C", str(root), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    (fixture_root / ".ready").write_text(head + "\n", encoding="utf-8")
+    return fixture_root, root
+
+
+def test_generated_template_ready_marker_matches_clean_head(
+    generated_repository_template: Path,
+) -> None:
+    fixture_root = generated_repository_template.parent
+
+    assert _require_ready_generated_template(fixture_root) == (generated_repository_template)
+
+
+def test_generated_template_ready_marker_fails_closed_on_mutation(tmp_path: Path) -> None:
+    fixture_root, root = _initialize_ready_template(tmp_path)
+    assert _require_ready_generated_template(fixture_root) == root
+
+    (root / "tracked.txt").write_text("mutated\n", encoding="utf-8")
+
+    with pytest.raises(AssertionError, match="template is dirty"):
+        _require_ready_generated_template(fixture_root)
+
+
+def test_generated_template_ready_marker_fails_closed_on_wrong_head(
+    tmp_path: Path,
+) -> None:
+    fixture_root, _root = _initialize_ready_template(tmp_path)
+    (fixture_root / ".ready").write_text("0" * 40 + "\n", encoding="utf-8")
+
+    with pytest.raises(AssertionError, match="does not match its ready marker"):
+        _require_ready_generated_template(fixture_root)
+
+
+def test_reusable_repository_is_worker_local(
+    generated_repository_template: Path,
+    reusable_generated_repository: _ReusableRepository,
+    tmp_path_factory: pytest.TempPathFactory,
+    worker_id: str,
+) -> None:
+    repository = reusable_generated_repository
+
+    assert repository.root != generated_repository_template
+    assert tmp_path_factory.getbasetemp() in repository.root.parents
+    if worker_id != "master":
+        assert generated_repository_template.parent.parent == (
+            tmp_path_factory.getbasetemp().parent
+        )
 
 
 def test_reusable_repository_restores_commits_index_config_and_untracked_files(

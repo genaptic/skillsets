@@ -12,7 +12,12 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from .generate import apply_generated_files, build_generated_files
+from .generate import (
+    GeneratedFiles,
+    _verify_generation_snapshot,
+    apply_generated_files,
+    build_generated_files,
+)
 from .lifecycle import semantic_version_key
 from .models import Pack, discover_packs, get_pack, load_repository
 from .path_safety import (
@@ -172,8 +177,13 @@ def _content_bytes(content: str | bytes) -> bytes:
     return content if isinstance(content, bytes) else content.encode("utf-8")
 
 
-def _generated_output_records(root: Path) -> list[dict[str, str]]:
-    generated = build_generated_files(root)
+def _generated_output_records(
+    root: Path, generated: GeneratedFiles | None = None
+) -> list[dict[str, str]]:
+    if generated is None:
+        generated = build_generated_files(root)
+    else:
+        _verify_generation_snapshot(root, generated)
     return [
         {
             "path": path,
@@ -280,11 +290,21 @@ def _preview_publication_changes(
             mode=0o644,
             expected=metadata,
         )
-        apply_generated_files(preview)
+        generated_result = apply_generated_files(preview)
+        generated = getattr(generated_result, "generated_files", None)
         raise_for_result(
-            validate_repository(preview, check_generated=True, strict_placeholders=True)
+            validate_repository(
+                preview,
+                check_generated=True,
+                strict_placeholders=True,
+                _generated_files=generated,
+            )
         )
-        generated_outputs = _generated_output_records(preview)
+        generated_outputs = (
+            _generated_output_records(preview, generated)
+            if generated is not None
+            else _generated_output_records(preview)
+        )
         candidates = [manifest_relative, *(item["path"] for item in generated_outputs)]
         patch, changed_paths = _git_patch_and_paths(preview, candidates)
         changed_files: list[dict[str, str | None]] = []
@@ -412,8 +432,16 @@ def _rollback_changed_files(
             current = current.parent
 
 
-def _verify_applied_plan(root: Path, plan: dict[str, Any]) -> None:
-    generated = _generated_output_records(root)
+def _verify_applied_plan(
+    root: Path,
+    plan: dict[str, Any],
+    generated_files: GeneratedFiles | None = None,
+) -> None:
+    generated = (
+        _generated_output_records(root, generated_files)
+        if generated_files is not None
+        else _generated_output_records(root)
+    )
     if generated != plan["generatedOutputs"]:
         raise SkillpackError("Generated outputs do not match the reviewed publication plan.")
     digest = sha256_bytes(
@@ -471,9 +499,17 @@ def prepare_publication_update(
             mode=0o644,
             expected=preimage,
         )
-        apply_generated_files(root)
-        raise_for_result(validate_repository(root, check_generated=True, strict_placeholders=True))
-        _verify_applied_plan(root, plan)
+        generated_result = apply_generated_files(root)
+        generated = getattr(generated_result, "generated_files", None)
+        raise_for_result(
+            validate_repository(
+                root,
+                check_generated=True,
+                strict_placeholders=True,
+                _generated_files=generated,
+            )
+        )
+        _verify_applied_plan(root, plan, generated)
     except BaseException as exc:
         rollback_after_failure(
             exc,

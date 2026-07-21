@@ -79,8 +79,16 @@ def check(root: Path) -> None:
             str(root / ".venv" / "rust-cargo-home"),
         ],
     )
-    apply_generated_files(root, check=True)
-    raise_for_result(validate_repository(root, check_generated=True, strict_placeholders=True))
+    generated_result = apply_generated_files(root, check=True)
+    generated = getattr(generated_result, "generated_files", None)
+    raise_for_result(
+        validate_repository(
+            root,
+            check_generated=True,
+            strict_placeholders=True,
+            _generated_files=generated,
+        )
+    )
     run_structural_evals(root)
     lint(root)
     test(root)
@@ -93,13 +101,15 @@ def check_pack(root: Path, pack_id: str) -> None:
         pack = get_pack(root, pack_id)
     except KeyError as exc:
         raise SkillpackError(str(exc)) from exc
-    apply_generated_files(root, check=True)
+    generated_result = apply_generated_files(root, check=True)
+    generated = getattr(generated_result, "generated_files", None)
     raise_for_result(
         validate_repository(
             root,
             check_generated=True,
             strict_placeholders=True,
             pack_filter=pack.id,
+            _generated_files=generated,
         )
     )
     for skill in pack.skills:
