@@ -108,19 +108,64 @@ def test_preview_uses_exact_shared_head_and_preserves_bytes(
         ["git", "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "new"],
         check=True,
     )
-    (root / "untracked.txt").write_bytes(b"do not copy\n")
-    source_status = _status(root)
+    new_head = subprocess.check_output(
+        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
+    ).strip()
+
+    redirected = tmp_path / "redirected"
+    redirected.mkdir()
+    subprocess.run(["git", "init", "-q", str(redirected)], check=True)
+    subprocess.run(["git", "-C", str(redirected), "config", "user.name", "Fixture"], check=True)
+    subprocess.run(
+        ["git", "-C", str(redirected), "config", "user.email", "fixture@example.invalid"],
+        check=True,
+    )
+    sentinel = redirected / "sentinel.txt"
+    sentinel.write_bytes(b"must remain unchanged\n")
+    subprocess.run(["git", "-C", str(redirected), "add", "sentinel.txt"], check=True)
+    subprocess.run(
+        ["git", "-C", str(redirected), "commit", "-q", "--no-gpg-sign", "-m", "sentinel"],
+        check=True,
+    )
+    redirected_status = _status(redirected)
+
     invalid_global_config = tmp_path / "invalid.gitconfig"
     invalid_global_config.write_text("[invalid\n", encoding="utf-8")
-    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(invalid_global_config))
+    contaminated_environment = {
+        "GIT_DIR": str(redirected / ".git"),
+        "GIT_WORK_TREE": str(redirected),
+        "GIT_INDEX_FILE": str(redirected / ".git/index"),
+        "GIT_OBJECT_DIRECTORY": str(redirected / ".git/objects"),
+        "GIT_CONFIG_GLOBAL": str(invalid_global_config),
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "core.hooksPath",
+        "GIT_CONFIG_VALUE_0": str(tmp_path / "injected-hooks"),
+        "GIT_CONFIG_PARAMETERS": "'core.bare=true'",
+    }
+    with monkeypatch.context() as context:
+        for key, value in contaminated_environment.items():
+            context.setenv(key, value)
+        isolated = lifecycle_commands._isolated_git_environment()
+        assert {key for key in isolated if key.upper().startswith("GIT_")} == {
+            "GIT_CONFIG_GLOBAL",
+            "GIT_CONFIG_NOSYSTEM",
+            "GIT_LFS_SKIP_SMUDGE",
+            "GIT_TERMINAL_PROMPT",
+        }
+        assert lifecycle_commands._require_clean_worktree(root) == new_head
+
+    (root / "untracked.txt").write_bytes(b"do not copy\n")
+    source_status = _status(root)
 
     replacement = "preview\nexact Unicode: ☃\n"
-    preview = lifecycle_commands._copy_for_preview(
-        root,
-        {"tracked.txt": replacement},
-        head=old_head,
-    )
-    monkeypatch.delenv("GIT_CONFIG_GLOBAL")
+    with monkeypatch.context() as context:
+        for key, value in contaminated_environment.items():
+            context.setenv(key, value)
+        preview = lifecycle_commands._copy_for_preview(
+            root,
+            {"tracked.txt": replacement},
+            head=old_head,
+        )
     try:
         assert (preview / "tracked.txt").read_bytes() == replacement.encode("utf-8")
         assert not (preview / "new-only.txt").exists()
@@ -135,6 +180,8 @@ def test_preview_uses_exact_shared_head_and_preserves_bytes(
     finally:
         lifecycle_commands._remove_temporary_tree(preview.parent)
     assert _status(root) == source_status
+    assert _status(redirected) == redirected_status
+    assert sentinel.read_bytes() == b"must remain unchanged\n"
 
 
 def test_preview_clone_failure_is_actionable_and_cleans_temporary_tree(

@@ -75,24 +75,51 @@ def _remove_temporary_tree(path: Path) -> None:
     shutil.rmtree(path, onerror=legacy_callback)
 
 
+def _isolated_git_environment() -> dict[str, str]:
+    environment = {
+        key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")
+    }
+    environment.update(
+        {
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_LFS_SKIP_SMUDGE": "1",
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+    )
+    return environment
+
+
 def _require_clean_worktree(root: Path) -> str:
     if not (root / ".git").exists():
         raise SkillpackError("Lifecycle preparation requires a Git worktree.")
+    git_environment = _isolated_git_environment()
     completed = subprocess.run(
-        ["git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(root),
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+        ],
         check=False,
         capture_output=True,
         text=True,
+        env=git_environment,
     )
     if completed.returncode != 0:
         raise SkillpackError(f"Could not inspect Git worktree: {completed.stderr.strip()}")
     if completed.stdout:
         raise SkillpackError("Lifecycle preparation requires a clean Git worktree.")
     head = subprocess.run(
-        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        ["git", "-c", "core.longpaths=true", "-C", str(root), "rev-parse", "HEAD"],
         check=False,
         capture_output=True,
         text=True,
+        env=git_environment,
     )
     if head.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}\n?", head.stdout):
         raise SkillpackError("Lifecycle preparation requires a resolvable Git HEAD.")
@@ -263,13 +290,7 @@ def _copy_for_preview(root: Path, changes: dict[str, str], *, head: str) -> Path
     temporary = temporary_parent / "repository"
     hooks = temporary_parent / "empty-hooks"
     hooks.mkdir()
-    git_environment = {
-        **os.environ,
-        "GIT_CONFIG_GLOBAL": os.devnull,
-        "GIT_CONFIG_NOSYSTEM": "1",
-        "GIT_LFS_SKIP_SMUDGE": "1",
-        "GIT_TERMINAL_PROMPT": "0",
-    }
+    git_environment = _isolated_git_environment()
 
     try:
         subprocess.run(
@@ -277,6 +298,8 @@ def _copy_for_preview(root: Path, changes: dict[str, str], *, head: str) -> Path
                 "git",
                 "-c",
                 f"core.hooksPath={hooks}",
+                "-c",
+                "core.longpaths=true",
                 "clone",
                 "--quiet",
                 "--shared",
@@ -294,6 +317,8 @@ def _copy_for_preview(root: Path, changes: dict[str, str], *, head: str) -> Path
                 "git",
                 "-c",
                 f"core.hooksPath={hooks}",
+                "-c",
+                "core.longpaths=true",
                 "-C",
                 str(temporary),
                 "checkout",
