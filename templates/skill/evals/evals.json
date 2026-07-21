@@ -43,14 +43,6 @@
       "prompt": "Request another near-match that shares vocabulary but has a different result.",
       "shouldTrigger": false,
       "reason": "Shared terms are insufficient without the intended outcome."
-    },
-    {
-      "id": "overlap-neighbor",
-      "kind": "overlap",
-      "prompt": "Request work that should prefer a specific neighboring skill instead.",
-      "shouldTrigger": false,
-      "preferredSkill": "replace-with-neighbor-skill",
-      "reason": "The neighboring skill has the narrower and more appropriate contract."
     }
   ],
   "behavior": [

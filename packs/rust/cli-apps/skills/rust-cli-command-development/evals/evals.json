@@ -43,14 +43,6 @@
       "prompt": "Add a library function that archives a project and expose no command-line grammar, output, exit behavior, or CLI tests.",
       "shouldTrigger": false,
       "reason": "The requested result is domain-library behavior without a command-line interface change."
-    },
-    {
-      "id": "overlap-application-redesign",
-      "kind": "overlap",
-      "prompt": "Redesign every command in this Rust CLI around a new grammar, runtime context, configuration model, output protocol, and error taxonomy.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-cli-application-design",
-      "reason": "The neighboring skill owns coordinated multi-command and application-level CLI design."
     }
   ],
   "behavior": [

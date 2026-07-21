@@ -43,14 +43,6 @@
       "prompt": "Write subprocess assertions for one CLI command's stderr and exit code contract.",
       "shouldTrigger": false,
       "reason": "The narrower CLI testing skill should handle this request."
-    },
-    {
-      "id": "overlap-cli-testing",
-      "kind": "overlap",
-      "prompt": "Create a comprehensive test matrix for command help, stdout, stderr, exit codes, stdin, and shell invocation.",
-      "shouldTrigger": false,
-      "reason": "The request is specifically CLI testing rather than repository-wide test strategy.",
-      "preferredSkill": "python-cli-testing"
     }
   ],
   "behavior": [

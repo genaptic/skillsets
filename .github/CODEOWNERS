@@ -5,7 +5,9 @@
 /.github/dependabot.yml @jecsand838
 /.claude-plugin/ @jecsand838
 /.agents/plugins/ @jecsand838
-/dist/install/ @jecsand838
+/dist/public/ @jecsand838
+/dist/preview/ @jecsand838
+/dist/dev/ @jecsand838
 /src/skillpack_tools/ @jecsand838
 /tools/ @jecsand838
 /schemas/ @jecsand838
@@ -17,4 +19,4 @@
 /packs/rust/best-practices/ @jecsand838
 /packs/rust/cli-apps/ @jecsand838
 /packs/shared/postgres-databases/ @jecsand838
-/packs/shared/repository-development/ @jecsand838
+/packs/shared/genaptic-skillsets-development/ @jecsand838

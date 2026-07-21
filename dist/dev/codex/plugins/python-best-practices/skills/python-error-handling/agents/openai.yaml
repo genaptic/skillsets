@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Error Handling"
+  short_description: "Design reliable Python failure contracts"
+  default_prompt: "Use $python-error-handling to review this exception design and propose a safe failure contract."

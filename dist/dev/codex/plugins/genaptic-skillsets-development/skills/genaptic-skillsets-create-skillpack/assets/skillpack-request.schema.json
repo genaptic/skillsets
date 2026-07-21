@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/genaptic/skillsets/main/packs/shared/genaptic-skillsets-development/skills/genaptic-skillsets-create-skillpack/assets/skillpack-request.schema.json",
+  "title": "Create New Skillpack request",
+  "description": "Resolved input for creating one independently installable Genaptic skillpack and every declared Agent Skill.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "skillpackName",
+    "packId",
+    "displayName",
+    "language",
+    "subject",
+    "description",
+    "details",
+    "scope",
+    "version",
+    "targets",
+    "category",
+    "keywords",
+    "compatibility",
+    "interface",
+    "operations",
+    "sourceRequirements",
+    "skills"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "skillpackName": {"type": "string", "minLength": 3, "maxLength": 100},
+    "packId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "displayName": {"type": "string", "minLength": 3, "maxLength": 80},
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 32
+    },
+    "subject": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 48
+    },
+    "description": {"type": "string", "minLength": 40, "maxLength": 500},
+    "details": {"type": "string", "minLength": 40, "maxLength": 16000},
+    "scope": {"$ref": "#/$defs/packScope"},
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {"enum": ["claude-code", "codex", "opencode"]}
+    },
+    "category": {"type": "string", "minLength": 3, "maxLength": 40},
+    "keywords": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+        "maxLength": 32
+      }
+    },
+    "compatibility": {"$ref": "#/$defs/compatibility"},
+    "interface": {"$ref": "#/$defs/packInterface"},
+    "operations": {"$ref": "#/$defs/operations"},
+    "sourceRequirements": {"$ref": "#/$defs/sourceRequirements"},
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {"$ref": "#/$defs/skill"}
+    },
+    "userSources": {"$ref": "#/$defs/httpSources"}
+  },
+  "$defs": {
+    "packScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owns", "excludes", "supportedEnvironments"],
+      "properties": {
+        "owns": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 10, "maxLength": 1000}
+        },
+        "excludes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 10, "maxLength": 1000}
+        },
+        "supportedEnvironments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 3, "maxLength": 500}
+        }
+      }
+    },
+    "skillScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["useWhen", "doNotUseWhen", "supportedEnvironments"],
+      "properties": {
+        "useWhen": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 10, "maxLength": 1000}
+        },
+        "doNotUseWhen": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 10, "maxLength": 1000}
+        },
+        "supportedEnvironments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 3, "maxLength": 500}
+        }
+      }
+    },
+    "examples": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shouldTrigger", "shouldNotTrigger"],
+      "properties": {
+        "shouldTrigger": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 20, "maxLength": 2000}
+        },
+        "shouldNotTrigger": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 20, "maxLength": 2000}
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtimes", "notes"],
+      "properties": {
+        "runtimes": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 12,
+          "propertyNames": {"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 100}
+        },
+        "notes": {"type": "string", "minLength": 20, "maxLength": 500}
+      }
+    },
+    "packInterface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shortDescription", "starterPrompts"],
+      "properties": {
+        "shortDescription": {"type": "string", "minLength": 25, "maxLength": 120, "pattern": "^\\S(?:.*[.!?])$"},
+        "starterPrompts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["skill", "prompt"],
+            "properties": {
+              "skill": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "maxLength": 64
+              },
+              "prompt": {
+                "type": "string",
+                "minLength": 30,
+                "maxLength": 300,
+                "pattern": "\\$[a-z0-9]+(?:-[a-z0-9]+)*"
+              }
+            }
+          }
+        }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["network", "filesystem", "commandExecution", "externalWrites"],
+      "properties": {
+        "network": {"enum": ["none", "optional", "required"]},
+        "filesystem": {"enum": ["read-only", "explicit-output", "project-write", "system-write"]},
+        "commandExecution": {"enum": ["none", "optional-explicit", "required"]},
+        "externalWrites": {"enum": ["none", "optional-explicit", "required"]}
+      }
+    },
+    "sourceRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["freshness", "requiredAuthorities"],
+      "properties": {
+        "freshness": {"type": "string", "minLength": 10, "maxLength": 1000},
+        "requiredAuthorities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 3, "maxLength": 300}
+        }
+      }
+    },
+    "openai": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["displayName", "shortDescription", "defaultPrompt"],
+      "properties": {
+        "displayName": {"type": "string", "minLength": 3, "maxLength": 80},
+        "shortDescription": {"type": "string", "minLength": 25, "maxLength": 64},
+        "defaultPrompt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 300,
+          "pattern": "\\$[a-z0-9]+(?:-[a-z0-9]+)*"
+        }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "details",
+        "scope",
+        "expectedOutput",
+        "successCriteria",
+        "examples",
+        "nearestNeighbor",
+        "constraints",
+        "operations",
+        "sourceRequirements",
+        "openai"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "maxLength": 64
+        },
+        "details": {"type": "string", "minLength": 40, "maxLength": 12000},
+        "scope": {"$ref": "#/$defs/skillScope"},
+        "expectedOutput": {"type": "string", "minLength": 20, "maxLength": 3000},
+        "successCriteria": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 10, "maxLength": 1000}
+        },
+        "examples": {"$ref": "#/$defs/examples"},
+        "nearestNeighbor": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "maxLength": 64,
+          "description": "Existing or proposed skill that owns the closest excluded outcome. For a one-skill pack it must be an existing skill outside the proposed pack."
+        },
+        "constraints": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 3, "maxLength": 1000}
+        },
+        "operations": {"$ref": "#/$defs/operations"},
+        "sourceRequirements": {"$ref": "#/$defs/sourceRequirements"},
+        "openai": {"$ref": "#/$defs/openai"}
+      }
+    },
+    "httpSources": {
+      "type": "array",
+      "maxItems": 20,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "format": "uri",
+        "pattern": "^https?://(?![^/?#]*@)[^\\s]+$"
+      }
+    }
+  }
+}

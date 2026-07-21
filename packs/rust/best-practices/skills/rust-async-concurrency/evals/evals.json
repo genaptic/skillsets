@@ -35,7 +35,6 @@
       "kind": "negative",
       "prompt": "Design a typed reqwest client with safe retryability, bounded error bodies, base-URL validation, and one total request deadline.",
       "shouldTrigger": false,
-      "preferredSkill": "rust-networking",
       "reason": "Transport semantics and HTTP reliability are owned by the networking skill."
     },
     {
@@ -43,16 +42,7 @@
       "kind": "negative",
       "prompt": "Decide whether these Rust checks belong in unit tests, integration tests, doctests, binary smoke tests, or an end-to-end crate.",
       "shouldTrigger": false,
-      "preferredSkill": "rust-testing-strategy",
       "reason": "Test placement and suite boundaries are owned by the testing strategy skill."
-    },
-    {
-      "id": "overlap-network-client",
-      "kind": "overlap",
-      "prompt": "Our async gRPC client reconnects for every call and retries timed-out writes; fix channel reuse and per-request deadline behavior.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-networking",
-      "reason": "Although async is involved, gRPC channel and retry semantics are the narrower networking outcome."
     }
   ],
   "behavior": [

@@ -2,8 +2,9 @@
 
 ## Provenance
 
-- Date:
-- Reviewer:
+- Tested at (canonical UTC `YYYY-MM-DDTHH:MM:SSZ`):
+- Reviewer GitHub login:
+- Reviewer numeric GitHub user ID:
 - Reviewer verdict: pass / fail
 - Operating system:
 - Shell:
@@ -18,6 +19,8 @@
 - Installation method:
 - Clean environment description:
 - Machine-readable report path:
+- Full 40-character evidence commit SHA containing that report:
+- Protected ingestion workflow run ID:
 
 ## Structural result
 
@@ -40,11 +43,24 @@
 - Permission prompts:
 - Unexpected behavior:
 
-## Model-backed routing cases
+## Model-backed per-skill routing cases
 
-| Case ID | Prompt reference | Expected skill | Observed skill | Overlap expectation met | Pass | Notes |
-|---|---|---|---|---|---|---|
-| | | | | | | |
+| Case ID | Prompt reference | Expected skill | Observed skill | Pass | Notes |
+|---|---|---|---|---|---|
+| | | | | | |
+
+## Model-backed routing-boundary cases
+
+Record every canonical boundary incident to any skill in the selected pack. For an
+`internal-pack` case, install the selected pack and make exactly the canonical `boundarySkills`
+pair available to the model-backed run. For a `cross-pack` case, perform a separate clean run
+with every canonical `installedPacks` entry and make the exact two `boundarySkills` available.
+The selected pack's primary discovery result remains in `installation.discoveredSkills`; the
+per-boundary fields describe the additional boundary environment.
+
+| Boundary ID | Case ID | Scope | Boundary skills | Installed packs | Expected skills | Observed skills | Pass | Notes |
+|---|---|---|---|---|---|---|---|---|
+| | | | | | | | | |
 
 ## Model-backed behavior cases
 

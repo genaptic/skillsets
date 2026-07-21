@@ -6,6 +6,7 @@ import json
 import math
 import os
 import re
+import stat
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,9 +15,21 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator
 
-from .evals import validate_eval_file
+from .evals import validate_eval_file, validate_routing_boundaries
+from .evidence import (
+    evidence_freshness_errors,
+    reviewer_authorization_errors,
+    strict_load_json,
+)
 from .generate import apply_generated_files
-from .models import Pack, RepositoryConfig, discover_packs, load_repository
+from .lifecycle import SEMVER_PATTERN, select_packs, validate_pack_lifecycle
+from .models import (
+    CompatibilityEvidencePolicy,
+    Pack,
+    RepositoryConfig,
+    discover_packs,
+    load_repository,
+)
 from .path_safety import (
     inspect_path,
     read_regular_bytes,
@@ -37,10 +50,7 @@ from .util import (
 )
 
 KEBAB_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-SEMVER_RE = re.compile(
-    r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
-    r"(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$"
-)
+SEMVER_RE = re.compile(SEMVER_PATTERN)
 PLACEHOLDER_PATTERNS = (
     "your-github-handle",
     "Your Name",
@@ -142,13 +152,15 @@ def _tracked_repository_paths(root: Path) -> set[Path] | None:
             ["git", "-C", str(root), "ls-files", "-z"],
             check=False,
             capture_output=True,
-            text=True,
         )
     except OSError:
         return None
     if completed.returncode != 0:
         return None
-    return {Path(value) for value in completed.stdout.split("\0") if value}
+    try:
+        return {Path(os.fsdecode(value)) for value in completed.stdout.split(b"\0") if value}
+    except UnicodeError:
+        return None
 
 
 @dataclass
@@ -436,7 +448,7 @@ def _validate_openai_sidecar(
             errors.append(f"{path}: interface.{key} must be a non-empty string.")
     short = interface.get("short_description")
     if isinstance(short, str) and not 25 <= len(short.strip()) <= 64:
-        errors.append(f"{path}: interface.short_description must be 25–64 characters.")
+        errors.append(f"{path}: interface.short_description must be 25 to 64 characters.")
     prompt = interface.get("default_prompt")
     if isinstance(prompt, str) and f"${skill}" not in prompt:
         errors.append(f"{path}: interface.default_prompt must explicitly name ${skill}.")
@@ -445,9 +457,10 @@ def _validate_openai_sidecar(
 def _validate_skill(
     root: Path,
     pack_id: str,
+    pack_version: str,
+    pack_maturity: str,
     skill: str,
     skill_dir: Path,
-    all_skill_names: set[str],
     errors: list[str],
     warnings: list[str],
 ) -> None:
@@ -501,7 +514,7 @@ def _validate_skill(
         description = " ".join(description.split())
         if not 80 <= len(description) <= 1024:
             errors.append(
-                f"{skill_file}: description must be 80–1024 characters; found {len(description)}."
+                f"{skill_file}: description must be 80 to 1024 characters; found {len(description)}."
             )
         if "Use when" not in description or "Do not use" not in description:
             errors.append(
@@ -519,6 +532,10 @@ def _validate_skill(
                 errors.append(f"{skill_file}: metadata keys and values must be strings.")
         if skill_metadata.get("skillpack") != pack_id:
             errors.append(f"{skill_file}: metadata.skillpack must be {pack_id!r}.")
+        if skill_metadata.get("version") != pack_version:
+            errors.append(f"{skill_file}: metadata.version must be {pack_version!r}.")
+        if skill_metadata.get("maturity") != pack_maturity:
+            errors.append(f"{skill_file}: metadata.maturity must be {pack_maturity!r}.")
 
     line_count = body.count("\n") + 1
     estimated_tokens = len(body) / 4
@@ -552,6 +569,24 @@ def _validate_skill(
         _validate_openai_sidecar(root, skill, sidecar, errors)
 
     skill_absolute = Path(os.path.abspath(os.fspath(skill_dir)))
+    resource_files = {
+        path
+        for path in files
+        if path.relative_to(skill_dir).parts
+        and path.relative_to(skill_dir).parts[0] in {"assets", "references", "scripts"}
+    }
+    for resource_name in ("assets", "references", "scripts"):
+        directory = skill_dir / resource_name
+        members = [
+            path for path in resource_files if path.relative_to(skill_dir).parts[0] == resource_name
+        ]
+        if directory in dict(snapshot.directories) and not members:
+            errors.append(f"{directory}: resource directory must not be empty.")
+        if members and all(path.name.casefold() == "readme.md" for path in members):
+            errors.append(f"{directory}: README-only resource directories are prohibited.")
+
+    link_graph: dict[Path, list[Path]] = {}
+    linked_directories: set[Path] = set()
     for markdown in sorted(path for path in files if path.suffix == ".md"):
         try:
             markdown_text = read_regular_text(markdown, root)
@@ -576,6 +611,31 @@ def _validate_skill(
                 continue
             if target_metadata is None:
                 errors.append(f"{markdown}: broken relative link: {target}")
+                continue
+            link_graph.setdefault(markdown, []).append(target_path)
+            if stat.S_ISDIR(target_metadata.st_mode):
+                linked_directories.add(target_path)
+
+    reachable: set[Path] = {skill_file}
+    pending = [skill_file]
+    while pending:
+        source = pending.pop()
+        for target in link_graph.get(source, []):
+            if target in reachable:
+                continue
+            reachable.add(target)
+            if target.suffix == ".md":
+                pending.append(target)
+    for resource in resource_files:
+        if any(
+            directory in reachable and resource.is_relative_to(directory)
+            for directory in linked_directories
+        ):
+            reachable.add(resource)
+    for resource in sorted(resource_files - reachable):
+        errors.append(
+            f"{resource}: runtime resource is not reachable from SKILL.md through local links."
+        )
 
     for path in sorted(files):
         relative = path.relative_to(skill_dir)
@@ -589,7 +649,7 @@ def _validate_skill(
 
     eval_path = skill_dir / "evals" / "evals.json"
     if eval_path in files:
-        eval_errors, _ = validate_eval_file(root, eval_path, all_skill_names=all_skill_names)
+        eval_errors, _ = validate_eval_file(root, eval_path)
         errors.extend(eval_errors)
 
     for path, path_metadata in (*snapshot.directories, *snapshot.files):
@@ -657,10 +717,75 @@ def _validate_workflows(root: Path, errors: list[str]) -> None:
                 errors.append(
                     f"{path.relative_to(root)}: action {action!r} must be pinned to a full lowercase commit SHA."
                 )
-        if path.name != "release.yml" and re.search(r"(?m)^\s*contents:\s*write\s*$", text):
-            errors.append(
-                f"{path.relative_to(root)}: only release.yml may request contents: write."
-            )
+        if re.search(r"(?m)^\s*contents:\s*write\s*$", text):
+            try:
+                workflow = yaml.safe_load(text)
+            except yaml.YAMLError:
+                workflow = None
+            allowed_jobs = {
+                "release.yml": {"release"},
+                "release-recovery.yml": {"resume"},
+            }.get(path.name, set())
+            write_jobs: set[str] = set()
+            top_write = False
+            if isinstance(workflow, dict):
+                permissions = workflow.get("permissions", {})
+                top_write = isinstance(permissions, dict) and permissions.get("contents") == "write"
+                jobs = workflow.get("jobs", {})
+                if isinstance(jobs, dict):
+                    for job_id, job in jobs.items():
+                        if not isinstance(job, dict):
+                            continue
+                        job_permissions = job.get("permissions", {})
+                        if (
+                            isinstance(job_permissions, dict)
+                            and job_permissions.get("contents") == "write"
+                        ):
+                            write_jobs.add(str(job_id))
+                            if job.get("environment") != "release":
+                                errors.append(
+                                    f"{path.relative_to(root)}: contents: write job "
+                                    f"{job_id!r} must use the release environment."
+                                )
+            if top_write or not write_jobs or not write_jobs <= allowed_jobs:
+                errors.append(
+                    f"{path.relative_to(root)}: only release.yml or guarded "
+                    "release-recovery.yml mutation jobs may request contents: write."
+                )
+        if re.search(r"(?m)^\s*issues:\s*write\s*$", text):
+            try:
+                workflow = yaml.safe_load(text)
+            except yaml.YAMLError:
+                workflow = None
+            allowed_issue_jobs = {
+                "publication-handoff.yml": {"notify"},
+            }.get(path.name, set())
+            issue_jobs: set[str] = set()
+            top_write = False
+            if isinstance(workflow, dict):
+                permissions = workflow.get("permissions", {})
+                top_write = isinstance(permissions, dict) and permissions.get("issues") == "write"
+                jobs = workflow.get("jobs", {})
+                if isinstance(jobs, dict):
+                    for job_id, job in jobs.items():
+                        if not isinstance(job, dict):
+                            continue
+                        job_permissions = job.get("permissions", {})
+                        if (
+                            isinstance(job_permissions, dict)
+                            and job_permissions.get("issues") == "write"
+                        ):
+                            issue_jobs.add(str(job_id))
+                            if job_permissions != {"contents": "read", "issues": "write"}:
+                                errors.append(
+                                    f"{path.relative_to(root)}: issues: write job {job_id!r} "
+                                    "must have only contents: read and issues: write."
+                                )
+            if top_write or not issue_jobs or issue_jobs != allowed_issue_jobs:
+                errors.append(
+                    f"{path.relative_to(root)}: only the exact post-publication tracking job "
+                    "may request issues: write."
+                )
 
 
 def validate_compatibility_report(
@@ -669,8 +794,18 @@ def validate_compatibility_report(
     *,
     pack: Pack | None = None,
     source_sha: str | None = None,
+    now: dt.datetime | None = None,
+    actor: str | None = None,
+    actor_id: int | None = None,
+    triggering_actor: str | None = None,
+    policy: CompatibilityEvidencePolicy | None = None,
+    schema_root: Path | None = None,
 ) -> tuple[list[str], dict[str, Any] | None]:
-    """Validate a native-client report and its pack/SHA binding."""
+    """Validate a native-client report and its pack/SHA binding.
+
+    Protected ingestion may supply the current protected policy and schema root while checking
+    the pack and eval inventory from an older exact release-candidate commit.
+    """
 
     errors: list[str] = []
     try:
@@ -678,15 +813,44 @@ def validate_compatibility_report(
         report_root = root
     except SkillpackError:
         report_root = Path(os.path.abspath(os.fspath(path.parent)))
-    data = _load_json(path, errors, root=report_root)
-    schema = _load_schema(root, "compatibility-report.schema.json", errors)
+    try:
+        data = strict_load_json(path, root=report_root)
+    except SkillpackError as exc:
+        errors.append(str(exc))
+        data = None
+    schema = _load_schema(schema_root or root, "compatibility-report.schema.json", errors)
     if data is None or schema is None:
+        return errors, data
+    if data.get("schemaVersion") == 1:
+        errors.append(
+            f"{path}: compatibility report schemaVersion 1 is unsupported; "
+            "migrate date/reviewer identity to the schemaVersion 2 testedAt contract."
+        )
         return errors, data
     errors.extend(_schema_errors(data, schema, str(path)))
     if errors:
         return errors, data
 
+    discovered_packs = discover_packs(root)
+    skill_owners = {
+        skill: candidate.id for candidate in discovered_packs for skill in candidate.skills
+    }
+
+    def owning_pack_ids(skills: tuple[str, str]) -> list[str]:
+        return sorted({skill_owners[skill] for skill in skills if skill in skill_owners})
+
+    boundary_errors, boundaries = validate_routing_boundaries(root, packs=discovered_packs)
+    errors.extend(boundary_errors)
+    boundaries_by_id = {boundary.id: boundary for boundary in boundaries}
+
     report_pack = data["pack"]
+    if pack is None:
+        pack = next(
+            (candidate for candidate in discovered_packs if candidate.id == report_pack["id"]),
+            None,
+        )
+        if pack is None:
+            errors.append(f"{path}: pack.id names an unknown canonical pack.")
     if pack:
         expected = {
             "id": pack.id,
@@ -714,16 +878,124 @@ def validate_compatibility_report(
             errors.append(f"{path}: routing cases must cover every declared (skill, case ID).")
         if actual_behavior != expected_behavior:
             errors.append(f"{path}: behavior cases must cover every declared (skill, case ID).")
+        pack_skill_set = set(pack.skills)
+        expected_boundaries = [
+            (
+                boundary.id,
+                case["id"],
+                ("internal-pack" if len(owning_pack_ids(boundary.skills)) == 1 else "cross-pack"),
+                list(boundary.skills),
+                owning_pack_ids(boundary.skills),
+                case["expectedSkills"],
+            )
+            for boundary in boundaries
+            if set(boundary.skills) & pack_skill_set
+            for case in boundary.cases
+        ]
+        actual_boundaries = [
+            (
+                case["boundaryId"],
+                case["caseId"],
+                case["scope"],
+                case["boundarySkills"],
+                case["installedPacks"],
+                case["expectedSkills"],
+            )
+            for case in data["cases"]["boundaries"]
+        ]
+        if actual_boundaries != expected_boundaries:
+            errors.append(
+                f"{path}: boundary cases must cover every canonical boundary incident to the "
+                "selected pack, including cross-pack cases, in canonical order with exact "
+                "scope, skill, installed-pack, and expected-skill fields."
+            )
+    all_skill_names = set(skill_owners)
+    for case in data["cases"]["boundaries"]:
+        boundary = boundaries_by_id.get(case["boundaryId"])
+        if boundary is None:
+            errors.append(f"{path}: {case['caseId']} names an unknown canonical boundary.")
+        else:
+            canonical_cases = {item["id"]: item for item in boundary.cases}
+            canonical_case = canonical_cases.get(case["caseId"])
+            if canonical_case is None:
+                errors.append(
+                    f"{path}: {case['caseId']} is not a canonical case for {case['boundaryId']}."
+                )
+            owners = owning_pack_ids(boundary.skills)
+            scope = "internal-pack" if len(owners) == 1 else "cross-pack"
+            if case["scope"] != scope:
+                errors.append(f"{path}: {case['caseId']} scope must be {scope!r}.")
+            if case["boundarySkills"] != list(boundary.skills):
+                errors.append(
+                    f"{path}: {case['caseId']} boundarySkills must be {list(boundary.skills)!r}."
+                )
+            if case["installedPacks"] != owners:
+                errors.append(f"{path}: {case['caseId']} installedPacks must be {owners!r}.")
+            if (
+                canonical_case is not None
+                and case["expectedSkills"] != canonical_case["expectedSkills"]
+            ):
+                errors.append(
+                    f"{path}: {case['caseId']} expectedSkills must match the canonical "
+                    "boundary case."
+                )
+        expected_selection = case["expectedSkills"]
+        observed = case["observedSkills"]
+        if expected_selection != sorted(expected_selection):
+            errors.append(f"{path}: {case['caseId']} expectedSkills must be sorted.")
+        if observed != sorted(observed):
+            errors.append(f"{path}: {case['caseId']} observedSkills must be sorted.")
+        unknown = sorted((set(expected_selection) | set(observed)) - all_skill_names)
+        if unknown:
+            errors.append(f"{path}: {case['caseId']} names unknown skills {unknown!r}.")
+        outside_boundary = sorted(
+            (set(expected_selection) | set(observed)) - set(case["boundarySkills"])
+        )
+        if outside_boundary:
+            errors.append(
+                f"{path}: {case['caseId']} selections must be limited to boundarySkills; "
+                f"found {outside_boundary!r}."
+            )
+        selection_matches = observed == expected_selection
+        if case["passed"] is not selection_matches:
+            errors.append(
+                f"{path}: {case['caseId']} passed must equal the observed/expected "
+                "selection comparison."
+            )
     if source_sha and report_pack["sourceSha"] != source_sha:
         errors.append(
             f"{path}: pack.sourceSha is {report_pack['sourceSha']!r}, expected {source_sha!r}."
         )
     if report_pack["expectedSkills"] != data["installation"]["discoveredSkills"]:
         errors.append(f"{path}: discoveredSkills must exactly match expectedSkills order.")
-    report_date = dt.date.fromisoformat(data["date"])
-    if report_date > dt.date.today():
-        errors.append(f"{path}: report date cannot be in the future.")
-    all_cases = [*data["cases"]["routing"], *data["cases"]["behavior"]]
+    effective_policy = policy or load_repository(root).compatibility_evidence
+    errors.extend(
+        evidence_freshness_errors(
+            data["testedAt"],
+            effective_policy,
+            now=now,
+            label=str(path),
+        )
+    )
+    maintainers = (
+        [str(item["github"]) for item in pack.maintainers if item.get("github")] if pack else []
+    )
+    errors.extend(
+        reviewer_authorization_errors(
+            data["reviewer"],
+            effective_policy,
+            actor=actor,
+            actor_id=actor_id,
+            triggering_actor=triggering_actor,
+            pack_maintainers=maintainers,
+            label=str(path),
+        )
+    )
+    all_cases = [
+        *data["cases"]["routing"],
+        *data["cases"]["behavior"],
+        *data["cases"]["boundaries"],
+    ]
     if data["verdict"]["status"] == "passed" and not all(case["passed"] for case in all_cases):
         errors.append(f"{path}: a passed verdict cannot contain failed cases.")
     if data["reviewer"]["verdict"] != data["verdict"]["status"]:
@@ -736,8 +1008,9 @@ def _validate_vendor_artifact_structure(root: Path, packs: list[Pack], errors: l
 
     claude = _load_json(root / ".claude-plugin" / "marketplace.json", errors, root=root)
     codex = _load_json(root / ".agents" / "plugins" / "marketplace.json", errors, root=root)
+    public_packs = select_packs(packs, "public")
     if claude:
-        expected = [pack for pack in packs if "claude-code" in pack.targets]
+        expected = [pack for pack in public_packs if "claude-code" in pack.targets]
         entries = claude.get("plugins")
         if not isinstance(entries, list) or [item.get("name") for item in entries] != [
             pack.id for pack in expected
@@ -746,22 +1019,19 @@ def _validate_vendor_artifact_structure(root: Path, packs: list[Pack], errors: l
         else:
             for item, pack in zip(entries, expected, strict=True):
                 wanted_source: str | dict[str, str]
-                if pack.source_sha:
-                    wanted_source = {
-                        "source": "git-subdir",
-                        "url": load_repository(root).git_url,
-                        "path": pack.relative_path,
-                        "ref": pack.tag,
-                        "sha": pack.source_sha,
-                    }
-                else:
-                    wanted_source = f"./{pack.relative_path}"
+                wanted_source = {
+                    "source": "git-subdir",
+                    "url": load_repository(root).git_url,
+                    "path": pack.relative_path,
+                    "ref": pack.published_tag,
+                    "sha": pack.source_sha,
+                }
                 if item.get("source") != wanted_source:
                     errors.append(
                         f".claude-plugin/marketplace.json: {pack.id} has invalid source metadata."
                     )
     if codex:
-        expected = [pack for pack in packs if "codex" in pack.targets]
+        expected = [pack for pack in public_packs if "codex" in pack.targets]
         entries = codex.get("plugins")
         if not isinstance(entries, list) or [item.get("name") for item in entries] != [
             pack.id for pack in expected
@@ -770,14 +1040,9 @@ def _validate_vendor_artifact_structure(root: Path, packs: list[Pack], errors: l
         else:
             for item, pack in zip(entries, expected, strict=True):
                 source = item.get("source")
-                if pack.source_sha:
-                    if not isinstance(source, dict) or source.get("sha") != pack.source_sha:
-                        errors.append(
-                            f".agents/plugins/marketplace.json: {pack.id} must pin source-sha."
-                        )
-                elif source != f"./{pack.relative_path}":
+                if not isinstance(source, dict) or source.get("sha") != pack.source_sha:
                     errors.append(
-                        f".agents/plugins/marketplace.json: {pack.id} must use a local source."
+                        f".agents/plugins/marketplace.json: {pack.id} must pin latest-release."
                     )
 
     for pack in packs:
@@ -790,6 +1055,31 @@ def _validate_vendor_artifact_structure(root: Path, packs: list[Pack], errors: l
                 manifest = _load_json(path, errors, root=root)
                 if manifest and manifest.get("name") != pack.id:
                     errors.append(f"{path}: manifest name must be {pack.id!r}.")
+                if (
+                    manifest
+                    and target == "claude-code"
+                    and manifest.get("description") != pack.short_description
+                ):
+                    errors.append(
+                        f"{path}: description must match the pack's authored "
+                        "interface.short-description."
+                    )
+                if manifest and target == "codex":
+                    interface = manifest.get("interface")
+                    expected_prompts = [item["prompt"] for item in pack.starter_prompts]
+                    if not isinstance(interface, dict):
+                        errors.append(f"{path}: interface must be an object.")
+                    else:
+                        expected = {
+                            "shortDescription": pack.short_description,
+                            "longDescription": pack.description,
+                            "defaultPrompt": expected_prompts,
+                        }
+                        for key, value in expected.items():
+                            if interface.get(key) != value:
+                                errors.append(
+                                    f"{path}: interface.{key} must match canonical pack metadata."
+                                )
             else:
                 try:
                     stale_metadata = inspect_path(
@@ -851,6 +1141,7 @@ def validate_repository(
     *,
     check_generated: bool = False,
     strict_placeholders: bool = False,
+    pack_filter: str | None = None,
 ) -> ValidationResult:
     root = Path(os.path.abspath(os.fspath(root)))
     errors: list[str] = []
@@ -866,7 +1157,12 @@ def validate_repository(
     catalog_schema = _load_schema(root, "catalog.schema.json", errors)
     generated_schema = _load_schema(root, "generated-files.schema.json", errors)
     _load_schema(root, "eval-report.schema.json", errors)
+    _load_schema(root, "routing-boundaries.schema.json", errors)
     _load_schema(root, "compatibility-report.schema.json", errors)
+    _load_schema(root, "compatibility-evidence-envelope.schema.json", errors)
+    _load_schema(root, "publication-record.schema.json", errors)
+    _load_schema(root, "release-metadata.schema.json", errors)
+    _load_schema(root, "release-intent.schema.json", errors)
     repository_configuration_errors = (
         _schema_errors(config.raw, repo_schema, "repository.yaml") if repo_schema else []
     )
@@ -882,6 +1178,8 @@ def validate_repository(
         return ValidationResult(errors=sorted(set(errors)), warnings=sorted(set(warnings)))
     if not packs:
         errors.append("No skillpack manifests found under packs/*/*/.")
+    if pack_filter is not None and pack_filter not in {pack.id for pack in packs}:
+        errors.append(f"Unknown pack filter: {pack_filter!r}.")
 
     _validate_skill_asset_schemas(root, config, errors)
 
@@ -889,8 +1187,12 @@ def validate_repository(
     all_skill_names: set[str] = set()
     for pack in packs:
         label = f"{pack.relative_path}/skillpack.yaml"
+        manifest_errors: list[str] = []
         if pack_schema:
-            errors.extend(_schema_errors(pack.raw, pack_schema, label))
+            manifest_errors = _schema_errors(pack.raw, pack_schema, label)
+            errors.extend(manifest_errors)
+        if not manifest_errors:
+            errors.extend(validate_pack_lifecycle(pack))
         if pack.id in pack_ids:
             errors.append(f"Duplicate pack ID: {pack.id}")
         pack_ids.add(pack.id)
@@ -905,9 +1207,6 @@ def validate_repository(
             errors.append(f"{label}: path must be packs/{pack.language}/{pack.subject}/.")
         if not SEMVER_RE.fullmatch(pack.version):
             errors.append(f"{label}: invalid Semantic Version {pack.version!r}.")
-        if pack.source_sha and not re.fullmatch(r"[0-9a-f]{40}", pack.source_sha):
-            errors.append(f"{label}: source-sha must be a lowercase full 40-character SHA.")
-
         skills_root = pack.path / "skills"
         try:
             skills_metadata = inspect_path(
@@ -953,14 +1252,20 @@ def validate_repository(
             if required_metadata is None:
                 errors.append(f"{pack.relative_path}: missing required file {required}.")
 
+    boundary_errors, _boundaries = validate_routing_boundaries(root, packs=packs)
+    errors.extend(boundary_errors)
+
     for pack in packs:
+        if pack_filter is not None and pack.id != pack_filter:
+            continue
         for skill in pack.skills:
             _validate_skill(
                 root,
                 pack.id,
+                pack.version,
+                pack.maturity,
                 skill,
                 pack.path / "skills" / skill,
-                all_skill_names,
                 errors,
                 warnings,
             )

@@ -43,14 +43,6 @@
       "prompt": "Edit the documentation and routing evals for an existing Agent Skill about Rust structs; do not change any Rust source code.",
       "shouldTrigger": false,
       "reason": "Maintaining an Agent Skill is repository authoring, not structuring Rust domain code."
-    },
-    {
-      "id": "overlap-abstraction-design",
-      "kind": "overlap",
-      "prompt": "The type layout is already stable; choose whether three implementations should use generics, a trait object, or closed enum and define lifetimes and typed public errors.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-abstraction-design",
-      "reason": "Polymorphism, lifetime, and public error contracts dominate over internal type organization."
     }
   ],
   "behavior": [

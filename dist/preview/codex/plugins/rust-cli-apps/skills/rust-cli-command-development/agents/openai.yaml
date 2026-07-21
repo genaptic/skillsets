@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust CLI Command Development"
+  short_description: "Add or change commands in an existing Rust CLI"
+  default_prompt: "Use $rust-cli-command-development to add or change one command in this existing Rust CLI."

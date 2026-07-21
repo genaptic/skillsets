@@ -17,6 +17,12 @@ change the active `protect-main` ruleset only from the exact contexts and GitHub
 identity observed on that run. Zero approvals is not permission to bypass failing, skipped,
 pending, or stale checks.
 
+The planned aggregate-check migration is deliberately two-step. First observe the non-required
+Python 3.14 probe and `required-validation` aggregate on a real pull request. Only then replace
+the five host validation contexts with the aggregate using the observed App ID and read the
+complete ruleset back. Python 3.13 remains required until a subsequent pull request promotes
+3.14; a local workflow edit alone never authorizes changing the live ruleset.
+
 ## Releases and environments
 
 The `compatibility`, `release`, and `github-pages` environments accept deployments only from

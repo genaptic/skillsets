@@ -43,14 +43,6 @@
       "prompt": "Design subcommands, global options, help text, and configuration precedence for our Python executable.",
       "shouldTrigger": false,
       "reason": "Command interface design belongs to the CLI pack."
-    },
-    {
-      "id": "overlap-testing-strategy",
-      "kind": "overlap",
-      "prompt": "Create a risk-based unit, integration, and end-to-end test plan for this existing Python package.",
-      "shouldTrigger": false,
-      "reason": "The testing skill has the narrower contract; no layout problem is present.",
-      "preferredSkill": "python-testing-strategy"
     }
   ],
   "behavior": [

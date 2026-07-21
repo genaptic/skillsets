@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,12 @@ import yaml
 
 from skillpack_tools import cli
 from skillpack_tools.evals import validate_eval_file
-from skillpack_tools.generate import apply_generated_files, build_generated_files
+from skillpack_tools.generate import (
+    _portable_source_mode,
+    _tracked_source_modes,
+    apply_generated_files,
+    build_generated_files,
+)
 from skillpack_tools.models import get_pack, load_repository
 from skillpack_tools.util import (
     SkillpackError,
@@ -24,6 +30,7 @@ from skillpack_tools.util import (
     path_is_within,
     relative_posix,
     replace_marked_section,
+    rollback_after_failure,
     sha256_bytes,
     sha256_file,
 )
@@ -38,6 +45,21 @@ from skillpack_tools.validate import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_rollback_failure_reports_both_failures_and_chains_from_rollback() -> None:
+    original = KeyboardInterrupt("interrupted write")
+    rollback = OSError("restoration failed")
+
+    def fail_rollback() -> None:
+        raise rollback
+
+    with pytest.raises(SkillpackError) as raised:
+        rollback_after_failure(original, fail_rollback, label="Lifecycle update")
+    message = str(raised.value)
+    assert "KeyboardInterrupt: interrupted write" in message
+    assert "OSError: restoration failed" in message
+    assert raised.value.__cause__ is rollback
 
 
 def test_operational_section_validation_accepts_both_supported_heading_styles() -> None:
@@ -56,17 +78,9 @@ def test_operational_section_validation_accepts_both_supported_heading_styles() 
     assert _missing_operational_sections(f"## Outcome\n{common}\n") == {"Safety"}
 
 
-def copy_ignore(_directory: str, names: list[str]) -> set[str]:
-    ignored = {".git", ".pytest_cache", "__pycache__", ".venv", "releases"} & set(names)
-    ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-    return ignored
-
-
 @pytest.fixture()
-def repo_copy(tmp_path: Path) -> Path:
-    target = tmp_path / "skillsets"
-    shutil.copytree(ROOT, target, ignore=copy_ignore)
-    return target
+def repo_copy(generated_repo_copy: Path) -> Path:
+    return generated_repo_copy
 
 
 def test_utilities_cover_success_and_error_paths(tmp_path: Path) -> None:
@@ -120,10 +134,14 @@ def test_utilities_cover_success_and_error_paths(tmp_path: Path) -> None:
     target = tmp_path / "nested" / "file.txt"
     atomic_write(target, "first\n", executable=True)
     assert target.read_text(encoding="utf-8") == "first\n"
-    assert os.access(target, os.X_OK)
+    if os.name != "nt":
+        assert os.access(target, os.X_OK)
+    else:
+        assert os.access(target, os.R_OK | os.W_OK)
     target.chmod(0o640)
+    expected_mode = target.stat().st_mode & 0o777
     atomic_write(target, "second\n")
-    assert target.stat().st_mode & 0o777 == 0o640
+    assert target.stat().st_mode & 0o777 == expected_mode
 
     replaced = replace_marked_section(
         "before\n  <!-- B -->\nold\n  <!-- E -->\nafter\n",
@@ -145,6 +163,55 @@ def test_utilities_cover_success_and_error_paths(tmp_path: Path) -> None:
 def _write_bytes(path: Path, content: bytes) -> Path:
     path.write_bytes(content)
     return path
+
+
+def test_portable_source_mode_infers_executable_shebang_without_git(tmp_path: Path) -> None:
+    script = tmp_path / "scripts" / "helper.py"
+    script.parent.mkdir()
+    script.write_text("#!/usr/bin/env python3\nprint('ok')\n", encoding="utf-8")
+    data = script.with_name("data.json")
+    data.write_text('{"fixture": true}\n', encoding="utf-8")
+
+    assert _portable_source_mode(tmp_path, script, tracked_modes={}) == 0o755
+    assert _portable_source_mode(tmp_path, data, tracked_modes={}) == 0o644
+
+
+def test_tracked_source_modes_enables_windows_long_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    captured: list[str] = []
+
+    def run(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured.extend(command)
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            "\0".join(
+                (
+                    "100755 abcdef 0\tscripts/helper.py",
+                    "100644 abcdef 0\tassets/data.json",
+                )
+            )
+            + "\0",
+            "",
+        )
+
+    monkeypatch.setattr("skillpack_tools.generate.subprocess.run", run)
+
+    assert _tracked_source_modes(tmp_path) == {
+        "scripts/helper.py": 0o755,
+        "assets/data.json": 0o644,
+    }
+    assert captured == [
+        "git",
+        "-c",
+        "core.longpaths=true",
+        "-C",
+        str(tmp_path),
+        "ls-files",
+        "--stage",
+        "-z",
+    ]
 
 
 def test_model_accessors_and_unknown_pack() -> None:
@@ -233,6 +300,10 @@ def test_cli_success_paths(repo_copy: Path, capsys: pytest.CaptureFixture[str]) 
                 "Example Maintainer",
                 "--maintainer-github",
                 "example-maintainer",
+                "--maintainer-github-id",
+                "123456",
+                "--trusted-ssh-fingerprint",
+                "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
                 "--security-email",
                 "security@example.org",
             ]
@@ -284,19 +355,19 @@ def test_eval_validation_reports_semantic_failures(tmp_path: Path) -> None:
     path = skill_dir / "evals.json"
 
     path.write_text("{bad", encoding="utf-8")
-    errors, summary = validate_eval_file(ROOT, path, all_skill_names={"sample-skill", "other"})
+    errors, summary = validate_eval_file(ROOT, path)
     assert summary is None and "invalid JSON" in errors[0]
 
     path.write_text(json.dumps({"skill": "sample-skill"}), encoding="utf-8")
-    errors, summary = validate_eval_file(ROOT, path, all_skill_names={"sample-skill", "other"})
+    errors, summary = validate_eval_file(ROOT, path)
     assert summary is None and errors
 
     routing = []
-    for index in range(7):
+    for index in range(6):
         routing.append(
             {
                 "id": "duplicate" if index < 2 else f"case-{index}",
-                "kind": "overlap" if index >= 5 else "explicit-positive",
+                "kind": "negative" if index >= 5 else "explicit-positive",
                 "prompt": f"A sufficiently long routing prompt number {index} for validation.",
                 "shouldTrigger": False,
                 "reason": f"A sufficiently long routing reason number {index} for validation.",
@@ -323,7 +394,7 @@ def test_eval_validation_reports_semantic_failures(tmp_path: Path) -> None:
         "behavior": [behavior_case, dict(behavior_case)],
     }
     path.write_text(json.dumps(data), encoding="utf-8")
-    errors, summary = validate_eval_file(ROOT, path, all_skill_names={"sample-skill", "other"})
+    errors, summary = validate_eval_file(ROOT, path)
     assert summary is not None
     combined = "\n".join(errors)
     for expected in (
@@ -333,22 +404,10 @@ def test_eval_validation_reports_semantic_failures(tmp_path: Path) -> None:
         "contextual-positive",
         "negative routing",
         "shouldTrigger",
-        "needs preferredSkill",
         "behavior case IDs",
         "end-to-end",
     ):
         assert expected in combined
-
-    data["skill"] = "sample-skill"
-    data["routing"][5]["preferredSkill"] = "unknown"
-    path.write_text(json.dumps(data), encoding="utf-8")
-    errors, _ = validate_eval_file(ROOT, path, all_skill_names={"sample-skill", "other"})
-    assert "unknown skill" in "\n".join(errors)
-
-    data["routing"][5]["preferredSkill"] = "sample-skill"
-    path.write_text(json.dumps(data), encoding="utf-8")
-    errors, _ = validate_eval_file(ROOT, path, all_skill_names={"sample-skill", "other"})
-    assert "cannot prefer the skill under test" in "\n".join(errors)
 
 
 def test_low_level_validation_helpers(tmp_path: Path) -> None:
@@ -386,7 +445,7 @@ def test_low_level_validation_helpers(tmp_path: Path) -> None:
     assert "No GitHub Actions" in workflow_errors[0]
     bad_workflow = workflow_root / "unsafe.yml"
     bad_workflow.write_text(
-        "on:\n  pull_request_target:\npermissions:\n  contents: write\njobs:\n"
+        "on:\n  pull_request_target:\npermissions:\n  contents: write\n  issues: write\njobs:\n"
         "  bad:\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n"
         "        with:\n          persist-credentials: true\n",
         encoding="utf-8",
@@ -398,6 +457,7 @@ def test_low_level_validation_helpers(tmp_path: Path) -> None:
     assert "credentials must not persist" in joined
     assert "full lowercase commit SHA" in joined
     assert "only release.yml" in joined
+    assert "post-publication tracking job" in joined
 
 
 def test_repository_validator_detects_compound_corruption(repo_copy: Path) -> None:
@@ -473,24 +533,30 @@ def test_repository_validator_detects_compound_corruption(repo_copy: Path) -> No
         raise_for_result(result)
 
 
-def test_generation_handles_sha_cleanup_and_missing_packs(repo_copy: Path) -> None:
+def test_generation_ignores_legacy_sha_cleans_legacy_roots_and_handles_missing_packs(
+    repo_copy: Path,
+) -> None:
     manifest_path = repo_copy / "packs" / "python" / "best-practices" / "skillpack.yaml"
     manifest = load_yaml(manifest_path)
     manifest["source-sha"] = "a" * 40
     manifest_path.write_text(dump_yaml(manifest), encoding="utf-8")
     generated = build_generated_files(repo_copy)
     marketplace = json.loads(generated[".claude-plugin/marketplace.json"])
+    assert marketplace["plugins"] == []
+    development = json.loads(generated["dist/dev/claude/.claude-plugin/marketplace.json"])
     source = next(
-        item for item in marketplace["plugins"] if item["name"] == "python-best-practices"
+        item for item in development["plugins"] if item["name"] == "python-best-practices"
     )["source"]
-    assert source["sha"] == "a" * 40
+    assert source == "./plugins/python-best-practices"
 
+    # Pre-v2 output roots are migration cleanup targets, never current generated surfaces.
     stale = repo_copy / "dist" / "install" / "stale.txt"
+    stale.parent.mkdir(parents=True)
     stale.write_text("stale\n", encoding="utf-8")
     changed = apply_generated_files(repo_copy)
     assert "dist/install/stale.txt" in changed
     assert not stale.exists()
 
     shutil.rmtree(repo_copy / "packs")
-    with pytest.raises(SkillpackError, match="No skillpack.yaml"):
+    with pytest.raises(SkillpackError, match=r"No skillpack\.yaml"):
         build_generated_files(repo_copy)

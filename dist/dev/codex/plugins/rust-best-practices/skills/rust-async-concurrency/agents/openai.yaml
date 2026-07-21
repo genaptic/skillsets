@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Async and Concurrency"
+  short_description: "Design bounded, cancellable async Rust systems"
+  default_prompt: "Use $rust-async-concurrency to design or review bounded, cancellable async Rust behavior."

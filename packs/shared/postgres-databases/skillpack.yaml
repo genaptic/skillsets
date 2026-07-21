@@ -1,10 +1,29 @@
-schema-version: 1
+schema-version: 2
 id: postgres-databases
 display-name: PostgreSQL Databases
 description: Schema, query, index, migration, and recovery workflows for safe, evidence-based PostgreSQL engineering.
 language: shared
 subject: postgres-databases
 version: 1.0.0
+maturity: release-candidate
+distribution:
+  visibility: public
+publication:
+  state: unpublished
+release-gates:
+- native-evidence
+- deterministic-archive
+interface:
+  short-description: Design and review safe, evidence-backed PostgreSQL changes.
+  starter-prompts:
+  - skill: postgres-schema-design
+    prompt: Use $postgres-schema-design to design a PostgreSQL schema from these domain invariants and workloads.
+  - skill: postgres-query-performance-review
+    prompt: Use $postgres-query-performance-review to diagnose this PostgreSQL query from the available plan evidence.
+  - skill: postgres-migration-safety
+    prompt: Use $postgres-migration-safety to turn this PostgreSQL change into a safe production rollout plan.
+  - skill: postgres-backup-recovery
+    prompt: Use $postgres-backup-recovery to assess this PostgreSQL recovery design against its RPO and RTO.
 license: Apache-2.0
 maintainers:
 - github: jecsand838

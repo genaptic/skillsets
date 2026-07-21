@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python CLI Command Design"
+  short_description: "Design clear and stable Python CLI commands"
+  default_prompt: "Use $python-cli-command-design to design a clear, stable command interface for this Python CLI."

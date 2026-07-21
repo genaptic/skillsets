@@ -10,6 +10,7 @@ import pytest
 from skillpack_tools import generate as generate_module
 from skillpack_tools import path_safety as path_safety_module
 from skillpack_tools import release as release_module
+from skillpack_tools import validate as validate_module
 from skillpack_tools.generate import apply_generated_files, build_generated_files
 from skillpack_tools.models import Pack, get_pack
 from skillpack_tools.path_safety import (
@@ -27,28 +28,9 @@ from skillpack_tools.validate import validate_repository
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
-    ignored = {
-        ".DS_Store",
-        ".git",
-        ".idea",
-        ".mypy_cache",
-        ".pytest_cache",
-        ".ruff_cache",
-        ".venv",
-        "__pycache__",
-        "releases",
-    } & set(names)
-    ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-    return ignored
-
-
 @pytest.fixture()
-def repo_copy(tmp_path: Path) -> Path:
-    target = tmp_path / "skillsets"
-    shutil.copytree(ROOT, target, ignore=_copy_ignore)
-    apply_generated_files(target)
-    return target
+def repo_copy(generated_repo_copy: Path) -> Path:
+    return generated_repo_copy
 
 
 def _symlink_or_skip(target: Path, link: Path, *, directory: bool = False) -> None:
@@ -90,7 +72,8 @@ def test_walk_rejects_portable_name_collisions_before_pruning(tmp_path: Path) ->
     root = tmp_path / "repo"
     root.mkdir()
     (root / "ignored").mkdir()
-    (root / "ｉｇｎｏｒｅｄ").mkdir()
+    # Intentional full-width adversarial spelling exercises portable collision handling.
+    (root / "ｉｇｎｏｒｅｄ").mkdir()  # noqa: RUF001 - adversarial full-width path fixture
 
     with pytest.raises(SkillpackError, match="portable name collision"):
         walk_tree(root, root, prune_directory=lambda _path: True)
@@ -295,7 +278,7 @@ def test_generated_root_symlink_fails_before_any_repair(
     marketplace.write_bytes(b"stale but must remain unchanged\n")
     before = marketplace.read_bytes()
 
-    generated_root = repo_copy / "dist" / "opencode"
+    generated_root = repo_copy / "dist" / "dev"
     shutil.rmtree(generated_root)
     external = tmp_path / "outside"
     if not dangling:
@@ -328,7 +311,7 @@ def test_generation_refuses_destination_changed_after_global_preflight(
     def racing_walk(directory: Path, root: Path, **kwargs: object):
         nonlocal changed
         snapshot = original_walk(directory, root, **kwargs)
-        if directory == repo_copy / "dist" / "opencode" and not changed:
+        if directory == repo_copy / "dist" / "dev" and not changed:
             marketplace.write_bytes(b"concurrent edit\n")
             changed = True
         return snapshot
@@ -376,7 +359,7 @@ def test_stale_cleanup_refuses_file_replaced_after_preflight(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    stale = repo_copy / "dist" / "opencode" / "stale.txt"
+    stale = repo_copy / "dist" / "dev" / "stale.txt"
     stale.write_bytes(b"stale generated content\n")
     external = tmp_path / "outside.txt"
     external.write_bytes(b"outside must not change\n")
@@ -393,7 +376,7 @@ def test_stale_cleanup_refuses_file_replaced_after_preflight(
         nonlocal replaced
         if path == stale and not replaced:
             stale.unlink()
-            stale.symlink_to(external)
+            _symlink_or_skip(external, stale)
             replaced = True
         original_unlink(path, root, expected=expected)
 
@@ -519,8 +502,13 @@ def test_runtime_special_node_is_rejected(repo_copy: Path) -> None:
     fifo = pack.path / "skills" / "python-project-layout" / "assets" / "runtime.fifo"
     os.mkfifo(fifo)
 
-    with pytest.raises(SkillpackError, match="special filesystem nodes are not allowed"):
-        build_generated_files(repo_copy)
+    try:
+        with pytest.raises(SkillpackError, match="special filesystem nodes are not allowed"):
+            build_generated_files(repo_copy)
+    finally:
+        # Git does not inventory special nodes consistently enough for generic
+        # checkout cleanup, so the fixture that creates one owns its removal.
+        fifo.unlink(missing_ok=True)
 
 
 def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
@@ -533,7 +521,7 @@ def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
     (assets / "résumé.txt").write_bytes(b"allowed unicode resource\n")
 
     allowed = build_generated_files(repo_copy)
-    prefix = "dist/opencode/python/best-practices/python-project-layout/assets/"
+    prefix = "dist/dev/opencode/python/best-practices/python-project-layout/assets/"
     allowed_resources = {path.removeprefix(prefix) for path in allowed if path.startswith(prefix)}
     assert ".env.example" in allowed_resources
     assert "résumé.txt" in allowed_resources
@@ -571,11 +559,12 @@ def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
     assert not generated_resources.intersection(excluded)
 
     (assets / "CREDENTIALS.JSON").unlink()
-    compatibility_name = "ＣＲＥＤＥＮＴＩＡＬＳ.json"
+    # These full-width spellings are security fixtures, not user-facing text.
+    compatibility_name = "ＣＲＥＤＥＮＴＩＡＬＳ.json"  # noqa: RUF001 - Unicode spoof fixture
     (assets / compatibility_name).write_bytes(b"compatibility spelling\n")
     compatibility_generated = build_generated_files(repo_copy)
     assert not any(path.endswith(compatibility_name) for path in compatibility_generated)
-    assert security_name_key("ＣＲＥＤＥＮＴＩＡＬＳ.JSON") == "credentials.json"
+    assert security_name_key("ＣＲＥＤＥＮＴＩＡＬＳ.JSON") == "credentials.json"  # noqa: RUF001 - Unicode spoof fixture
     assert security_name_key("Straße") == security_name_key("STRASSE")
 
 
@@ -584,7 +573,7 @@ def test_runtime_security_filter_is_unicode_normalized_and_case_insensitive(
     (
         "docs/__PyCache__/module.PYC",
         "docs/Secrets/hidden.txt",
-        "docs/ＣＲＥＤＥＮＴＩＡＬＳ/hidden.txt",
+        "docs/ＣＲＥＤＥＮＴＩＡＬＳ/hidden.txt",  # noqa: RUF001 - Unicode spoof fixture
     ),
 )
 def test_repository_validation_reports_normalized_residue_directories(
@@ -594,6 +583,20 @@ def test_repository_validation_reports_normalized_residue_directories(
     residue = repo_copy / relative
     residue.parent.mkdir(parents=True, exist_ok=True)
     residue.write_bytes(b"must not be distributed\n")
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(repo_copy),
+            "add",
+            "-f",
+            "--",
+            relative,
+        ],
+        check=True,
+    )
 
     result = validate_repository(repo_copy)
 
@@ -601,3 +604,26 @@ def test_repository_validation_reports_normalized_residue_directories(
     combined = "\n".join(result.errors)
     assert residue.parent.relative_to(repo_copy).as_posix() in combined
     assert "must not be committed" in combined
+
+
+def test_tracked_repository_paths_decodes_verbatim_git_paths_as_filesystem_names(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    # Git's NUL-delimited output is a byte-oriented pathname protocol. Decode it with
+    # the filesystem codec rather than the locale-dependent subprocess text codec.
+    compatibility_name = "ＣＲＥＤＥＮＴＩＡＬＳ"  # noqa: RUF001 - Unicode spoof fixture
+    relative = Path("docs") / compatibility_name / "hidden.txt"
+    payload = os.fsencode(relative.as_posix()) + b"\0"
+    observed: dict[str, object] = {}
+
+    def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[bytes]:
+        observed.update(kwargs)
+        return subprocess.CompletedProcess(command, 0, payload, b"")
+
+    monkeypatch.setattr(validate_module.subprocess, "run", run)
+
+    assert validate_module._tracked_repository_paths(tmp_path) == {relative}
+    assert observed["capture_output"] is True
+    assert "text" not in observed
+    assert "encoding" not in observed

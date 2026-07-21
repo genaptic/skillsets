@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rustdoc Maintenance"
+  short_description: "Refresh public Rust API docs and doctests"
+  default_prompt: "Use $rustdoc-maintenance to refresh this Rust library's public API documentation and doctests."

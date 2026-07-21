@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "program": "acme",
+  "dimensions": {
+    "invocation": ["installed-entry-point", "python-module"],
+    "terminal": ["tty", "non-tty"],
+    "output": ["text", "json"],
+    "platform": ["linux", "macos", "windows"],
+    "result": ["success", "expected-failure", "unexpected-failure"]
+  },
+  "requiredScenarios": [
+    {
+      "id": "root-help",
+      "purpose": "Root help is available without configuration or network access.",
+      "assert": ["exit status", "stdout/stderr contract", "command discovery"]
+    },
+    {
+      "id": "parse-error",
+      "purpose": "Invalid invocation identifies the problem and relevant usage.",
+      "assert": ["nonzero status", "stderr", "no traceback"]
+    },
+    {
+      "id": "machine-success",
+      "purpose": "Machine output is parseable and contains no decorative text.",
+      "assert": ["JSON parse", "stdout only", "stable fields"]
+    },
+    {
+      "id": "interrupt-cleanup",
+      "purpose": "Interrupt exits deliberately and releases temporary resources.",
+      "assert": ["status policy", "no noisy traceback", "cleanup"]
+    },
+    {
+      "id": "shell-quoting",
+      "purpose": "Arguments containing spaces, Unicode, and leading hyphens are preserved.",
+      "assert": ["argv fidelity", "-- handling", "cross-platform evidence"]
+    }
+  ]
+}

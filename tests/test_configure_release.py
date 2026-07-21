@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import zipfile
 from pathlib import Path
 
@@ -13,19 +12,10 @@ from skillpack_tools.models import discover_packs, load_repository
 from skillpack_tools.release import build_release
 from skillpack_tools.validate import validate_repository
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
-def copy_ignore(_directory: str, names: list[str]) -> set[str]:
-    ignored = {".git", ".pytest_cache", "__pycache__", ".venv"} & set(names)
-    ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-    return ignored
-
 
 @pytest.fixture()
-def configured_repo(tmp_path: Path) -> Path:
-    target = tmp_path / "skillsets"
-    shutil.copytree(ROOT, target, ignore=copy_ignore)
+def configured_repo(generated_repo_copy: Path) -> Path:
+    target = generated_repo_copy
     configure_repository(
         target,
         project_name="Example Skillsets",
@@ -37,6 +27,8 @@ def configured_repo(tmp_path: Path) -> Path:
         copyright_owner="Example Publisher",
         maintainer_name="Example Maintainer",
         maintainer_github="example-maintainer",
+        maintainer_github_id=123456,
+        trusted_ssh_fingerprint="SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
         security_channel="github-private-vulnerability-reporting",
         marketplace_name="example-skillsets",
         marketplace_display_name="Example Skillsets",
@@ -77,6 +69,13 @@ def test_configure_replaces_every_identity_surface(configured_repo: Path) -> Non
         (configured_repo / ".claude-plugin/marketplace.json").read_text(encoding="utf-8")
     )
     assert marketplace["owner"]["name"] == "Example Publisher"
+    release_intent_schema = json.loads(
+        (configured_repo / "schemas/release-intent.schema.json").read_text(encoding="utf-8")
+    )
+    assert release_intent_schema["$id"] == (
+        "https://raw.githubusercontent.com/example-org/skillsets/main/"
+        "schemas/release-intent.schema.json"
+    )
     result = validate_repository(
         configured_repo,
         check_generated=True,
@@ -91,7 +90,10 @@ def test_pack_release_is_deterministic_and_bounded(configured_repo: Path) -> Non
     first_bytes = first.read_bytes()
     first_digest = hashlib.sha256(first_bytes).hexdigest()
     assert checksum.read_text(encoding="utf-8").startswith(first_digest)
-    assert "python-best-practices-v1.0.0" in notes.read_text(encoding="utf-8")
+    notes_text = notes.read_text(encoding="utf-8")
+    assert "python-best-practices-v1.0.0" in notes_text
+    assert notes_text.count("# Changelog") == 1
+    assert notes_text.count("Prepared the `1.0.0` release-candidate contents") == 1
 
     second, _, _ = build_release(configured_repo, "python-best-practices", draft=True)
     assert second.read_bytes() == first_bytes

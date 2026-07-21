@@ -8,21 +8,20 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: github-pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: deploy generated Pages site
+  build:
+    name: build public Pages artifact
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      removed_paths: ${{ steps.removed-paths.outputs.paths }}
+    permissions:
+      contents: read
     steps:
       - name: Validate the deployment source branch
         env:
@@ -37,6 +36,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -52,12 +52,88 @@ jobs:
         run: |
           python tools/generate-all --check
           python tools/validate-repository --check-generated --strict-placeholders
+      - name: Record non-public legacy URLs that must be absent
+        id: removed-paths
+        shell: python
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          from skillpack_tools.lifecycle import pages_absent_paths
+          from skillpack_tools.models import discover_packs
+
+          packs = discover_packs(Path.cwd())
+          legacy = json.loads(
+              Path("tests/fixtures/pages-legacy-public-urls-v1.json").read_text(encoding="utf-8")
+          )
+          if (
+              set(legacy) != {"schemaVersion", "paths"}
+              or legacy["schemaVersion"] != 1
+              or not isinstance(legacy["paths"], list)
+              or not legacy["paths"]
+              or any(not isinstance(path, str) or not path for path in legacy["paths"])
+              or len(set(legacy["paths"])) != len(legacy["paths"])
+          ):
+              raise SystemExit("invalid versioned Pages legacy-URL fixture")
+          paths = pages_absent_paths(packs, legacy["paths"])
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as output:
+              output.write("paths=" + json.dumps(sorted(paths), separators=(",", ":")) + "\n")
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
       - name: Upload generated Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:
-          path: dist
+          path: dist/public
+
+  deploy:
+    name: deploy public Pages artifact
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128
+      - name: Verify the deployed public boundary
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          REMOVED_PATHS: ${{ needs.build.outputs.removed_paths }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${PAGE_URL%/}/"
+          status=""
+          for attempt in {1..12}; do
+            if ! status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              --max-time 20 "$base"); then
+              status="000"
+            fi
+            [[ "$status" = 200 ]] && break
+            [[ "$attempt" -lt 12 ]] && sleep 5
+          done
+          if [[ "$status" != 200 ]]; then
+            echo "Pages root returned HTTP $status after deployment." >&2
+            exit 1
+          fi
+          mapfile -t removed < <(jq -r '.[]' <<< "$REMOVED_PATHS")
+          for path in "${removed[@]}"; do
+            for attempt in {1..12}; do
+              if ! status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+                --max-time 20 "$base$path"); then
+                status="000"
+              fi
+              [[ "$status" = 404 ]] && break
+              [[ "$attempt" -lt 12 ]] && sleep 5
+            done
+            if [[ "$status" != 404 ]]; then
+              echo "Non-public URL $base$path returned HTTP $status; expected 404." >&2
+              exit 1
+            fi
+          done

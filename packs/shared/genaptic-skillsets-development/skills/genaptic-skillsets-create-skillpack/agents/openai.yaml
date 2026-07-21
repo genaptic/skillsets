@@ -1,0 +1,4 @@
+interface:
+  display_name: "Genaptic Skillsets: Create Skillpack"
+  short_description: "Create and verify one repository skillpack"
+  default_prompt: "Use $genaptic-skillsets-create-skillpack to design, add, and verify one independently installable skillpack."

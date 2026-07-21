@@ -35,7 +35,6 @@
       "kind": "negative",
       "prompt": "Decide how to split this Rust monolith into crates, modules, a thin binary, and internal libraries with clear ownership boundaries.",
       "shouldTrigger": false,
-      "preferredSkill": "rust-project-architecture",
       "reason": "Crate and module decomposition is owned by project architecture."
     },
     {
@@ -43,16 +42,7 @@
       "kind": "negative",
       "prompt": "Design reqwest retryability, bounded error bodies, total deadlines, tonic request timeouts, and SQL pool capacity for this service.",
       "shouldTrigger": false,
-      "preferredSkill": "rust-networking",
       "reason": "Runtime transport reliability and pool behavior are the networking outcome."
-    },
-    {
-      "id": "overlap-crate-boundary",
-      "kind": "overlap",
-      "prompt": "Split this Rust application into a thin binary and several library crates, deciding which dependencies each new boundary should own.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-project-architecture",
-      "reason": "Although dependency ownership is involved, crate-boundary design is the narrower architecture contract."
     }
   ],
   "behavior": [

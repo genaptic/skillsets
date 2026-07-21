@@ -43,14 +43,6 @@
       "prompt": "Add one subcommand to an existing Rust CLI using its established parser, dispatch, output, and test conventions; do not change package boundaries.",
       "shouldTrigger": false,
       "reason": "Adding one command to an existing CLI belongs to rust-cli-command-development."
-    },
-    {
-      "id": "overlap-abstraction-design",
-      "kind": "overlap",
-      "prompt": "Within the existing module tree, choose between a generic, trait object, and closed enum for three runtime-selectable implementations and design their error contract.",
-      "shouldTrigger": false,
-      "preferredSkill": "rust-abstraction-design",
-      "reason": "Polymorphism and API failure contracts dominate while project layout remains fixed."
     }
   ],
   "behavior": [

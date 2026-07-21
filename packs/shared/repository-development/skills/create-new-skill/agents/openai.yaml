@@ -1,4 +1,0 @@
-interface:
-  display_name: "Create New Skill"
-  short_description: "Create and verify one repository Agent Skill"
-  default_prompt: "Use $create-new-skill to research, add, and verify one Agent Skill in an existing skillpack."

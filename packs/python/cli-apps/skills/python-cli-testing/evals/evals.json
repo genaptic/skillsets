@@ -43,14 +43,6 @@
       "prompt": "Choose public exit codes and decide which error payload goes to stdout versus stderr.",
       "shouldTrigger": false,
       "reason": "That is design of the failure contract, not its tests."
-    },
-    {
-      "id": "overlap-testing-strategy",
-      "kind": "overlap",
-      "prompt": "Redesign fixture scopes, coverage goals, markers, and the full Python project's pull-request test selection.",
-      "shouldTrigger": false,
-      "reason": "The request is broader than the CLI and belongs to general testing strategy.",
-      "preferredSkill": "python-testing-strategy"
     }
   ],
   "behavior": [

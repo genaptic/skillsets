@@ -2,9 +2,14 @@ from __future__ import annotations
 
 import os
 import subprocess
+import textwrap
 from html import escape
-from pathlib import Path
+from pathlib import Path, PurePath
 
+import yaml
+
+from .evals import RoutingBoundarySummary, validate_routing_boundaries
+from .lifecycle import DistributionChannel, select_packs
 from .models import Pack, RepositoryConfig, discover_packs, load_repository
 from .path_safety import (
     inspect_path,
@@ -22,7 +27,6 @@ from .path_safety import (
 from .util import (
     SkillpackError,
     json_text,
-    parse_skill_markdown_text,
     replace_marked_section,
     sha256_bytes,
 )
@@ -31,6 +35,10 @@ GENERATED_BEGIN = "<!-- BEGIN GENERATED PACK CATALOG -->"
 GENERATED_END = "<!-- END GENERATED PACK CATALOG -->"
 PACK_INSTALL_BEGIN = "<!-- BEGIN GENERATED INSTALL COMMANDS -->"
 PACK_INSTALL_END = "<!-- END GENERATED INSTALL COMMANDS -->"
+PACK_LIFECYCLE_BEGIN = "<!-- BEGIN GENERATED LIFECYCLE -->"
+PACK_LIFECYCLE_END = "<!-- END GENERATED LIFECYCLE -->"
+BOUNDARY_MATRIX_BEGIN = "<!-- BEGIN GENERATED ROUTING BOUNDARY MATRIX -->"
+BOUNDARY_MATRIX_END = "<!-- END GENERATED ROUTING BOUNDARY MATRIX -->"
 
 GeneratedContent = str | bytes
 
@@ -51,24 +59,100 @@ def _as_bytes(content: GeneratedContent) -> bytes:
     return content if isinstance(content, bytes) else content.encode("utf-8")
 
 
-def _source(config: RepositoryConfig, pack: Pack, *, codex: bool = False) -> str | dict[str, str]:
-    # A local path is intentionally used until a release commit is recorded.  Publishing
-    # a tag-shaped remote source before that tag exists makes generated install commands
-    # look usable when they are not.
-    if not pack.source_sha:
-        return f"./{pack.relative_path}"
+def _channel_version(pack: Pack, channel: DistributionChannel) -> str:
+    if channel == "public":
+        if not pack.published_version:
+            raise SkillpackError(f"{pack.id}: public generation requires latest-release.")
+        return pack.published_version
+    return pack.version
+
+
+def _channel_tag(pack: Pack, channel: DistributionChannel) -> str:
+    return f"{pack.id}-v{_channel_version(pack, channel)}"
+
+
+def _channel_source_sha(pack: Pack, channel: DistributionChannel) -> str | None:
+    return pack.source_sha if channel == "public" else None
+
+
+def _git_object(root: Path, revision: str, relative: str) -> bytes:
+    """Read one immutable Git blob without checking out or executing tree content."""
+
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(root),
+                "show",
+                f"{revision}:{relative}",
+            ],
+            check=False,
+            capture_output=True,
+        )
+    except OSError as exc:
+        raise SkillpackError("Git is required to render a published release snapshot.") from exc
+    if completed.returncode:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise SkillpackError(
+            f"Could not read published blob {revision}:{relative}: {detail or 'missing object'}"
+        )
+    return completed.stdout
+
+
+def _published_snapshot(root: Path, pack: Pack) -> Pack:
+    """Load public metadata from the exact released tree, then attach current publication state."""
+
+    source_sha = pack.source_sha
+    version = pack.published_version
+    if not source_sha or not version or pack.latest_release is None:
+        raise SkillpackError(f"{pack.id}: public generation requires a complete latest-release.")
+    relative = f"{pack.relative_path}/skillpack.yaml"
+    try:
+        raw = yaml.safe_load(_git_object(root, source_sha, relative).decode("utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise SkillpackError(
+            f"{pack.id}: released skillpack manifest is not valid UTF-8 YAML."
+        ) from exc
+    if not isinstance(raw, dict):
+        raise SkillpackError(f"{pack.id}: released skillpack manifest must be a mapping.")
+    if raw.get("id") != pack.id or raw.get("version") != version:
+        raise SkillpackError(
+            f"{pack.id}: latest-release does not match the manifest at {source_sha}."
+        )
+    raw["publication"] = dict(pack.raw["publication"])
+    raw["distribution"] = dict(pack.raw["distribution"])
+    return Pack(root=pack.root, path=pack.path, raw=raw)
+
+
+def _source(
+    config: RepositoryConfig,
+    pack: Pack,
+    *,
+    channel: DistributionChannel,
+    codex: bool = False,
+    local_path: str | None = None,
+) -> str | dict[str, str]:
+    if channel != "public":
+        return local_path or f"./{pack.relative_path}"
+    source_sha = _channel_source_sha(pack, channel)
+    if not source_sha:
+        raise SkillpackError(f"{pack.id}: public source requires an exact release SHA.")
     source: dict[str, str] = {
         "source": "git-subdir",
         "url": config.git_url,
         "path": f"./{pack.relative_path}" if codex else pack.relative_path,
-        "ref": pack.tag,
+        "ref": _channel_tag(pack, channel),
+        "sha": source_sha,
     }
-    if pack.source_sha:
-        source["sha"] = pack.source_sha
     return source
 
 
-def _claude_plugin(config: RepositoryConfig, pack: Pack) -> dict:
+def _claude_plugin(
+    config: RepositoryConfig, pack: Pack, channel: DistributionChannel = "development"
+) -> dict:
     author = {"name": config.publisher_name}
     if config.security_email:
         author["email"] = config.security_email
@@ -76,17 +160,22 @@ def _claude_plugin(config: RepositoryConfig, pack: Pack) -> dict:
         "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
         "name": pack.id,
         "displayName": pack.display_name,
-        "version": pack.version,
-        "description": pack.description,
+        "version": _channel_version(pack, channel),
+        "description": pack.short_description,
         "author": author,
-        "homepage": f"{config.web_url}/tree/{pack.source_sha or config.default_branch}/{pack.relative_path}",
+        "homepage": (
+            f"{config.web_url}/tree/"
+            f"{_channel_source_sha(pack, channel) or config.default_branch}/{pack.relative_path}"
+        ),
         "repository": config.web_url,
         "license": pack.license,
         "keywords": pack.keywords,
     }
 
 
-def _codex_plugin(config: RepositoryConfig, pack: Pack) -> dict:
+def _codex_plugin(
+    config: RepositoryConfig, pack: Pack, channel: DistributionChannel = "development"
+) -> dict:
     author = {
         "name": config.publisher_name,
         "url": config.web_url,
@@ -95,30 +184,45 @@ def _codex_plugin(config: RepositoryConfig, pack: Pack) -> dict:
         author["email"] = config.security_email
     return {
         "name": pack.id,
-        "version": pack.version,
+        "version": _channel_version(pack, channel),
         "description": pack.description,
         "author": author,
-        "homepage": f"{config.web_url}/tree/{pack.source_sha or config.default_branch}/{pack.relative_path}",
+        "homepage": (
+            f"{config.web_url}/tree/"
+            f"{_channel_source_sha(pack, channel) or config.default_branch}/{pack.relative_path}"
+        ),
         "repository": config.web_url,
         "license": pack.license,
         "keywords": pack.keywords,
         "skills": "./skills/",
         "interface": {
             "displayName": pack.display_name,
-            "shortDescription": pack.description[:120],
+            "shortDescription": (
+                pack.short_description
+                if len(pack.short_description) <= 120
+                else textwrap.shorten(pack.short_description, width=120, placeholder="…")
+            ),
             "longDescription": pack.description,
             "developerName": config.publisher_name,
             "category": pack.category,
             "capabilities": ["Read", "Write"],
-            "websiteURL": f"{config.web_url}/tree/{pack.source_sha or config.default_branch}/{pack.relative_path}",
-            "defaultPrompt": [
-                f"Use {pack.display_name} to review the relevant files and propose a verified plan."
-            ],
+            "websiteURL": (
+                f"{config.web_url}/tree/"
+                f"{_channel_source_sha(pack, channel) or config.default_branch}/"
+                f"{pack.relative_path}"
+            ),
+            "defaultPrompt": [item["prompt"] for item in pack.starter_prompts],
         },
     }
 
 
-def _claude_marketplace(config: RepositoryConfig, packs: list[Pack]) -> dict:
+def _claude_marketplace(
+    config: RepositoryConfig,
+    packs: list[Pack],
+    *,
+    channel: DistributionChannel = "public",
+    self_contained: bool = False,
+) -> dict:
     owner = {"name": config.publisher_name}
     if config.security_email:
         owner["email"] = config.security_email
@@ -129,9 +233,14 @@ def _claude_marketplace(config: RepositoryConfig, packs: list[Pack]) -> dict:
         "plugins": [
             {
                 "name": pack.id,
-                "source": _source(config, pack),
-                "description": pack.description,
-                "version": pack.version,
+                "source": _source(
+                    config,
+                    pack,
+                    channel=channel,
+                    local_path=f"./plugins/{pack.id}" if self_contained else None,
+                ),
+                "description": pack.short_description,
+                "version": _channel_version(pack, channel),
                 "author": {"name": config.publisher_name},
                 "category": pack.category,
                 "tags": pack.keywords,
@@ -143,14 +252,26 @@ def _claude_marketplace(config: RepositoryConfig, packs: list[Pack]) -> dict:
     }
 
 
-def _codex_marketplace(config: RepositoryConfig, packs: list[Pack]) -> dict:
+def _codex_marketplace(
+    config: RepositoryConfig,
+    packs: list[Pack],
+    *,
+    channel: DistributionChannel = "public",
+    self_contained: bool = False,
+) -> dict:
     return {
         "name": config.marketplace_name,
         "interface": {"displayName": config.marketplace_display_name},
         "plugins": [
             {
                 "name": pack.id,
-                "source": _source(config, pack, codex=True),
+                "source": _source(
+                    config,
+                    pack,
+                    channel=channel,
+                    codex=True,
+                    local_path=f"./plugins/{pack.id}" if self_contained else None,
+                ),
                 "policy": {
                     "installation": "AVAILABLE",
                     "authentication": "ON_INSTALL",
@@ -163,9 +284,14 @@ def _codex_marketplace(config: RepositoryConfig, packs: list[Pack]) -> dict:
     }
 
 
-def _catalog(config: RepositoryConfig, packs: list[Pack]) -> dict:
+def _catalog(
+    config: RepositoryConfig,
+    packs: list[Pack],
+    *,
+    channel: DistributionChannel = "public",
+) -> dict:
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "project": config.project_name,
         "repository": config.slug,
         "marketplace": config.marketplace_name,
@@ -173,11 +299,12 @@ def _catalog(config: RepositoryConfig, packs: list[Pack]) -> dict:
             {
                 "id": pack.id,
                 "displayName": pack.display_name,
+                "shortDescription": pack.short_description,
                 "description": pack.description,
                 "language": pack.language,
                 "subject": pack.subject,
-                "version": pack.version,
-                "tag": pack.tag,
+                "version": _channel_version(pack, channel),
+                "tag": _channel_tag(pack, channel),
                 "path": pack.relative_path,
                 "license": pack.license,
                 "skills": pack.skills,
@@ -188,8 +315,21 @@ def _catalog(config: RepositoryConfig, packs: list[Pack]) -> dict:
                 "operations": pack.operations,
                 "publication": {
                     "state": pack.publication_state,
-                    "sourceType": "git-subdir" if pack.source_sha else "repo-local",
-                    **({"sourceSha": pack.source_sha} if pack.source_sha else {}),
+                    "visibility": pack.visibility,
+                    "maturity": pack.maturity,
+                    "sourceType": "git-subdir" if channel == "public" else "repo-local",
+                    **(
+                        {
+                            "latestRelease": {
+                                "version": pack.published_version,
+                                "sourceSha": pack.source_sha,
+                                "releaseId": pack.latest_release["release-id"],
+                                "releasedAt": pack.latest_release["released-at"],
+                            }
+                        }
+                        if pack.latest_release
+                        else {}
+                    ),
                 },
             }
             for pack in packs
@@ -215,6 +355,13 @@ def _pages_index(config: RepositoryConfig, catalog: dict) -> str:
                 "OpenCode index</a></p>"
             )
         publication = escape(str(pack["publication"]["state"]))
+        tag = str(pack["tag"])
+        latest_release = pack["publication"]["latestRelease"]
+        source_sha = str(latest_release["sourceSha"])
+        release_url = f"{config.web_url}/releases/tag/{tag}"
+        commit_url = f"{config.web_url}/commit/{source_sha}"
+        checksum_url = f"{config.web_url}/releases/download/{tag}/{tag}.zip.sha256"
+        attestations_url = f"{config.web_url}/attestations"
         pack_cards.append(
             "\n".join(
                 [
@@ -233,9 +380,32 @@ def _pages_index(config: RepositoryConfig, catalog: dict) -> str:
                     "              <dt>Publication</dt>",
                     f"              <dd><code>{publication}</code></dd>",
                     "            </div>",
+                    "            <div>",
+                    "              <dt>Tag</dt>",
+                    (
+                        f'              <dd><a href="{escape(release_url, quote=True)}">'
+                        f"<code>{escape(tag)}</code></a></dd>"
+                    ),
+                    "            </div>",
+                    "            <div>",
+                    "              <dt>Source</dt>",
+                    (
+                        f'              <dd><a href="{escape(commit_url, quote=True)}">'
+                        f"<code>{escape(source_sha)}</code></a></dd>"
+                    ),
+                    "            </div>",
                     "          </dl>",
-                    f"          <p>{escape(str(pack['description']))}</p>",
-                    "          <h4>Supported targets</h4>",
+                    f"          <p>{escape(str(pack['shortDescription']))}</p>",
+                    "          <p>",
+                    (
+                        f'            <a href="{escape(release_url, quote=True)}">'
+                        "Immutable release</a> · "
+                        f'<a href="{escape(checksum_url, quote=True)}">SHA-256 checksum</a> · '
+                        f'<a href="{escape(attestations_url, quote=True)}">'
+                        "Verify attestations</a>"
+                    ),
+                    "          </p>",
+                    "          <h4>Generated adapter targets</h4>",
                     '          <ul class="targets">',
                     target_items,
                     "          </ul>" + index_link,
@@ -276,44 +446,35 @@ def _pages_index(config: RepositoryConfig, catalog: dict) -> str:
         "      </header>\n"
         '      <section aria-labelledby="skillpacks-heading">\n'
         '        <h2 id="skillpacks-heading">Skillpacks</h2>\n'
-        '        <div class="packs">\n' + "\n".join(pack_cards) + "\n"
-        "        </div>\n"
-        "      </section>\n"
+        + (
+            '        <div class="packs">\n' + "\n".join(pack_cards) + "\n        </div>\n"
+            if pack_cards
+            else "        <p><strong>No stable releases are currently published.</strong></p>\n"
+        )
+        + "      </section>\n"
         "    </main>\n"
         "  </body>\n"
         "</html>\n"
     )
 
 
-def _pack_is_stable(pack: Pack) -> bool:
-    for skill in pack.skills:
-        skill_path = pack.path / "skills" / skill / "SKILL.md"
-        metadata, _ = parse_skill_markdown_text(
-            read_regular_text(skill_path, pack.root),
-            skill_path.relative_to(pack.root),
-        )
-        if metadata.get("metadata", {}).get("maturity") != "stable":
-            return False
-    return True
-
-
 def _root_catalog_markdown(config: RepositoryConfig, packs: list[Pack]) -> str:
+    if not packs:
+        return (
+            "**No stable releases are currently published.** Public installation commands "
+            "will appear here after an immutable release is reconciled."
+        )
     rows = [
         "| Pack | Purpose | Skills | Version | Publication | Claude | Codex | OpenCode |",
         "|---|---|---:|---:|---|---|---|---|",
     ]
     for pack in packs:
-        publication = (
-            "Published"
-            if pack.source_sha
-            else "Awaiting source pin"
-            if _pack_is_stable(pack)
-            else "Release candidate"
-        )
+        publication = "Published"
         rows.append(
             "| "
             f"[`{pack.id}`]({pack.relative_path}/README.md) | "
-            f"{pack.description} | {len(pack.skills)} | `{pack.version}` | "
+            f"{pack.short_description} | {len(pack.skills)} | "
+            f"`{pack.published_version}` | "
             f"{publication} | "
             f"{'Plugin' if 'claude-code' in pack.targets else '—'} | "
             f"{'Plugin' if 'codex' in pack.targets else '—'} | "
@@ -322,27 +483,57 @@ def _root_catalog_markdown(config: RepositoryConfig, packs: list[Pack]) -> str:
     rows.extend(
         [
             "",
-            f"Marketplace: `{config.marketplace_name}`. Published sources pin both the "
-            "pack-specific tag and its full release commit SHA; release candidates use "
-            "repository-local paths.",
+            f"Marketplace: `{config.marketplace_name}`. Every public source pins both the "
+            "pack-specific tag and its full release commit SHA.",
+        ]
+    )
+    return "\n".join(rows)
+
+
+def _routing_boundary_markdown(boundaries: tuple[RoutingBoundarySummary, ...]) -> str:
+    rows = [
+        "This table is generated from `evals/routing-boundaries.json`. `A` and `B` follow the",
+        "lexicographically sorted skill IDs in each boundary.",
+        "",
+        "| Boundary | Shared vocabulary | A only | B only | Both | Neither |",
+        "|---|---|---|---|---|---|",
+    ]
+    for boundary in boundaries:
+        skill_a, skill_b = boundary.skills
+        vocabulary = ", ".join(f"`{item}`" for item in boundary.shared_vocabulary)
+        rows.append(
+            f"| `{boundary.id}`<br>A: `${skill_a}`<br>B: `${skill_b}` | {vocabulary} | "
+            f"`${skill_a}` | `${skill_b}` | both | none |"
+        )
+    rows.extend(
+        [
+            "",
+            f"The {len(boundaries)} reviewed boundaries contain "
+            f"{sum(len(boundary.cases) for boundary in boundaries)} cases: exactly one "
+            "A-only, B-only, both, and neither prompt per boundary.",
         ]
     )
     return "\n".join(rows)
 
 
 def _pack_install_markdown(config: RepositoryConfig, pack: Pack) -> str:
-    if pack.source_sha:
-        marketplace_source = config.slug
+    is_published = pack.publication_state == "published" and pack.latest_release is not None
+    if is_published:
+        claude_marketplace_source = config.slug
+        codex_marketplace_source = config.slug
         status = (
-            f"Published as `{pack.tag}` and pinned to `{pack.source_sha}` in generated "
+            f"Latest public release: `{pack.published_tag}`, pinned to `{pack.source_sha}` "
+            "in generated "
             "marketplaces."
         )
     else:
-        marketplace_source = "."
+        claude_marketplace_source = "dist/dev/claude"
+        codex_marketplace_source = "dist/dev/codex"
         status = (
             "The marketplace source is repository-local and unpublished. Clone this "
             "repository and run these commands from its root; remote marketplace installation "
-            "remains unavailable until the post-release source-SHA update. Run strict repository "
+            "remains unavailable until post-release publication reconciliation. Run strict "
+            "repository "
             "validation immediately before a local install so ignored cache files are not copied."
         )
     lines = [status, ""]
@@ -353,13 +544,13 @@ def _pack_install_markdown(config: RepositoryConfig, pack: Pack) -> str:
                 "### Claude Code",
                 "",
                 "```bash",
-                f"claude plugin marketplace add {marketplace_source}",
+                f"claude plugin marketplace add {claude_marketplace_source}",
                 f"claude plugin install {pack.id}@{config.marketplace_name}",
                 "```",
                 "",
             ]
         )
-        if pack.source_sha:
+        if is_published:
             lines.extend(
                 [
                     "Update the remote marketplace before installing an updated pack:",
@@ -399,13 +590,13 @@ def _pack_install_markdown(config: RepositoryConfig, pack: Pack) -> str:
                 "### Codex",
                 "",
                 "```bash",
-                f"codex plugin marketplace add {marketplace_source}",
+                f"codex plugin marketplace add {codex_marketplace_source}",
                 f"codex plugin add {pack.id}@{config.marketplace_name}",
                 "```",
                 "",
             ]
         )
-        if pack.source_sha:
+        if is_published:
             lines.extend(
                 [
                     "Update by refreshing the remote marketplace and reinstalling the plugin:",
@@ -453,12 +644,12 @@ def _pack_install_markdown(config: RepositoryConfig, pack: Pack) -> str:
                 "",
             ]
         )
-        if pack.source_sha:
+        if is_published:
             lines.extend(
                 [
                     "```bash",
                     (
-                        f"bash dist/install/{pack.id}.sh --repository {config.slug} "
+                        f"bash dist/public/install/{pack.id}.sh --repository {config.slug} "
                         f"--agent opencode --scope user --pin {pack.source_sha}"
                     ),
                     "```",
@@ -467,7 +658,7 @@ def _pack_install_markdown(config: RepositoryConfig, pack: Pack) -> str:
                     "",
                     "```powershell",
                     (
-                        f".\\dist\\install\\{pack.id}.ps1 -Repository {config.slug} "
+                        f".\\dist\\public\\install\\{pack.id}.ps1 -Repository {config.slug} "
                         f"-Agent opencode -Scope user -Pin {pack.source_sha}"
                     ),
                     "```",
@@ -484,11 +675,11 @@ def _pack_install_markdown(config: RepositoryConfig, pack: Pack) -> str:
                     ),
                     "",
                     "```bash",
-                    f"bash dist/install/{pack.id}.sh --dry-run",
+                    f"bash dist/dev/install/{pack.id}.sh --dry-run",
                     "```",
                     "",
                     "```powershell",
-                    f".\\dist\\install\\{pack.id}.ps1 -DryRun",
+                    f".\\dist\\dev\\install\\{pack.id}.ps1 -DryRun",
                     "```",
                     "",
                     "The dry run does not install skills or make a compatibility claim.",
@@ -498,10 +689,48 @@ def _pack_install_markdown(config: RepositoryConfig, pack: Pack) -> str:
     return "\n".join(lines).rstrip()
 
 
-def _bash_installer(config: RepositoryConfig, pack: Pack) -> str:
+def _pack_lifecycle_markdown(pack: Pack) -> str:
+    lines = [
+        f"Current source version: `{pack.version}`.",
+        "",
+        f"Maturity: `{pack.maturity}`. Distribution visibility: `{pack.visibility}`. "
+        f"Publication state: `{pack.publication_state}`.",
+        "",
+        f"Current derived tag: `{pack.tag}`.",
+    ]
+    if pack.latest_release:
+        lines.extend(
+            [
+                "",
+                f"Latest immutable public release: `{pack.published_tag}` at "
+                f"`{pack.source_sha}` (release ID `{pack.latest_release['release-id']}`).",
+            ]
+        )
+    if pack.visibility == "maintainers":
+        claim = "This maintainer-only pack is ineligible for formal public release."
+    elif pack.publication_state == "withdrawn":
+        claim = "This pack is withdrawn and absent from every installable public surface."
+    elif pack.maturity == "stable" and pack.publication_state == "unpublished":
+        claim = (
+            "This stable source is ready for exact-SHA native evidence; no public installation "
+            "or compatibility claim exists before immutable release and reconciliation."
+        )
+    elif pack.publication_state == "unpublished":
+        claim = "No public installation or native-client/model compatibility is claimed yet."
+    else:
+        claim = (
+            "Public distribution remains pinned to the latest immutable release and its "
+            "attached exact-SHA evidence."
+        )
+    lines.extend(["", claim])
+    return "\n".join(lines)
+
+
+def _bash_installer(config: RepositoryConfig, pack: Pack, *, channel: DistributionChannel) -> str:
     skills = "\n".join(f'  "{skill}"' for skill in pack.skills)
-    default_pin = pack.source_sha or "UNPUBLISHED"
-    unpublished = 0 if pack.source_sha else 1
+    source_sha = _channel_source_sha(pack, channel)
+    default_pin = source_sha or "UNPUBLISHED"
+    unpublished = 0 if source_sha else 1
     return f"""#!/usr/bin/env bash
 # Generated by tools/generate-installers. Do not edit by hand.
 set -euo pipefail
@@ -612,10 +841,13 @@ done
 """
 
 
-def _powershell_installer(config: RepositoryConfig, pack: Pack) -> str:
+def _powershell_installer(
+    config: RepositoryConfig, pack: Pack, *, channel: DistributionChannel
+) -> str:
     skills = ",\n    ".join(f'"{skill}"' for skill in pack.skills)
-    default_pin = pack.source_sha or "UNPUBLISHED"
-    unpublished = "$true" if not pack.source_sha else "$false"
+    source_sha = _channel_source_sha(pack, channel)
+    default_pin = source_sha or "UNPUBLISHED"
+    unpublished = "$true" if not source_sha else "$false"
     return f"""# Generated by tools/generate-installers. Do not edit by hand.
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -753,7 +985,12 @@ foreach ($skill in $skills) {{
 """
 
 
-def _installer_readme(config: RepositoryConfig, packs: list[Pack]) -> str:
+def _installer_readme(
+    config: RepositoryConfig,
+    packs: list[Pack],
+    *,
+    channel: DistributionChannel,
+) -> str:
     lines = [
         "# Generated direct installers",
         "",
@@ -777,7 +1014,7 @@ def _installer_readme(config: RepositoryConfig, packs: list[Pack]) -> str:
     for pack in packs:
         lines.append(
             f"| `{pack.id}` | `{pack.id}.sh` | `{pack.id}.ps1` | "
-            f"`{pack.source_sha or 'unpublished; explicit SHA required'}` |"
+            f"`{_channel_source_sha(pack, channel) or 'development; explicit SHA required'}` |"
         )
     lines.extend(
         [
@@ -790,14 +1027,14 @@ def _installer_readme(config: RepositoryConfig, packs: list[Pack]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _opencode_readme(packs: list[Pack]) -> str:
+def _opencode_readme(packs: list[Pack], *, channel: DistributionChannel) -> str:
     lines = [
         "# Generated OpenCode V2 catalogs",
         "",
-        "Each language/subject directory is an independently hostable HTTP catalog. Serve the",
-        "directory containing `index.json` as the catalog base URL.",
+        "Each language/subject directory is an independently hostable HTTP catalog. Configure",
+        'OpenCode with `{"skills":{"urls":["https://host/catalog/base/"]}}`.',
         "",
-        "The named skill Markdown and resources are generated copies of canonical pack content.",
+        "Each skill directory contains a literal `SKILL.md` plus its generated resources.",
         "Do not edit this directory by hand.",
         "",
         "| Pack | Catalog path | Version |",
@@ -805,7 +1042,8 @@ def _opencode_readme(packs: list[Pack]) -> str:
     ]
     for pack in packs:
         lines.append(
-            f"| `{pack.id}` | `{pack.language}/{pack.subject}/index.json` | `{pack.version}` |"
+            f"| `{pack.id}` | `{pack.language}/{pack.subject}/index.json` | "
+            f"`{_channel_version(pack, channel)}` |"
         )
     return "\n".join(lines) + "\n"
 
@@ -813,6 +1051,12 @@ def _opencode_readme(packs: list[Pack]) -> str:
 def _is_runtime_file(path: Path, skill_dir: Path) -> bool:
     relative = path.relative_to(skill_dir)
     return runtime_resource_is_allowed(relative)
+
+
+def _skill_relative_posix(path: PurePath, skill_dir: PurePath) -> str:
+    """Return a platform-independent ordering key for one skill resource."""
+
+    return path.relative_to(skill_dir).as_posix()
 
 
 def _runtime_files(root: Path, skill_dir: Path) -> list[Path]:
@@ -823,7 +1067,77 @@ def _runtime_files(root: Path, skill_dir: Path) -> list[Path]:
         paths.extend(
             path for path, _metadata in snapshot.files if _is_runtime_file(path, skill_dir)
         )
-    return paths
+    return sorted(paths, key=lambda path: _skill_relative_posix(path, skill_dir))
+
+
+def _released_skill_files(root: Path, pack: Pack, skill: str) -> list[tuple[Path, bytes, int]]:
+    """Return the released SKILL.md/runtime tree from the exact public source commit."""
+
+    source_sha = pack.source_sha
+    if not source_sha:
+        raise SkillpackError(f"{pack.id}: released skill files require a source SHA.")
+    skill_prefix = f"{pack.relative_path}/skills/{skill}"
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(root),
+                "ls-tree",
+                "-r",
+                "-z",
+                source_sha,
+                "--",
+                skill_prefix,
+            ],
+            check=False,
+            capture_output=True,
+        )
+    except OSError as exc:
+        raise SkillpackError("Git is required to render released skill files.") from exc
+    if completed.returncode:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise SkillpackError(
+            f"Could not enumerate released files for {pack.id}/{skill}: "
+            f"{detail or 'missing object'}"
+        )
+
+    entries: list[tuple[Path, bytes, int]] = []
+    for record in completed.stdout.split(b"\0"):
+        if not record:
+            continue
+        try:
+            metadata, raw_path = record.split(b"\t", 1)
+            mode, kind, _object_id = metadata.decode("ascii").split(" ", 2)
+            repository_path = Path(raw_path.decode("utf-8"))
+            relative = repository_path.relative_to(skill_prefix)
+        except (UnicodeDecodeError, ValueError) as exc:
+            raise SkillpackError(
+                f"{pack.id}/{skill}: malformed or unsafe released Git tree entry."
+            ) from exc
+        if kind != "blob" or mode not in {"100644", "100755"}:
+            raise SkillpackError(
+                f"{pack.id}/{skill}: released runtime entries must be regular files."
+            )
+        include = relative == Path("SKILL.md") or (
+            relative.parts
+            and relative.parts[0] in {"references", "assets", "scripts"}
+            and runtime_resource_is_allowed(relative)
+        )
+        if not include:
+            continue
+        entries.append(
+            (
+                relative,
+                _git_object(root, source_sha, repository_path.as_posix()),
+                0o755 if mode == "100755" else 0o644,
+            )
+        )
+    if not any(relative == Path("SKILL.md") for relative, _content, _mode in entries):
+        raise SkillpackError(f"{pack.id}/{skill}: released tree has no literal SKILL.md.")
+    return sorted(entries, key=lambda item: item[0].as_posix())
 
 
 def _tracked_source_modes(root: Path) -> dict[str, int]:
@@ -831,7 +1145,16 @@ def _tracked_source_modes(root: Path) -> dict[str, int]:
 
     try:
         result = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "--stage", "-z"],
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(root),
+                "ls-files",
+                "--stage",
+                "-z",
+            ],
             check=False,
             capture_output=True,
             text=True,
@@ -853,7 +1176,7 @@ def _tracked_source_modes(root: Path) -> dict[str, int]:
 def _portable_source_mode(
     root: Path, path: Path, tracked_modes: dict[str, int] | None = None
 ) -> int:
-    """Read the tracked executable bit portably, falling back to filesystem mode."""
+    """Read executable intent portably, even when Git metadata is unavailable."""
 
     try:
         relative = path.relative_to(root).as_posix()
@@ -862,9 +1185,168 @@ def _portable_source_mode(
     modes = tracked_modes if tracked_modes is not None else _tracked_source_modes(root)
     if relative in modes:
         return modes[relative]
+    if read_regular_bytes(path, root).startswith(b"#!/"):
+        return 0o755
     metadata = inspect_path(path, root, leaf_kind="file")
     assert metadata is not None
     return 0o755 if metadata.st_mode & 0o111 else 0o644
+
+
+def _add_skill_tree(
+    files: GeneratedFiles,
+    root: Path,
+    pack: Pack,
+    destination: Path,
+    tracked_modes: dict[str, int],
+    *,
+    include_openai_sidecar: bool,
+) -> None:
+    for skill in pack.skills:
+        skill_dir = pack.path / "skills" / skill
+        inputs = [skill_dir / "SKILL.md", *_runtime_files(root, skill_dir)]
+        if include_openai_sidecar:
+            inputs.append(skill_dir / "agents" / "openai.yaml")
+        for source in sorted(
+            inputs,
+            key=lambda source: _skill_relative_posix(source, skill_dir),
+        ):
+            relative = source.relative_to(skill_dir)
+            files.add(
+                (destination / skill / relative).as_posix(),
+                read_regular_bytes(source, root),
+                mode=_portable_source_mode(root, source, tracked_modes),
+            )
+
+
+def _add_self_contained_marketplaces(
+    files: GeneratedFiles,
+    root: Path,
+    config: RepositoryConfig,
+    packs: list[Pack],
+    tracked_modes: dict[str, int],
+    *,
+    channel: DistributionChannel,
+    destination: Path,
+) -> None:
+    claude = [pack for pack in packs if "claude-code" in pack.targets]
+    codex = [pack for pack in packs if "codex" in pack.targets]
+    files.add(
+        (destination / "claude/.claude-plugin/marketplace.json").as_posix(),
+        json_text(_claude_marketplace(config, claude, channel=channel, self_contained=True)),
+    )
+    files.add(
+        (destination / "codex/.agents/plugins/marketplace.json").as_posix(),
+        json_text(_codex_marketplace(config, codex, channel=channel, self_contained=True)),
+    )
+    for pack in claude:
+        plugin_root = destination / "claude/plugins" / pack.id
+        files.add(
+            (plugin_root / ".claude-plugin/plugin.json").as_posix(),
+            json_text(_claude_plugin(config, pack, channel)),
+        )
+        _add_skill_tree(
+            files,
+            root,
+            pack,
+            plugin_root / "skills",
+            tracked_modes,
+            include_openai_sidecar=False,
+        )
+    for pack in codex:
+        plugin_root = destination / "codex/plugins" / pack.id
+        files.add(
+            (plugin_root / ".codex-plugin/plugin.json").as_posix(),
+            json_text(_codex_plugin(config, pack, channel)),
+        )
+        _add_skill_tree(
+            files,
+            root,
+            pack,
+            plugin_root / "skills",
+            tracked_modes,
+            include_openai_sidecar=True,
+        )
+
+
+def _add_installers(
+    files: GeneratedFiles,
+    config: RepositoryConfig,
+    packs: list[Pack],
+    *,
+    channel: DistributionChannel,
+    destination: Path,
+) -> None:
+    opencode_packs = [pack for pack in packs if "opencode" in pack.targets]
+    files.add(
+        (destination / "README.md").as_posix(),
+        _installer_readme(config, opencode_packs, channel=channel),
+    )
+    for pack in opencode_packs:
+        files.add(
+            (destination / f"{pack.id}.sh").as_posix(),
+            _bash_installer(config, pack, channel=channel),
+            mode=0o755,
+        )
+        files.add(
+            (destination / f"{pack.id}.ps1").as_posix(),
+            _powershell_installer(config, pack, channel=channel),
+        )
+
+
+def _add_opencode_catalogs(
+    files: GeneratedFiles,
+    root: Path,
+    packs: list[Pack],
+    tracked_modes: dict[str, int],
+    *,
+    channel: DistributionChannel,
+    destination: Path,
+) -> None:
+    opencode_packs = [pack for pack in packs if "opencode" in pack.targets]
+    files.add(
+        (destination / "README.md").as_posix(),
+        _opencode_readme(opencode_packs, channel=channel),
+    )
+    for pack in opencode_packs:
+        catalog_base = destination / pack.language / pack.subject
+        catalog_skills: list[dict[str, object]] = []
+        for skill in pack.skills:
+            skill_dir = pack.path / "skills" / skill
+            target_prefix = catalog_base / skill
+            if channel == "public":
+                inputs = _released_skill_files(root, pack, skill)
+            else:
+                source_skill = skill_dir / "SKILL.md"
+                inputs = [
+                    (Path("SKILL.md"), read_regular_bytes(source_skill, root), 0o644),
+                    *[
+                        (
+                            resource.relative_to(skill_dir),
+                            read_regular_bytes(resource, root),
+                            _portable_source_mode(root, resource, tracked_modes),
+                        )
+                        for resource in _runtime_files(root, skill_dir)
+                    ],
+                ]
+            listed_files: list[str] = []
+            for relative, content, mode in inputs:
+                listed_files.append(relative.as_posix())
+                files.add(
+                    (target_prefix / relative).as_posix(),
+                    content,
+                    mode=mode,
+                )
+            catalog_skills.append(
+                {
+                    "name": skill,
+                    "version": _channel_version(pack, channel),
+                    "files": listed_files,
+                }
+            )
+        files.add(
+            (catalog_base / "index.json").as_posix(),
+            json_text({"skills": catalog_skills}),
+        )
 
 
 def build_generated_files(root: Path) -> GeneratedFiles:
@@ -875,30 +1357,59 @@ def build_generated_files(root: Path) -> GeneratedFiles:
         raise SkillpackError("No skillpack.yaml files were found under packs/*/*/.")
     tracked_modes = _tracked_source_modes(root)
 
+    public_packs = [_published_snapshot(root, pack) for pack in select_packs(packs, "public")]
+    preview_packs = select_packs(packs, "preview")
+    development_packs = select_packs(packs, "development")
+    boundary_errors, boundaries = validate_routing_boundaries(root, packs=packs)
+    if boundary_errors:
+        raise SkillpackError(
+            "Routing-boundary validation failed:\n"
+            + "\n".join(f"  - {error}" for error in boundary_errors)
+        )
+
     files = GeneratedFiles()
     for pack in packs:
         if "claude-code" in pack.targets:
             files.add(
                 f"{pack.relative_path}/.claude-plugin/plugin.json",
-                json_text(_claude_plugin(config, pack)),
+                json_text(_claude_plugin(config, pack, "development")),
             )
         if "codex" in pack.targets:
             files.add(
                 f"{pack.relative_path}/.codex-plugin/plugin.json",
-                json_text(_codex_plugin(config, pack)),
+                json_text(_codex_plugin(config, pack, "development")),
             )
 
-    files.add(".claude-plugin/marketplace.json", json_text(_claude_marketplace(config, packs)))
-    files.add(".agents/plugins/marketplace.json", json_text(_codex_marketplace(config, packs)))
-    catalog = _catalog(config, packs)
-    files.add("catalog.json", json_text(catalog))
-    files.add("dist/index.html", _pages_index(config, catalog))
+    files.add(
+        ".claude-plugin/marketplace.json",
+        json_text(_claude_marketplace(config, public_packs, channel="public")),
+    )
+    files.add(
+        ".agents/plugins/marketplace.json",
+        json_text(_codex_marketplace(config, public_packs, channel="public")),
+    )
+    public_catalog = _catalog(config, public_packs, channel="public")
+    files.add("catalog.json", json_text(public_catalog))
+    files.add("dist/public/index.html", _pages_index(config, public_catalog))
 
     root_readme = read_regular_text(root / "README.md", root)
     files.add(
         "README.md",
         replace_marked_section(
-            root_readme, GENERATED_BEGIN, GENERATED_END, _root_catalog_markdown(config, packs)
+            root_readme,
+            GENERATED_BEGIN,
+            GENERATED_END,
+            _root_catalog_markdown(config, public_packs),
+        ),
+    )
+    evals_document = read_regular_text(root / "docs" / "evals.md", root)
+    files.add(
+        "docs/evals.md",
+        replace_marked_section(
+            evals_document,
+            BOUNDARY_MATRIX_BEGIN,
+            BOUNDARY_MATRIX_END,
+            _routing_boundary_markdown(boundaries),
         ),
     )
 
@@ -915,46 +1426,67 @@ def build_generated_files(root: Path) -> GeneratedFiles:
             files.add(
                 f"{pack.relative_path}/README.md",
                 replace_marked_section(
-                    pack_readme,
-                    PACK_INSTALL_BEGIN,
-                    PACK_INSTALL_END,
-                    _pack_install_markdown(config, pack),
+                    replace_marked_section(
+                        pack_readme,
+                        PACK_INSTALL_BEGIN,
+                        PACK_INSTALL_END,
+                        _pack_install_markdown(config, pack),
+                    ),
+                    PACK_LIFECYCLE_BEGIN,
+                    PACK_LIFECYCLE_END,
+                    _pack_lifecycle_markdown(pack),
                 ),
             )
 
-    opencode_packs = [pack for pack in packs if "opencode" in pack.targets]
-    files.add("dist/install/README.md", _installer_readme(config, opencode_packs))
-    files.add("dist/opencode/README.md", _opencode_readme(opencode_packs))
+    if public_packs:
+        _add_installers(
+            files,
+            config,
+            public_packs,
+            channel="public",
+            destination=Path("dist/public/install"),
+        )
+        _add_opencode_catalogs(
+            files,
+            root,
+            public_packs,
+            tracked_modes,
+            channel="public",
+            destination=Path("dist/public/opencode"),
+        )
 
-    for pack in opencode_packs:
-        files.add(f"dist/install/{pack.id}.sh", _bash_installer(config, pack), mode=0o755)
-        files.add(f"dist/install/{pack.id}.ps1", _powershell_installer(config, pack))
-
-        catalog_base = Path("dist/opencode") / pack.language / pack.subject
-        catalog_skills: list[dict] = []
-        for skill in pack.skills:
-            skill_dir = pack.path / "skills" / skill
-            source_skill = skill_dir / "SKILL.md"
-            runtime = _runtime_files(root, skill_dir)
-            listed_files = [f"{skill}.md"]
-            target_prefix = catalog_base / skill
-            files.add(
-                (target_prefix / f"{skill}.md").as_posix(),
-                read_regular_bytes(source_skill, root),
-            )
-            for resource in runtime:
-                relative = resource.relative_to(skill_dir)
-                listed_files.append(relative.as_posix())
-                mode = _portable_source_mode(root, resource, tracked_modes)
-                files.add(
-                    (target_prefix / relative).as_posix(),
-                    read_regular_bytes(resource, root),
-                    mode=mode,
-                )
-            catalog_skills.append({"name": skill, "version": pack.version, "files": listed_files})
+    for channel, selected in (
+        ("preview", preview_packs),
+        ("development", development_packs),
+    ):
+        destination = Path("dist/preview" if channel == "preview" else "dist/dev")
         files.add(
-            (catalog_base / "index.json").as_posix(),
-            json_text({"skills": catalog_skills}),
+            (destination / "catalog.json").as_posix(),
+            json_text(_catalog(config, selected, channel=channel)),
+        )
+        _add_self_contained_marketplaces(
+            files,
+            root,
+            config,
+            selected,
+            tracked_modes,
+            channel=channel,
+            destination=destination,
+        )
+        _add_installers(
+            files,
+            config,
+            selected,
+            channel=channel,
+            destination=destination / "install",
+        )
+        _add_opencode_catalogs(
+            files,
+            root,
+            selected,
+            tracked_modes,
+            channel=channel,
+            destination=destination / "opencode",
         )
 
     manifest_entries = [
@@ -979,7 +1511,7 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
     canonical_before = walk_tree(root / "packs", root)
     root_source_preimages = {
         path: inspect_path(path, root, leaf_kind="file")
-        for path in (root / "repository.yaml", root / "README.md")
+        for path in (root / "repository.yaml", root / "README.md", root / "docs" / "evals.md")
     }
     expected = build_generated_files(root)
     changed: list[str] = []
@@ -1005,6 +1537,10 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
     generated_roots = [
         root / ".claude-plugin",
         root / ".agents" / "plugins",
+        root / "dist" / "public",
+        root / "dist" / "preview",
+        root / "dist" / "dev",
+        # Legacy roots are retained in cleanup for the schema-v2 migration only.
         root / "dist" / "install",
         root / "dist" / "opencode",
         *(pack.path / ".claude-plugin" for pack in packs),
@@ -1029,6 +1565,15 @@ def apply_generated_files(root: Path, *, check: bool = False) -> list[str]:
         snapshot = walk_tree(generated_root, root, allow_missing=True)
         cleanup_files.update(snapshot.files)
         cleanup_directories.update(snapshot.directories)
+    legacy_index = root / "dist" / "index.html"
+    legacy_index_metadata = inspect_path(
+        legacy_index,
+        root,
+        leaf_kind="file",
+        allow_missing=True,
+    )
+    if legacy_index_metadata is not None:
+        cleanup_files[legacy_index] = legacy_index_metadata
 
     for relative, content in expected.items():
         path, preimage = expected_paths[relative]

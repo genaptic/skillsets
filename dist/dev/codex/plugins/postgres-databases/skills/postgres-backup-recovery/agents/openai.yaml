@@ -1,0 +1,4 @@
+interface:
+  display_name: "PostgreSQL Backup and Recovery"
+  short_description: "Plan verifiable PostgreSQL recovery systems"
+  default_prompt: "Use $postgres-backup-recovery to assess this PostgreSQL recovery design against its RPO and RTO."

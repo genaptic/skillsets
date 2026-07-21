@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/genaptic/skillsets/main/schemas/release-intent.schema.json",
+  "title": "Exact immutable-release publication intent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "mode",
+    "repository",
+    "workflow",
+    "packId",
+    "releaseId",
+    "tag",
+    "url",
+    "tagObjectSha",
+    "sourceSha",
+    "signer",
+    "title",
+    "body",
+    "targetCommitish",
+    "releaseState",
+    "assets"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "mode": {"enum": ["sealed-draft", "reconstructed-published"]},
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slug", "policySha"],
+      "properties": {
+        "slug": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+        "policySha": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "runId", "runAttempt"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "runId": {"type": "integer", "minimum": 1},
+        "runAttempt": {"type": "integer", "minimum": 1}
+      }
+    },
+    "packId": {"$ref": "#/$defs/kebab"},
+    "releaseId": {"type": "integer", "minimum": 1},
+    "tag": {"type": "string", "minLength": 1},
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://github\\.com/[^/]+/[^/]+/releases/tag/[^/?#]+$"
+    },
+    "tagObjectSha": {"$ref": "#/$defs/sha"},
+    "sourceSha": {"$ref": "#/$defs/sha"},
+    "signer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "fingerprint"],
+      "properties": {
+        "type": {"enum": ["ssh", "openpgp"]},
+        "fingerprint": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"type": {"const": "ssh"}}, "required": ["type"]},
+          "then": {"properties": {"fingerprint": {"pattern": "^SHA256:[A-Za-z0-9+/]{43}$"}}}
+        },
+        {
+          "if": {"properties": {"type": {"const": "openpgp"}}, "required": ["type"]},
+          "then": {"properties": {"fingerprint": {"pattern": "^(?:[0-9A-F]{40}|[0-9A-F]{64})$"}}}
+        }
+      ]
+    },
+    "title": {"type": "string", "minLength": 1},
+    "body": {"type": "string", "minLength": 1},
+    "targetCommitish": {"type": "string", "minLength": 1},
+    "releaseState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["draft", "prerelease", "immutable", "publishedAt"],
+      "properties": {
+        "draft": {"type": "boolean"},
+        "prerelease": {"type": "boolean"},
+        "immutable": {"type": "boolean"},
+        "publishedAt": {"type": ["string", "null"]}
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "size", "state", "digest", "uploader"],
+        "properties": {
+          "id": {"type": "integer", "minimum": 1},
+          "name": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+          "size": {"type": "integer", "minimum": 0},
+          "state": {"const": "uploaded"},
+          "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "uploader": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "sealed-draft"}}, "required": ["mode"]},
+      "then": {
+        "properties": {
+          "releaseState": {
+            "properties": {
+              "draft": {"const": true},
+              "prerelease": {"const": false},
+              "immutable": {"const": false},
+              "publishedAt": {"type": "null"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"mode": {"const": "reconstructed-published"}},
+        "required": ["mode"]
+      },
+      "then": {
+        "properties": {
+          "releaseState": {
+            "properties": {
+              "draft": {"const": false},
+              "prerelease": {"const": false},
+              "immutable": {"const": true},
+              "publishedAt": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "kebab": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+  }
+}

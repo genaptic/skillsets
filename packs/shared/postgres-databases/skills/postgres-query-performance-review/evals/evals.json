@@ -43,14 +43,6 @@
       "prompt": "Review this table's complete index inventory and choose one production-ready covering or partial index proposal.",
       "shouldTrigger": false,
       "reason": "A focused index decision belongs to the index-design skill."
-    },
-    {
-      "id": "overlap-index-design",
-      "kind": "overlap",
-      "prompt": "Given this diagnosed filter and sort pattern, specify the exact PostgreSQL index definition, rollout, and redundancy plan.",
-      "shouldTrigger": false,
-      "reason": "The bottleneck has been diagnosed and the narrower deliverable is index design.",
-      "preferredSkill": "postgres-index-design"
     }
   ],
   "behavior": [

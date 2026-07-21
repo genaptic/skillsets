@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Project Architecture"
+  short_description: "Design Rust crates, modules, and workspaces"
+  default_prompt: "Use $rust-project-architecture to design or review this Rust project's crate, module, and workspace boundaries."

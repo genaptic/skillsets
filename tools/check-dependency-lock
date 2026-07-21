@@ -18,7 +18,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="genaptic-lock-") as temporary:
         candidate = Path(temporary) / LOCK.name
         environment = os.environ.copy()
-        environment["CUSTOM_COMPILE_COMMAND"] = "make lock"
+        environment["CUSTOM_COMPILE_COMMAND"] = "skillpacks lock"
         environment["PIP_TOOLS_CACHE_DIR"] = str(Path(temporary) / "cache")
         command = [
             sys.executable,
@@ -27,6 +27,8 @@ def main() -> int:
             "compile",
             "--allow-unsafe",
             "--generate-hashes",
+            "--no-annotate",
+            "--newline=lf",
             "--quiet",
             "--strip-extras",
             "--resolver=backtracking",
@@ -37,14 +39,14 @@ def main() -> int:
         if completed.returncode:
             print(
                 "dependency lock freshness could not be evaluated; "
-                "confirm package-index access and rerun `make lock-check`",
+                "confirm package-index access and rerun `skillpacks lock --check`",
                 file=sys.stderr,
             )
             return completed.returncode
         expected = LOCK.read_bytes() if LOCK.exists() else b""
         actual = candidate.read_bytes()
         if actual != expected:
-            print("requirements-dev.txt is stale; run `make lock`.", file=sys.stderr)
+            print("requirements-dev.txt is stale; run `skillpacks lock`.", file=sys.stderr)
             return 1
     print("dependency lock is current and hash-pinned")
     return 0

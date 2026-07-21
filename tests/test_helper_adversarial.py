@@ -396,7 +396,9 @@ def test_explain_summarizer_valid_invalid_and_nonexecuting(tmp_path: Path) -> No
     )
     completed = run_helper("summarize-explain", adversarial, "--json", cwd=tmp_path)
     assert completed.returncode == 0
-    assert payload in completed.stdout
+    report = json.loads(completed.stdout)
+    assert report["nodes"][0]["node_type"] == payload
+    assert report["nodes"][0]["relation"] == payload
     assert not marker.exists()
 
 

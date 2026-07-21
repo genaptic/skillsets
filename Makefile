@@ -1,55 +1,48 @@
 BOOTSTRAP_PYTHON ?= python3
-VENV ?= .venv
-PYTHON ?= $(VENV)/bin/python
-RUST_CARGO_HOME ?= $(VENV)/rust-cargo-home
 
-.PHONY: bootstrap rust-bootstrap rust-check lock lock-check generate validate eval lint test check configure clean release
+.PHONY: bootstrap rust-bootstrap rust-check lock lock-check generate validate eval lint test check check-pack configure clean release
 
 bootstrap:
-	$(BOOTSTRAP_PYTHON) -m venv $(VENV)
-	$(PYTHON) -m pip install --require-hashes -r requirements-dev.txt
-	$(PYTHON) -m pip install --no-deps --no-build-isolation -e .
-	$(PYTHON) -c "from pathlib import Path; import sys; sys.exit(0 if Path('$(VENV)/bin/skillpacks').is_file() else 'skillpacks entry point was not installed')"
-	$(MAKE) rust-bootstrap
+	$(BOOTSTRAP_PYTHON) tools/bootstrap
 
 rust-bootstrap:
-	$(PYTHON) tools/check-rust-assets --bootstrap --cargo-home "$(RUST_CARGO_HOME)"
+	.venv/bin/python tools/check-rust-assets --bootstrap --cargo-home ".venv/rust-cargo-home"
 
 rust-check:
-	$(PYTHON) tools/check-rust-assets --cargo-home "$(RUST_CARGO_HOME)"
+	.venv/bin/python tools/check-rust-assets --cargo-home ".venv/rust-cargo-home"
 
 lock:
-	CUSTOM_COMPILE_COMMAND="make lock" $(PYTHON) -m piptools compile --allow-unsafe --generate-hashes --quiet --strip-extras --resolver=backtracking --output-file=requirements-dev.txt requirements-dev.in
+	.venv/bin/python -m skillpack_tools lock
 
 lock-check:
-	$(PYTHON) tools/check-dependency-lock
+	.venv/bin/python -m skillpack_tools lock --check
 
 generate:
-	$(PYTHON) tools/generate-all
+	.venv/bin/python -m skillpack_tools generate
 
 validate:
-	$(PYTHON) tools/validate-repository --check-generated --strict-placeholders
+	.venv/bin/python -m skillpack_tools validate --check-generated --strict-placeholders
 
 eval:
-	$(PYTHON) tools/run-evals
+	.venv/bin/python -m skillpack_tools eval
 
 lint:
-	$(PYTHON) -m ruff check .
-	$(PYTHON) -m ruff format --check .
-	$(PYTHON) tools/lint-portable
+	.venv/bin/python -m skillpack_tools lint
 
 test:
-	$(PYTHON) -m pytest
+	.venv/bin/python -m skillpack_tools test
 
-check: lock-check rust-check
-	$(PYTHON) tools/generate-all --check
-	$(MAKE) validate eval lint test
+check:
+	.venv/bin/python -m skillpack_tools check
+
+check-pack:
+	.venv/bin/python -m skillpack_tools check-pack $(PACK)
 
 configure:
-	@echo "Use: $(PYTHON) tools/configure-repository --help"
+	@echo "Use: .venv/bin/python tools/configure-repository --help"
 
 release:
-	@echo "Use: $(PYTHON) tools/release-pack PACK_ID --draft for a local rehearsal"
+	@echo "Use: .venv/bin/python tools/release-pack PACK_ID --draft for a local rehearsal"
 
 clean:
 	rm -rf .build .tmp .pytest_cache .ruff_cache .mypy_cache .coverage htmlcov dist/releases

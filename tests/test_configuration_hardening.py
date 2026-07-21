@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import stat
 from copy import deepcopy
 from pathlib import Path
@@ -101,7 +102,7 @@ def test_configuration_preserves_unknown_fields_for_schema_rejection(
     path.write_text(dump_yaml(data), encoding="utf-8")
     before = _snapshot(configuration_root)
 
-    with pytest.raises(ValueError, match="repository.yaml:repository"):
+    with pytest.raises(ValueError, match=re.escape("repository.yaml:repository")):
         configure_repository(configuration_root)
 
     assert _snapshot(configuration_root) == before
@@ -145,7 +146,7 @@ def test_configuration_rejects_missing_or_wrong_type_sections_before_indexing(
     path.write_text(dump_yaml(data), encoding="utf-8")
     before = _snapshot(configuration_root)
 
-    with pytest.raises(ValueError, match="repository.yaml"):
+    with pytest.raises(ValueError, match=re.escape("repository.yaml")):
         configure_repository(configuration_root)
 
     assert _snapshot(configuration_root) == before
@@ -169,7 +170,7 @@ def test_configuration_rejects_malformed_or_invalid_schema_before_writing(
     schema_path.write_text(schema_text, encoding="utf-8")
     before = _snapshot(configuration_root)
 
-    with pytest.raises(ValueError, match="schemas/repository.schema.json"):
+    with pytest.raises(ValueError, match=re.escape("schemas/repository.schema.json")):
         configure_repository(configuration_root)
 
     assert _snapshot(configuration_root) == before
@@ -188,7 +189,7 @@ def test_configuration_rejects_oversized_or_overdeep_schema_before_writing(
     ):
         schema_path.write_text(schema_text, encoding="utf-8")
         before = _snapshot(configuration_root)
-        with pytest.raises(ValueError, match="schemas/repository.schema.json"):
+        with pytest.raises(ValueError, match=re.escape("schemas/repository.schema.json")):
             configure_repository(configuration_root)
         assert _snapshot(configuration_root) == before
 

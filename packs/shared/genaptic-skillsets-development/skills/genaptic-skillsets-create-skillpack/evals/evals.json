@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "skill": "genaptic-skillsets-create-skillpack",
+  "routing": [
+    {
+      "id": "explicit-positive",
+      "kind": "explicit-positive",
+      "prompt": "Use genaptic-skillsets-create-skillpack to create a Go Microservices skillpack. Scope it to production HTTP services and include detailed skills for service layout, graceful shutdown, health endpoints, and request observability.",
+      "shouldTrigger": true,
+      "reason": "The prompt explicitly requests a new skillpack and supplies name, scope, and a multi-skill list."
+    },
+    {
+      "id": "implicit-positive-new-language-subject",
+      "kind": "implicit-positive",
+      "prompt": "Add a new independently installable typescript-docs pack with four complete skills: API reference authoring, examples validation, migration guides, and package README review. Research each domain and wire every client adapter.",
+      "shouldTrigger": true,
+      "reason": "The requested result is one new package containing a detailed coordinated list of skills."
+    },
+    {
+      "id": "implicit-positive-independent-one-skill-pack",
+      "kind": "implicit-positive",
+      "prompt": "Add a new independently installable rust-unsafe-code-audit pack containing exactly one skill, rust-unsafe-boundary-review. Security reviewers need that focused installation and release boundary; rust-core-best-practices owns the nearest excluded general Rust review outcome. Research and integrate the complete pack.",
+      "shouldTrigger": true,
+      "reason": "A new one-skill pack with a genuine independent installation and release boundary belongs to the skillpack workflow."
+    },
+    {
+      "id": "contextual-positive-design-brief",
+      "kind": "contextual-positive",
+      "prompt": "Here is a design document naming the rust-cli-apps skillpack, its package boundaries, and five detailed skills. Add the complete pack to this repository, resolve overlaps with current CLI skills, generate catalogs and installers, and verify everything.",
+      "shouldTrigger": true,
+      "reason": "The supplied artifact contains the required package and skill-list context."
+    },
+    {
+      "id": "negative-release-existing-pack",
+      "kind": "negative",
+      "prompt": "Bump python-cli-apps to 1.1.0, generate its release archive, and write release notes; do not add skills.",
+      "shouldTrigger": false,
+      "reason": "This is release maintenance for an existing pack, not creation of a new skillpack."
+    },
+    {
+      "id": "negative-remote-git-personal-bundle",
+      "kind": "negative",
+      "prompt": "Push my already-created personal bundle of two unrelated home-directory Codex skills to its remote and open a pull request; do not create or edit any Genaptic pack or skill.",
+      "shouldTrigger": false,
+      "reason": "This requests only remote Git operations on an existing generic personal bundle, not creation of a Genaptic skillpack or skills."
+    }
+  ],
+  "behavior": [
+    {
+      "id": "focused-pack-design",
+      "kind": "focused",
+      "prompt": "Create a new typescript-library-maintenance skillpack with dependency-update-planning, public-api-compatibility-review, package-release-readiness, and deprecation-migration-authoring. The scope excludes application deployment and frontend UI design.",
+      "assertions": [
+        "Validates explicit package identity, runtimes, targets, aggregate operations, sources, and complete per-skill contracts before mutation",
+        "Inspects every existing pack and all skill names and descriptions for identity and conceptual overlap",
+        "Uses current primary package-level and per-skill web sources with source-to-decision records",
+        "Produces a cohesion decision and pairwise boundary matrix with explicit existing and proposed neighbors",
+        "Creates a complete schema-valid pack and every required file including each skill's OpenAI interface",
+        "Runs make generate before non-mutating make check and reports real structural results without claiming native-client evidence"
+      ],
+      "forbidden": [
+        "Silently renames, drops, merges, or adds skills from the supplied list",
+        "Creates broad catch-all routing that competes with every listed skill",
+        "Accepts pack operations that differ from the component-wise maximum of included skills",
+        "Hand-edits generated marketplaces, installers, or catalogs"
+      ]
+    },
+    {
+      "id": "end-to-end-research-decompose-verify",
+      "kind": "end-to-end",
+      "prompt": "From my detailed Kubernetes Operations brief, create rollout-safety-review, manifest-policy-review, workload-resource-review, and incident-context-collection as a new pack. Research the current APIs and clients, use preview-first scaffolding, author all skills and tests, regenerate, validate, and report the final state.",
+      "assertions": [
+        "Checks whether each requested outcome belongs together or in an existing pack and records any proposed list change for approval",
+        "Maps public identity to language, subject, path, and pack ID without hiding version, runtime, target, or permission defaults",
+        "Keeps every installed skill self-contained with shallow references and no root-only critical dependency",
+        "Adds reviewed A-only, B-only, both, and neither boundary cases for likely collisions",
+        "Reviews a deterministic no-write preview and applies only with its exact plan digest after source preimages are rechecked",
+        "Audits the final diff for duplicate canonical content, placeholders, secrets, unrelated edits, version disagreement, and generated drift"
+      ],
+      "forbidden": [
+        "Treats existence of all files as proof of domain correctness",
+        "Runs copied web commands or production operations during research",
+        "Installs missing tools or dependencies, uses hidden network access, or runs subprocesses from the scaffold helper",
+        "Claims web research, client compatibility, or test success without executed evidence",
+        "Commits, pushes, tags, publishes, or performs external writes without a separate request"
+      ]
+    }
+  ]
+}

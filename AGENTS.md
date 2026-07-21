@@ -11,7 +11,7 @@ separation in every change.
 - Edit pack metadata only in `packs/<language>/<subject>/skillpack.yaml`.
 - Edit skills only in their canonical `skills/<skill-name>/` directories.
 - Do not hand-edit `.claude-plugin/`, `.agents/plugins/`, `catalog.json`, generated plugin
-  manifests, `dist/install/`, `dist/opencode/`, or `dist/generated-files.json`.
+  manifests, `dist/public/`, `dist/preview/`, `dist/dev/`, or `dist/generated-files.json`.
 - Never create canonical duplicates under `.claude/skills`, `.agents/skills`, or
   `.opencode/skills`.
 
@@ -34,12 +34,12 @@ make check
 fail on generated-output or dependency-lock drift. Do not silence validation warnings;
 `--strict-placeholders` must pass.
 
-## Repository-development routing
+## Genaptic Skillsets development routing
 
-- Use `$create-new-skill` only for exactly one new public skill that belongs in an existing
-  skillpack.
-- Use `$create-new-skillset` for a new independently installable pack, a coordinated list of
-  skills, or a capability with no coherent existing pack owner.
+- Use `$genaptic-skillsets-create-skill` only for exactly one new public skill that belongs in
+  an existing skillpack.
+- Use `$genaptic-skillsets-create-skillpack` for a new independently installable pack, a
+  coordinated list of skills, or a capability with no coherent existing pack owner.
 - Do not use either workflow to edit an existing public skill, publish a pack, or perform remote
   Git operations.
 - Preview scaffold changes first. Apply only the unchanged reviewed plan with
@@ -61,11 +61,12 @@ fail on generated-output or dependency-lock drift. Do not silence validation war
   deterministic, documented helpers in `scripts/`.
 - Helpers must default to read-only behavior, use no hidden network access, install no
   dependencies, print actionable failures, and never execute during installation.
-- Repository-development request documents must validate against their bundled canonical JSON
-  Schemas before preview or apply. Do not invent public IDs, versions, runtimes, permission
+- Genaptic Skillsets development request documents must validate against their bundled
+  canonical JSON Schemas before preview or apply. Do not invent public IDs, versions, runtimes, permission
   envelopes, or neighboring skill boundaries.
-- Every skill must include routing and behavior evals. Add positive, contextual, negative,
-  overlap, and end-to-end cases for changed behavior.
+- Every skill must include routing and behavior evals. Add positive, contextual, negative, and
+  end-to-end cases for changed behavior, and maintain its reviewed four-outcome relationship in
+  `evals/routing-boundaries.json`.
 - Preserve client portability. Do not make core behavior depend on one vendor-specific
   frontmatter field or command.
 

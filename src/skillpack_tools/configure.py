@@ -4,6 +4,7 @@ import json
 import os
 import re
 from copy import deepcopy
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -40,10 +41,15 @@ IDENTITY_TEXT_SURFACES = (
     "schemas/repository.schema.json",
     "schemas/skillpack.schema.json",
     "schemas/evals.schema.json",
+    "schemas/routing-boundaries.schema.json",
     "schemas/catalog.schema.json",
     "schemas/generated-files.schema.json",
     "schemas/eval-report.schema.json",
     "schemas/compatibility-report.schema.json",
+    "schemas/compatibility-evidence-envelope.schema.json",
+    "schemas/publication-record.schema.json",
+    "schemas/release-metadata.schema.json",
+    "schemas/release-intent.schema.json",
 )
 
 
@@ -53,6 +59,10 @@ def _write_if_changed(root: Path, relative: str, content: str, changed: list[str
     if current != content:
         atomic_write(path, content)
         changed.append(relative)
+
+
+def _surface_replacement(match: re.Match[str], *, replacements: dict[str, str]) -> str:
+    return replacements[match.group(0)]
 
 
 def _replace_placeholder_maintainers(data: dict[str, Any], github: str) -> bool:
@@ -114,6 +124,8 @@ def configure_repository(
     copyright_owner: str | None = None,
     maintainer_name: str | None = None,
     maintainer_github: str | None = None,
+    maintainer_github_id: int | None = None,
+    trusted_ssh_fingerprint: str | None = None,
     security_channel: str | None = None,
     security_email: str | None = None,
     marketplace_name: str | None = None,
@@ -172,6 +184,7 @@ def configure_repository(
     maintainer_github = (
         data["maintainer"]["github"] if maintainer_github is None else maintainer_github
     )
+    identity_changes = maintainer_github != old_github
     publisher_name = (
         current_publisher.get("name", maintainer_name) if publisher_name is None else publisher_name
     )
@@ -225,6 +238,24 @@ def configure_repository(
     candidate["marketplace"]["description"] = marketplace_description
     candidate["release"]["license"] = license_id
     candidate["release"]["initial-year"] = initial_year
+    validate_schema_instance(candidate, schema, label="repository.yaml")
+    if identity_changes and (maintainer_github_id is None or trusted_ssh_fingerprint is None):
+        raise ValueError(
+            "Changing maintainer-github requires maintainer_github_id and "
+            "trusted_ssh_fingerprint so evidence and release trust cannot drift silently."
+        )
+    if maintainer_github_id is not None:
+        candidate["compatibility-evidence"]["authorized-reviewers"] = [
+            {"github": maintainer_github, "github-id": maintainer_github_id}
+        ]
+    if trusted_ssh_fingerprint is not None:
+        candidate["release"]["trusted-signers"] = [
+            {
+                "type": "ssh",
+                "github": maintainer_github,
+                "fingerprint": trusted_ssh_fingerprint,
+            }
+        ]
 
     validate_schema_instance(candidate, schema, label="repository.yaml")
 
@@ -277,8 +308,7 @@ def configure_repository(
                 )
             )
             text = replacement_pattern.sub(
-                lambda match: surface_replacements[match.group(0)],
-                text,
+                partial(_surface_replacement, replacements=surface_replacements), text
             )
         _write_if_changed(root, relative, text, changed)
 
@@ -310,10 +340,6 @@ def configure_repository(
         (
             f"          DEFAULT_BRANCH: {old_branch_yaml}\n",
             f"          DEFAULT_BRANCH: {default_branch_yaml}\n",
-        ),
-        (
-            f"success\\tworkflow_dispatch\\t{old_branch}\\t",
-            f"success\\tworkflow_dispatch\\t{default_branch}\\t",
         ),
     )
     for relative in workflow_branch_surfaces:

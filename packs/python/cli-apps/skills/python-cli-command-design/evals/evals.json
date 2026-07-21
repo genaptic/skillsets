@@ -43,14 +43,6 @@
       "prompt": "Write pytest and subprocess tests for the existing CLI's help, stdin, output, and signals.",
       "shouldTrigger": false,
       "reason": "The task is CLI testing rather than command design."
-    },
-    {
-      "id": "overlap-error-output",
-      "kind": "overlap",
-      "prompt": "Design the user-facing diagnostic format, debug traceback policy, and numeric exit-status mapping for existing commands.",
-      "shouldTrigger": false,
-      "reason": "The interface already exists; the failure contract is the narrower concern.",
-      "preferredSkill": "python-cli-error-output"
     }
   ],
   "behavior": [

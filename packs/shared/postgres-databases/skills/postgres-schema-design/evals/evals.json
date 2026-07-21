@@ -43,14 +43,6 @@
       "prompt": "This SELECT became slow after data growth. Interpret the EXPLAIN ANALYZE JSON and identify the bottleneck.",
       "shouldTrigger": false,
       "reason": "Plan interpretation and runtime evidence belong to query performance review."
-    },
-    {
-      "id": "overlap-schema-review",
-      "kind": "overlap",
-      "prompt": "Review these existing CREATE TABLE statements and catalog snapshots, rank defects, and propose minimal corrections.",
-      "shouldTrigger": false,
-      "reason": "An existing-schema audit has the narrower contract and should trigger instead.",
-      "preferredSkill": "postgres-schema-review"
     }
   ],
   "behavior": [

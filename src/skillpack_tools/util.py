@@ -5,6 +5,7 @@ import json
 import os
 import re
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,23 @@ MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 
 class SkillpackError(RuntimeError):
     """A user-facing repository tooling error."""
+
+
+def rollback_after_failure(
+    failure: BaseException,
+    rollback: Callable[[], None],
+    *,
+    label: str,
+) -> None:
+    """Run transactional rollback, preserving an actionable dual-failure diagnostic."""
+
+    try:
+        rollback()
+    except BaseException as rollback_failure:
+        raise SkillpackError(
+            f"{label} failed ({type(failure).__name__}: {failure}); rollback also failed "
+            f"({type(rollback_failure).__name__}: {rollback_failure})."
+        ) from rollback_failure
 
 
 def find_repository_root(start: Path | None = None) -> Path:

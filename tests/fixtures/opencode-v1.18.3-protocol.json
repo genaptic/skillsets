@@ -1,0 +1,21 @@
+{
+  "version": "1.18.3",
+  "tagCommit": "127bdb30784d508cc556c71a0f32b508a3061517",
+  "configuration": {
+    "skills": {
+      "urls": [
+        "https://example.invalid/opencode/python/best-practices/"
+      ]
+    }
+  },
+  "indexEntryKeys": [
+    "files",
+    "name",
+    "version"
+  ],
+  "requiredSkillFile": "SKILL.md",
+  "sources": {
+    "configuration": "https://github.com/anomalyco/opencode/blob/127bdb30784d508cc556c71a0f32b508a3061517/packages/core/src/v1/config/skills.ts",
+    "discovery": "https://github.com/anomalyco/opencode/blob/127bdb30784d508cc556c71a0f32b508a3061517/packages/opencode/src/skill/discovery.ts"
+  }
+}

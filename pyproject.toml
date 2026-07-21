@@ -40,6 +40,9 @@ xfail_strict = true
 filterwarnings = [
   "error",
 ]
+markers = [
+  "rust_repository_contract: canonical Rust pack and native-Cargo contracts owned by the selected Rust release gate",
+]
 
 [tool.coverage.run]
 branch = true
@@ -55,6 +58,7 @@ target-version = "py311"
 line-length = 100
 extend-exclude = ["dist"]
 extend-include = [
+  "tools/bootstrap",
   "tools/check-dependency-lock",
   "tools/check-dco",
   "tools/check-rust-assets",
@@ -71,6 +75,7 @@ extend-include = [
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "UP"]
+extend-select = ["B", "C4", "PIE", "RUF", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
 "tools/configure-repository" = ["E402"]

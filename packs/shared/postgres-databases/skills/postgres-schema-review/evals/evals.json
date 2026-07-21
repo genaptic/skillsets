@@ -43,14 +43,6 @@
       "prompt": "Define our RPO, WAL archiving, retention, restore topology, and quarterly recovery exercise.",
       "shouldTrigger": false,
       "reason": "This is backup and recovery planning, not schema review."
-    },
-    {
-      "id": "overlap-migration",
-      "kind": "overlap",
-      "prompt": "Plan a low-lock production rollout for these already approved constraint and index changes on a 2 TB table.",
-      "shouldTrigger": false,
-      "reason": "The schema decision is complete and safe deployment is the narrower concern.",
-      "preferredSkill": "postgres-migration-safety"
     }
   ],
   "behavior": [

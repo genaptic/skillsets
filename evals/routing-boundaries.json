@@ -1,0 +1,749 @@
+{
+  "schemaVersion": 1,
+  "boundaries": [
+    {
+      "id": "genaptic-skillsets-create-skill-vs-genaptic-skillsets-create-skillpack",
+      "skills": [
+        "genaptic-skillsets-create-skill",
+        "genaptic-skillsets-create-skillpack"
+      ],
+      "sharedVocabulary": ["authoring request", "skill boundary", "skillpack"],
+      "outcomeExplanations": {
+        "a-only": "Exactly one public skill belongs in an existing skillpack.",
+        "b-only": "A new installable pack or coordinated capability needs a skillpack plan.",
+        "both": "The request separately adds one skill to an existing pack and creates a new pack.",
+        "neither": "The request changes an existing skill and does not scaffold new public surface."
+      },
+      "cases": [
+        {
+          "id": "genaptic-skillsets-create-skill-vs-genaptic-skillsets-create-skillpack-a-only",
+          "outcome": "a-only",
+          "prompt": "Add exactly one skill named python-logging-boundary-review to the existing python-best-practices pack, using these detailed requirements and exclusions.",
+          "expectedSkills": ["genaptic-skillsets-create-skill"],
+          "reason": "One new skill in an existing pack has the narrower create-skill contract."
+        },
+        {
+          "id": "genaptic-skillsets-create-skill-vs-genaptic-skillsets-create-skillpack-b-only",
+          "outcome": "b-only",
+          "prompt": "Add a new independently installable rust-unsafe-code-audit pack containing exactly one skill, rust-unsafe-boundary-review. Security reviewers need that focused installation and release boundary; rust-core-best-practices owns the nearest excluded general Rust review outcome. Research and integrate the complete pack.",
+          "expectedSkills": ["genaptic-skillsets-create-skillpack"],
+          "reason": "Even one declared skill belongs to the skillpack workflow when it creates an independent release boundary."
+        },
+        {
+          "id": "genaptic-skillsets-create-skill-vs-genaptic-skillsets-create-skillpack-both",
+          "outcome": "both",
+          "prompt": "Create a new installable observability skillpack with two coordinated skills, and separately add one logging-review skill to the existing Python best-practices pack.",
+          "expectedSkills": [
+            "genaptic-skillsets-create-skill",
+            "genaptic-skillsets-create-skillpack"
+          ],
+          "reason": "The two independent deliverables require both reviewed scaffolding workflows."
+        },
+        {
+          "id": "genaptic-skillsets-create-skill-vs-genaptic-skillsets-create-skillpack-neither",
+          "outcome": "neither",
+          "prompt": "Revise the verification section of the existing python-project-layout skill without adding a skill or changing its pack boundary.",
+          "expectedSkills": [],
+          "reason": "Editing an existing public skill is explicitly outside both scaffolding workflows."
+        }
+      ]
+    },
+    {
+      "id": "postgres-backup-recovery-vs-postgres-migration-safety",
+      "skills": ["postgres-backup-recovery", "postgres-migration-safety"],
+      "sharedVocabulary": ["recovery", "rollback", "runbook"],
+      "outcomeExplanations": {
+        "a-only": "The outcome is backup integrity, restore testing, or recovery readiness.",
+        "b-only": "The outcome is a guarded production change rollout and operational rollback.",
+        "both": "A risky migration needs both a rollout plan and independently verified recovery capability.",
+        "neither": "The task is general database observation without a migration or recovery change."
+      },
+      "cases": [
+        {
+          "id": "postgres-backup-recovery-vs-postgres-migration-safety-a-only",
+          "outcome": "a-only",
+          "prompt": "Audit our PostgreSQL base backups and WAL archive, then design an isolated point-in-time restore rehearsal with measurable recovery objectives.",
+          "expectedSkills": ["postgres-backup-recovery"],
+          "reason": "The deliverable is recovery capability and restore evidence, not a schema rollout."
+        },
+        {
+          "id": "postgres-backup-recovery-vs-postgres-migration-safety-b-only",
+          "outcome": "b-only",
+          "prompt": "We need an operational rollback and restore trigger for one approved high-risk schema migration next week.",
+          "expectedSkills": ["postgres-migration-safety"],
+          "reason": "The primary deliverable is the migration runbook, which should reference existing recovery capability."
+        },
+        {
+          "id": "postgres-backup-recovery-vs-postgres-migration-safety-both",
+          "outcome": "both",
+          "prompt": "Before a destructive PostgreSQL type migration, prove point-in-time restore in isolation and prepare the low-lock rollout, abort criteria, and rollback runbook.",
+          "expectedSkills": ["postgres-backup-recovery", "postgres-migration-safety"],
+          "reason": "The request has distinct recovery-verification and safe-migration workstreams."
+        },
+        {
+          "id": "postgres-backup-recovery-vs-postgres-migration-safety-neither",
+          "outcome": "neither",
+          "prompt": "Explain the difference between PostgreSQL text and varchar for a classroom exercise with no production system or proposed change.",
+          "expectedSkills": [],
+          "reason": "A conceptual type comparison needs neither operational recovery nor migration planning."
+        }
+      ]
+    },
+    {
+      "id": "postgres-index-design-vs-postgres-migration-safety",
+      "skills": ["postgres-index-design", "postgres-migration-safety"],
+      "sharedVocabulary": ["index", "locking", "production change"],
+      "outcomeExplanations": {
+        "a-only": "The access path, columns, order, predicate, and redundancy are not yet decided.",
+        "b-only": "An approved index definition needs safe production rollout and rollback controls.",
+        "both": "The request requires an index decision followed by a separately guarded rollout.",
+        "neither": "The task neither selects an index nor plans a production mutation."
+      },
+      "cases": [
+        {
+          "id": "postgres-index-design-vs-postgres-migration-safety-a-only",
+          "outcome": "a-only",
+          "prompt": "We know the query is slow but have not chosen the exact access method, columns, order, or partial predicate.",
+          "expectedSkills": ["postgres-index-design"],
+          "reason": "The change is not yet designed; focused index design should happen before rollout."
+        },
+        {
+          "id": "postgres-index-design-vs-postgres-migration-safety-b-only",
+          "outcome": "b-only",
+          "prompt": "The DBA has approved this exact CREATE INDEX CONCURRENTLY statement; prepare production prechecks, monitoring, cancellation, and rollback steps.",
+          "expectedSkills": ["postgres-migration-safety"],
+          "reason": "Index selection is complete and the remaining outcome is safe operational execution."
+        },
+        {
+          "id": "postgres-index-design-vs-postgres-migration-safety-both",
+          "outcome": "both",
+          "prompt": "Choose the smallest useful partial index for this diagnosed workload, then plan its low-risk production creation, validation, and rollback.",
+          "expectedSkills": ["postgres-index-design", "postgres-migration-safety"],
+          "reason": "The request explicitly combines index definition with production rollout safety."
+        },
+        {
+          "id": "postgres-index-design-vs-postgres-migration-safety-neither",
+          "outcome": "neither",
+          "prompt": "List the PostgreSQL indexes already present on these tables without recommending or applying any changes.",
+          "expectedSkills": [],
+          "reason": "A read-only inventory alone does not require index design or migration execution."
+        }
+      ]
+    },
+    {
+      "id": "postgres-index-design-vs-postgres-query-performance-review",
+      "skills": ["postgres-index-design", "postgres-query-performance-review"],
+      "sharedVocabulary": ["execution plan", "index", "query latency"],
+      "outcomeExplanations": {
+        "a-only": "Evidence already identifies the access pattern and the task is an exact index definition.",
+        "b-only": "The bottleneck is unknown and must be established from safe observations first.",
+        "both": "The request asks for evidence-backed diagnosis and an index only if that evidence supports one.",
+        "neither": "The task does not diagnose a query or design an index."
+      },
+      "cases": [
+        {
+          "id": "postgres-index-design-vs-postgres-query-performance-review-a-only",
+          "outcome": "a-only",
+          "prompt": "Given this diagnosed filter and sort pattern, specify the exact PostgreSQL index definition, rollout, and redundancy plan.",
+          "expectedSkills": ["postgres-index-design"],
+          "reason": "The bottleneck has been diagnosed and the narrower deliverable is index design."
+        },
+        {
+          "id": "postgres-index-design-vs-postgres-query-performance-review-b-only",
+          "outcome": "b-only",
+          "prompt": "A SELECT regressed, but we do not yet know whether the bottleneck is plan estimates, blocking, I/O, or a missing index.",
+          "expectedSkills": ["postgres-query-performance-review"],
+          "reason": "The broader diagnosis must establish the mechanism before index design."
+        },
+        {
+          "id": "postgres-index-design-vs-postgres-query-performance-review-both",
+          "outcome": "both",
+          "prompt": "Review safe plan and runtime evidence for this slow query, and if it proves an access-path gap, design the exact minimal PostgreSQL index.",
+          "expectedSkills": ["postgres-index-design", "postgres-query-performance-review"],
+          "reason": "Diagnosis and conditional index design are both explicit deliverables."
+        },
+        {
+          "id": "postgres-index-design-vs-postgres-query-performance-review-neither",
+          "outcome": "neither",
+          "prompt": "Format this SQL keyword list for a documentation page without connecting to a database or evaluating performance.",
+          "expectedSkills": [],
+          "reason": "Documentation formatting requires neither performance diagnosis nor index design."
+        }
+      ]
+    },
+    {
+      "id": "postgres-migration-safety-vs-postgres-schema-review",
+      "skills": ["postgres-migration-safety", "postgres-schema-review"],
+      "sharedVocabulary": ["constraints", "existing schema", "production rollout"],
+      "outcomeExplanations": {
+        "a-only": "Approved schema changes need a production-safe rollout plan.",
+        "b-only": "Existing schema artifacts need evidence-backed defect review before changes are selected.",
+        "both": "The request asks for a schema review and safe rollout of the accepted corrections.",
+        "neither": "The task does not review existing schema or execute schema changes."
+      },
+      "cases": [
+        {
+          "id": "postgres-migration-safety-vs-postgres-schema-review-a-only",
+          "outcome": "a-only",
+          "prompt": "Plan a low-lock production rollout for these already approved constraint and index changes on a 2 TB table.",
+          "expectedSkills": ["postgres-migration-safety"],
+          "reason": "The schema decision is complete and safe deployment is the narrower concern."
+        },
+        {
+          "id": "postgres-migration-safety-vs-postgres-schema-review-b-only",
+          "outcome": "b-only",
+          "prompt": "Review this existing PostgreSQL catalog snapshot for weak constraints, inconsistent types, ownership defects, and privilege drift without planning deployment.",
+          "expectedSkills": ["postgres-schema-review"],
+          "reason": "The requested outcome is an evidence-backed audit of the current schema."
+        },
+        {
+          "id": "postgres-migration-safety-vs-postgres-schema-review-both",
+          "outcome": "both",
+          "prompt": "Audit the existing customer schema, rank concrete defects, and prepare a guarded migration runbook for the corrections we approve.",
+          "expectedSkills": ["postgres-migration-safety", "postgres-schema-review"],
+          "reason": "The work includes both current-state review and operational change planning."
+        },
+        {
+          "id": "postgres-migration-safety-vs-postgres-schema-review-neither",
+          "outcome": "neither",
+          "prompt": "Summarize PostgreSQL's release cadence for an internal newsletter without inspecting or changing any database.",
+          "expectedSkills": [],
+          "reason": "Product-release prose is unrelated to schema review and migration safety."
+        }
+      ]
+    },
+    {
+      "id": "postgres-schema-design-vs-postgres-schema-review",
+      "skills": ["postgres-schema-design", "postgres-schema-review"],
+      "sharedVocabulary": ["constraints", "data model", "schema"],
+      "outcomeExplanations": {
+        "a-only": "A new or materially redesigned model needs tables, constraints, keys, and ownership decisions.",
+        "b-only": "Existing DDL or catalog evidence needs defect review and minimal corrections.",
+        "both": "The existing model must be reviewed before a replacement design is proposed.",
+        "neither": "The task does not design or review a PostgreSQL schema."
+      },
+      "cases": [
+        {
+          "id": "postgres-schema-design-vs-postgres-schema-review-a-only",
+          "outcome": "a-only",
+          "prompt": "Design a new PostgreSQL model for organizations, memberships, invitations, and expiring roles with explicit keys, constraints, and ownership boundaries.",
+          "expectedSkills": ["postgres-schema-design"],
+          "reason": "The request creates a new relational contract rather than auditing existing DDL."
+        },
+        {
+          "id": "postgres-schema-design-vs-postgres-schema-review-b-only",
+          "outcome": "b-only",
+          "prompt": "Review these existing CREATE TABLE statements and catalog snapshots, rank defects, and propose minimal corrections.",
+          "expectedSkills": ["postgres-schema-review"],
+          "reason": "An existing-schema audit has the narrower contract and should trigger instead."
+        },
+        {
+          "id": "postgres-schema-design-vs-postgres-schema-review-both",
+          "outcome": "both",
+          "prompt": "Review the legacy billing schema for evidence-backed defects, then design the normalized replacement model and document each deliberate compatibility break.",
+          "expectedSkills": ["postgres-schema-design", "postgres-schema-review"],
+          "reason": "The request has distinct audit and new-design phases that need both skills."
+        },
+        {
+          "id": "postgres-schema-design-vs-postgres-schema-review-neither",
+          "outcome": "neither",
+          "prompt": "Write a parameterized SELECT against a documented table without changing or reviewing the database schema.",
+          "expectedSkills": [],
+          "reason": "A routine query does not require schema design or an existing-schema audit."
+        }
+      ]
+    },
+    {
+      "id": "python-cli-command-design-vs-python-cli-error-output",
+      "skills": ["python-cli-command-design", "python-cli-error-output"],
+      "sharedVocabulary": ["command contract", "exit status", "user interface"],
+      "outcomeExplanations": {
+        "a-only": "The command grammar, inputs, outputs, and compatibility contract need design.",
+        "b-only": "Existing commands need a coherent diagnostic, stream, traceback, and exit-status policy.",
+        "both": "A command redesign includes both normal interface behavior and its failure contract.",
+        "neither": "The task does not change a Python command interface or its errors."
+      },
+      "cases": [
+        {
+          "id": "python-cli-command-design-vs-python-cli-error-output-a-only",
+          "outcome": "a-only",
+          "prompt": "Design the subcommands, option names, precedence rules, stdin behavior, and stable machine-output shape for a new Python administration CLI.",
+          "expectedSkills": ["python-cli-command-design"],
+          "reason": "The request is command-interface design with no focused failure-output task."
+        },
+        {
+          "id": "python-cli-command-design-vs-python-cli-error-output-b-only",
+          "outcome": "b-only",
+          "prompt": "Design the user-facing diagnostic format, debug traceback policy, and numeric exit-status mapping for existing commands.",
+          "expectedSkills": ["python-cli-error-output"],
+          "reason": "The interface already exists; the failure contract is the narrower concern."
+        },
+        {
+          "id": "python-cli-command-design-vs-python-cli-error-output-both",
+          "outcome": "both",
+          "prompt": "Redesign this Python CLI's command grammar and machine-output contract, including stable stderr diagnostics and exit statuses for every failure class.",
+          "expectedSkills": ["python-cli-command-design", "python-cli-error-output"],
+          "reason": "Both the normal command interface and error-output protocol are in scope."
+        },
+        {
+          "id": "python-cli-command-design-vs-python-cli-error-output-neither",
+          "outcome": "neither",
+          "prompt": "Refactor an internal Python library cache that has no command-line entry point or user-visible process behavior.",
+          "expectedSkills": [],
+          "reason": "Internal library caching is outside both CLI interface contracts."
+        }
+      ]
+    },
+    {
+      "id": "python-cli-error-output-vs-python-error-handling",
+      "skills": ["python-cli-error-output", "python-error-handling"],
+      "sharedVocabulary": ["exceptions", "failure contract", "logging"],
+      "outcomeExplanations": {
+        "a-only": "The user-visible process contract for diagnostics, streams, tracebacks, and status codes dominates.",
+        "b-only": "Internal exception taxonomy, translation, cleanup, retry, or logging ownership dominates.",
+        "both": "The library exception policy and its CLI boundary mapping both need coordinated design.",
+        "neither": "The task does not concern Python exception policy or CLI failure output."
+      },
+      "cases": [
+        {
+          "id": "python-cli-error-output-vs-python-error-handling-a-only",
+          "outcome": "a-only",
+          "prompt": "Review a Python command's messages, debug mode, stderr routing, and process exit status when exceptions occur.",
+          "expectedSkills": ["python-cli-error-output"],
+          "reason": "The CLI error-output skill owns the user-visible process contract."
+        },
+        {
+          "id": "python-cli-error-output-vs-python-error-handling-b-only",
+          "outcome": "b-only",
+          "prompt": "Refactor internal exceptions, context-manager cleanup, retries, and logging before any CLI mapping is considered.",
+          "expectedSkills": ["python-error-handling"],
+          "reason": "The task is internal exception policy rather than process output."
+        },
+        {
+          "id": "python-cli-error-output-vs-python-error-handling-both",
+          "outcome": "both",
+          "prompt": "Define this Python library's exception taxonomy and translation boundaries, then map them to safe CLI diagnostics, traceback policy, streams, and exit statuses.",
+          "expectedSkills": ["python-cli-error-output", "python-error-handling"],
+          "reason": "The request spans internal exception semantics and the external process contract."
+        },
+        {
+          "id": "python-cli-error-output-vs-python-error-handling-neither",
+          "outcome": "neither",
+          "prompt": "Review a static HTML color palette for accessibility without changing Python code or a command-line interface.",
+          "expectedSkills": [],
+          "reason": "Visual design has no Python exception or CLI failure-output boundary."
+        }
+      ]
+    },
+    {
+      "id": "python-cli-testing-vs-python-testing-strategy",
+      "skills": ["python-cli-testing", "python-testing-strategy"],
+      "sharedVocabulary": ["fixtures", "integration tests", "test matrix"],
+      "outcomeExplanations": {
+        "a-only": "Tests specifically exercise command invocation, streams, exit codes, help, and shell behavior.",
+        "b-only": "The repository-wide test architecture, layers, fixtures, and selection policy dominate.",
+        "both": "The project needs a general testing strategy plus a specialized CLI test matrix.",
+        "neither": "The request does not design Python tests."
+      },
+      "cases": [
+        {
+          "id": "python-cli-testing-vs-python-testing-strategy-a-only",
+          "outcome": "a-only",
+          "prompt": "Create a comprehensive test matrix for command help, stdout, stderr, exit codes, stdin, and shell invocation.",
+          "expectedSkills": ["python-cli-testing"],
+          "reason": "The request is specifically CLI testing rather than repository-wide test strategy."
+        },
+        {
+          "id": "python-cli-testing-vs-python-testing-strategy-b-only",
+          "outcome": "b-only",
+          "prompt": "Redesign fixture scopes, coverage goals, markers, and the full Python project's pull-request test selection.",
+          "expectedSkills": ["python-testing-strategy"],
+          "reason": "The request is broader than the CLI and belongs to general testing strategy."
+        },
+        {
+          "id": "python-cli-testing-vs-python-testing-strategy-both",
+          "outcome": "both",
+          "prompt": "Create the repository-wide Python test pyramid and CI selection policy, then add a focused matrix for CLI help, streams, exit codes, stdin, and shell invocation.",
+          "expectedSkills": ["python-cli-testing", "python-testing-strategy"],
+          "reason": "The broad suite architecture and CLI-specific behavior both require coverage."
+        },
+        {
+          "id": "python-cli-testing-vs-python-testing-strategy-neither",
+          "outcome": "neither",
+          "prompt": "Run an already documented production smoke command and report its output without changing test design or test code.",
+          "expectedSkills": [],
+          "reason": "Executing an existing operational check is not a test-strategy design task."
+        }
+      ]
+    },
+    {
+      "id": "python-project-layout-vs-python-testing-strategy",
+      "skills": ["python-project-layout", "python-testing-strategy"],
+      "sharedVocabulary": ["package boundaries", "repository layout", "test placement"],
+      "outcomeExplanations": {
+        "a-only": "Package discovery, source layout, import isolation, or project boundaries need review.",
+        "b-only": "The existing package needs a risk-based test architecture rather than layout changes.",
+        "both": "A layout change requires a coordinated test-placement and verification strategy.",
+        "neither": "The task concerns neither Python project structure nor testing strategy."
+      },
+      "cases": [
+        {
+          "id": "python-project-layout-vs-python-testing-strategy-a-only",
+          "outcome": "a-only",
+          "prompt": "Review this Python repository's src layout, package discovery, editable-install isolation, namespace boundaries, and import behavior without redesigning its tests.",
+          "expectedSkills": ["python-project-layout"],
+          "reason": "The requested outcome is package and repository structure."
+        },
+        {
+          "id": "python-project-layout-vs-python-testing-strategy-b-only",
+          "outcome": "b-only",
+          "prompt": "Create a risk-based unit, integration, and end-to-end test plan for this existing Python package.",
+          "expectedSkills": ["python-testing-strategy"],
+          "reason": "The testing skill has the narrower contract; no layout problem is present."
+        },
+        {
+          "id": "python-project-layout-vs-python-testing-strategy-both",
+          "outcome": "both",
+          "prompt": "Move this Python project to an import-safe src layout and redesign unit, integration, and package-install tests around the new boundaries.",
+          "expectedSkills": ["python-project-layout", "python-testing-strategy"],
+          "reason": "The structural migration and its test architecture are both explicit outcomes."
+        },
+        {
+          "id": "python-project-layout-vs-python-testing-strategy-neither",
+          "outcome": "neither",
+          "prompt": "Tune a PostgreSQL query plan from supplied execution evidence without touching the Python repository.",
+          "expectedSkills": [],
+          "reason": "A database performance task has no Python layout or testing-strategy outcome."
+        }
+      ]
+    },
+    {
+      "id": "rust-abstraction-design-vs-rust-code-structure",
+      "skills": ["rust-abstraction-design", "rust-code-structure"],
+      "sharedVocabulary": ["error types", "ownership", "type design"],
+      "outcomeExplanations": {
+        "a-only": "Polymorphism, lifetimes, trait boundaries, and public error contracts dominate.",
+        "b-only": "Internal state representation, parameter grouping, and behavior placement dominate.",
+        "both": "The request changes both public abstraction contracts and internal type organization.",
+        "neither": "The task does not alter Rust abstractions or code structure."
+      },
+      "cases": [
+        {
+          "id": "rust-abstraction-design-vs-rust-code-structure-a-only",
+          "outcome": "a-only",
+          "prompt": "The type layout is already stable; choose whether three implementations should use generics, a trait object, or closed enum and define lifetimes and typed public errors.",
+          "expectedSkills": ["rust-abstraction-design"],
+          "reason": "Polymorphism, lifetime, and public error contracts dominate over internal type organization."
+        },
+        {
+          "id": "rust-abstraction-design-vs-rust-code-structure-b-only",
+          "outcome": "b-only",
+          "prompt": "Keep polymorphism and public errors unchanged; replace this string tag and optional-field struct with data-carrying enums, group repeated parameters, and place behavior on natural owners.",
+          "expectedSkills": ["rust-code-structure"],
+          "reason": "Internal type, state, and function organization is the narrower outcome."
+        },
+        {
+          "id": "rust-abstraction-design-vs-rust-code-structure-both",
+          "outcome": "both",
+          "prompt": "Redesign this Rust plugin boundary's polymorphism and typed errors, then reorganize its internal states and behavior around the new ownership model.",
+          "expectedSkills": ["rust-abstraction-design", "rust-code-structure"],
+          "reason": "The public abstraction and internal representation must evolve together."
+        },
+        {
+          "id": "rust-abstraction-design-vs-rust-code-structure-neither",
+          "outcome": "neither",
+          "prompt": "Correct spelling in a Rust workspace README without changing any source code, API, type, or module boundary.",
+          "expectedSkills": [],
+          "reason": "A constrained prose correction needs neither Rust design skill."
+        }
+      ]
+    },
+    {
+      "id": "rust-abstraction-design-vs-rust-project-architecture",
+      "skills": ["rust-abstraction-design", "rust-project-architecture"],
+      "sharedVocabulary": ["dependency direction", "public api", "runtime selection"],
+      "outcomeExplanations": {
+        "a-only": "The existing project layout remains fixed while a polymorphism or API contract is selected.",
+        "b-only": "Crate, target, module, and dependency boundaries need redesign without a focused polymorphism decision.",
+        "both": "New project boundaries and the public abstractions crossing them must be designed together.",
+        "neither": "The task changes neither Rust API abstractions nor project architecture."
+      },
+      "cases": [
+        {
+          "id": "rust-abstraction-design-vs-rust-project-architecture-a-only",
+          "outcome": "a-only",
+          "prompt": "Within the existing module tree, choose between a generic, trait object, and closed enum for three runtime-selectable implementations and design their error contract.",
+          "expectedSkills": ["rust-abstraction-design"],
+          "reason": "Polymorphism and API failure contracts dominate while project layout remains fixed."
+        },
+        {
+          "id": "rust-abstraction-design-vs-rust-project-architecture-b-only",
+          "outcome": "b-only",
+          "prompt": "Reorganize this Rust repository into a library, binaries, and workspace crates with explicit dependency direction while preserving all existing public traits and errors.",
+          "expectedSkills": ["rust-project-architecture"],
+          "reason": "Crate and target ownership dominate while abstraction contracts stay unchanged."
+        },
+        {
+          "id": "rust-abstraction-design-vs-rust-project-architecture-both",
+          "outcome": "both",
+          "prompt": "Split this Rust service into stable workspace crates and design the trait, lifetime, and typed-error contracts that cross their new boundaries.",
+          "expectedSkills": ["rust-abstraction-design", "rust-project-architecture"],
+          "reason": "The project topology and cross-boundary abstractions are inseparable deliverables."
+        },
+        {
+          "id": "rust-abstraction-design-vs-rust-project-architecture-neither",
+          "outcome": "neither",
+          "prompt": "Investigate a PostgreSQL backup retention alert without modifying the Rust repository or its public APIs.",
+          "expectedSkills": [],
+          "reason": "Database operations do not require Rust abstraction or architecture design."
+        }
+      ]
+    },
+    {
+      "id": "rust-async-concurrency-vs-rust-networking",
+      "skills": ["rust-async-concurrency", "rust-networking"],
+      "sharedVocabulary": ["cancellation", "retries", "timeouts"],
+      "outcomeExplanations": {
+        "a-only": "Task ownership, bounds, cancellation, and process-wide shutdown dominate.",
+        "b-only": "Transport reuse, request deadlines, retryability, and protocol behavior dominate.",
+        "both": "Network operations and their concurrent task lifecycle both require redesign.",
+        "neither": "The task concerns neither Rust async lifecycle nor networking behavior."
+      },
+      "cases": [
+        {
+          "id": "rust-async-concurrency-vs-rust-networking-a-only",
+          "outcome": "a-only",
+          "prompt": "Several HTTP and database background tasks ignore cancellation and prevent the Tokio process from shutting down; redesign their shared task lifecycle.",
+          "expectedSkills": ["rust-async-concurrency"],
+          "reason": "Although network clients are involved, process-wide task ownership and shutdown are the narrower async concurrency contract."
+        },
+        {
+          "id": "rust-async-concurrency-vs-rust-networking-b-only",
+          "outcome": "b-only",
+          "prompt": "Our async gRPC client reconnects for every call and retries timed-out writes; fix channel reuse and per-request deadline behavior.",
+          "expectedSkills": ["rust-networking"],
+          "reason": "Although async is involved, gRPC channel and retry semantics are the narrower networking outcome."
+        },
+        {
+          "id": "rust-async-concurrency-vs-rust-networking-both",
+          "outcome": "both",
+          "prompt": "Redesign this Rust client's connection pooling, deadline, and retry semantics together with bounded fan-out, cancellation, and graceful shutdown.",
+          "expectedSkills": ["rust-async-concurrency", "rust-networking"],
+          "reason": "The transport contract and concurrent task lifecycle both need coordinated changes."
+        },
+        {
+          "id": "rust-async-concurrency-vs-rust-networking-neither",
+          "outcome": "neither",
+          "prompt": "Update a license-year range in Cargo package metadata without changing runtime code, dependencies, or network behavior.",
+          "expectedSkills": [],
+          "reason": "Metadata-only maintenance has no async-concurrency or networking outcome."
+        }
+      ]
+    },
+    {
+      "id": "rust-cli-application-design-vs-rust-cli-command-development",
+      "skills": ["rust-cli-application-design", "rust-cli-command-development"],
+      "sharedVocabulary": ["command grammar", "dispatch", "output contract"],
+      "outcomeExplanations": {
+        "a-only": "Coordinated application-wide grammar, context, configuration, output, or error policy needs redesign.",
+        "b-only": "Exactly one command changes within an established CLI contract.",
+        "both": "An application-wide redesign also includes a separately scoped command implementation.",
+        "neither": "The task does not design or change a Rust CLI."
+      },
+      "cases": [
+        {
+          "id": "rust-cli-application-design-vs-rust-cli-command-development-a-only",
+          "outcome": "a-only",
+          "prompt": "Redesign every command in this Rust CLI around a new grammar, runtime context, configuration model, output protocol, and error taxonomy.",
+          "expectedSkills": ["rust-cli-application-design"],
+          "reason": "The application-design skill owns coordinated multi-command and application-level CLI design."
+        },
+        {
+          "id": "rust-cli-application-design-vs-rust-cli-command-development-b-only",
+          "outcome": "b-only",
+          "prompt": "In an existing Rust CLI, add exactly one `project archive` command while preserving the discovered grammar, dispatch, output, and test conventions.",
+          "expectedSkills": ["rust-cli-command-development"],
+          "reason": "The narrower skill owns adding or changing exactly one established CLI command."
+        },
+        {
+          "id": "rust-cli-application-design-vs-rust-cli-command-development-both",
+          "outcome": "both",
+          "prompt": "Redesign this Rust CLI's shared grammar and runtime context, then implement the new `project archive` command against the approved application contract.",
+          "expectedSkills": ["rust-cli-application-design", "rust-cli-command-development"],
+          "reason": "Application-wide design and the concrete single-command change are separate outcomes."
+        },
+        {
+          "id": "rust-cli-application-design-vs-rust-cli-command-development-neither",
+          "outcome": "neither",
+          "prompt": "Add a pure Rust library function for parsing timestamps without exposing or changing any command-line interface.",
+          "expectedSkills": [],
+          "reason": "A non-CLI library API belongs to neither Rust CLI skill."
+        }
+      ]
+    },
+    {
+      "id": "rust-core-best-practices-vs-rust-project-architecture",
+      "skills": ["rust-core-best-practices", "rust-project-architecture"],
+      "sharedVocabulary": ["crate boundaries", "idiomatic rust", "repository policy"],
+      "outcomeExplanations": {
+        "a-only": "A broad repository-aware Rust implementation or review does not center on project boundaries.",
+        "b-only": "Crate, target, module, dependency, and test-placement boundaries dominate.",
+        "both": "A broad Rust modernization explicitly includes architectural decomposition.",
+        "neither": "The task has no Rust implementation or architecture outcome."
+      },
+      "cases": [
+        {
+          "id": "rust-core-best-practices-vs-rust-project-architecture-a-only",
+          "outcome": "a-only",
+          "prompt": "Review this Rust patch for ownership, error handling, iterator use, safety, repository toolchain policy, and verification without changing crate boundaries.",
+          "expectedSkills": ["rust-core-best-practices"],
+          "reason": "The outcome is a broad idiomatic Rust review while architecture remains fixed."
+        },
+        {
+          "id": "rust-core-best-practices-vs-rust-project-architecture-b-only",
+          "outcome": "b-only",
+          "prompt": "Split this Rust application into a library, two binaries, and workspace packages, deciding module ownership, dependency direction, and integration-test placement.",
+          "expectedSkills": ["rust-project-architecture"],
+          "reason": "Crate, target, module, and test boundaries dominate, so the specialized architecture skill should win."
+        },
+        {
+          "id": "rust-core-best-practices-vs-rust-project-architecture-both",
+          "outcome": "both",
+          "prompt": "Modernize this Rust service for idiomatic ownership and errors while splitting it into a reusable library, two binaries, and policy-compliant workspace crates.",
+          "expectedSkills": ["rust-core-best-practices", "rust-project-architecture"],
+          "reason": "The request combines broad implementation guidance with explicit architecture work."
+        },
+        {
+          "id": "rust-core-best-practices-vs-rust-project-architecture-neither",
+          "outcome": "neither",
+          "prompt": "Draft release notes from an approved change list without reviewing Rust source or reorganizing the project.",
+          "expectedSkills": [],
+          "reason": "Release-note drafting has no Rust implementation or architecture decision."
+        }
+      ]
+    },
+    {
+      "id": "rust-dependency-portability-vs-rust-project-architecture",
+      "skills": ["rust-dependency-portability", "rust-project-architecture"],
+      "sharedVocabulary": ["crate ownership", "dependencies", "platform support"],
+      "outcomeExplanations": {
+        "a-only": "Dependency features, MSRV, licenses, targets, or offline policy need review within fixed boundaries.",
+        "b-only": "Crate and target ownership need redesign while dependency choices remain fixed.",
+        "both": "New crate boundaries require explicit dependency and portability decisions.",
+        "neither": "The task changes neither dependencies nor Rust project structure."
+      },
+      "cases": [
+        {
+          "id": "rust-dependency-portability-vs-rust-project-architecture-a-only",
+          "outcome": "a-only",
+          "prompt": "Review this Rust crate's dependency features, MSRV, target support, licenses, native requirements, and offline build policy without changing its crate layout.",
+          "expectedSkills": ["rust-dependency-portability"],
+          "reason": "Dependency and platform portability dominate while architecture stays fixed."
+        },
+        {
+          "id": "rust-dependency-portability-vs-rust-project-architecture-b-only",
+          "outcome": "b-only",
+          "prompt": "Split this Rust application into a thin binary and several library crates, deciding which dependencies each new boundary should own.",
+          "expectedSkills": ["rust-project-architecture"],
+          "reason": "Although dependency ownership is involved, crate-boundary design is the narrower architecture contract."
+        },
+        {
+          "id": "rust-dependency-portability-vs-rust-project-architecture-both",
+          "outcome": "both",
+          "prompt": "Split the Rust workspace by domain ownership and audit each new crate's features, MSRV, licenses, target support, and native build requirements.",
+          "expectedSkills": ["rust-dependency-portability", "rust-project-architecture"],
+          "reason": "The new architecture and dependency portability contracts must be designed together."
+        },
+        {
+          "id": "rust-dependency-portability-vs-rust-project-architecture-neither",
+          "outcome": "neither",
+          "prompt": "Explain a compiler diagnostic from a standalone snippet without selecting dependencies or changing the repository layout.",
+          "expectedSkills": [],
+          "reason": "A narrow language explanation needs neither dependency nor architecture work."
+        }
+      ]
+    },
+    {
+      "id": "rust-testing-strategy-vs-rustdoc-maintenance",
+      "skills": ["rust-testing-strategy", "rustdoc-maintenance"],
+      "sharedVocabulary": ["doctests", "examples", "verification"],
+      "outcomeExplanations": {
+        "a-only": "Test layers, placement, fixtures, failure modes, and CI selection dominate.",
+        "b-only": "Public API prose, links, examples, safety, errors, and platform documentation dominate.",
+        "both": "Public examples must become verified doctests within a broader test strategy.",
+        "neither": "The task changes neither Rust tests nor rustdoc."
+      },
+      "cases": [
+        {
+          "id": "rust-testing-strategy-vs-rustdoc-maintenance-a-only",
+          "outcome": "a-only",
+          "prompt": "Design unit, integration, property, binary smoke, and end-to-end test layers for this Rust workspace without changing its public documentation.",
+          "expectedSkills": ["rust-testing-strategy"],
+          "reason": "The request is test architecture rather than public API documentation."
+        },
+        {
+          "id": "rust-testing-strategy-vs-rustdoc-maintenance-b-only",
+          "outcome": "b-only",
+          "prompt": "Refresh the public API prose, repair intra-doc links, and rewrite its examples so readers understand safety, errors, and platform behavior.",
+          "expectedSkills": ["rustdoc-maintenance"],
+          "reason": "Although examples may become doctests, the primary outcome is public API documentation."
+        },
+        {
+          "id": "rust-testing-strategy-vs-rustdoc-maintenance-both",
+          "outcome": "both",
+          "prompt": "Rewrite the public Rust API examples as maintainable doctests and place them within a risk-based unit, integration, and documentation-test strategy.",
+          "expectedSkills": ["rust-testing-strategy", "rustdoc-maintenance"],
+          "reason": "Both documentation quality and test-layer design are explicit outcomes."
+        },
+        {
+          "id": "rust-testing-strategy-vs-rustdoc-maintenance-neither",
+          "outcome": "neither",
+          "prompt": "Change a Cargo package category field without touching tests, examples, public prose, or source behavior.",
+          "expectedSkills": [],
+          "reason": "Package metadata maintenance needs neither test strategy nor rustdoc work."
+        }
+      ]
+    },
+    {
+      "id": "rust-workspace-documentation-vs-rustdoc-maintenance",
+      "skills": ["rust-workspace-documentation", "rustdoc-maintenance"],
+      "sharedVocabulary": ["documentation drift", "examples", "rust workspace"],
+      "outcomeExplanations": {
+        "a-only": "Repository Markdown, architecture documents, runbooks, and agent guidance dominate.",
+        "b-only": "Crate-level or item-level public API prose, links, and doctestable examples dominate.",
+        "both": "Repository documentation and public API rustdoc need coordinated reconciliation.",
+        "neither": "The task changes neither workspace documentation nor rustdoc."
+      },
+      "cases": [
+        {
+          "id": "rust-workspace-documentation-vs-rustdoc-maintenance-a-only",
+          "outcome": "a-only",
+          "prompt": "Reconcile all Rust workspace READMEs, architecture documents, runbooks, and AGENTS.md files with current code; mention rustdoc drift separately.",
+          "expectedSkills": ["rust-workspace-documentation"],
+          "reason": "The requested artifacts are repository Markdown and agent guidance."
+        },
+        {
+          "id": "rust-workspace-documentation-vs-rustdoc-maintenance-b-only",
+          "outcome": "b-only",
+          "prompt": "Refresh crate-level and item-level rustdoc plus all doctestable examples across the workspace; report Markdown drift separately without editing Markdown.",
+          "expectedSkills": ["rustdoc-maintenance"],
+          "reason": "The requested deliverable is the public rustdoc surface."
+        },
+        {
+          "id": "rust-workspace-documentation-vs-rustdoc-maintenance-both",
+          "outcome": "both",
+          "prompt": "Reconcile the Rust workspace READMEs and architecture guides with current code, then update matching crate rustdoc, intra-doc links, and examples.",
+          "expectedSkills": ["rust-workspace-documentation", "rustdoc-maintenance"],
+          "reason": "Both repository-level and API-level documentation surfaces must agree."
+        },
+        {
+          "id": "rust-workspace-documentation-vs-rustdoc-maintenance-neither",
+          "outcome": "neither",
+          "prompt": "Fix a runtime cancellation race in a private Rust worker without editing public documentation or repository Markdown.",
+          "expectedSkills": [],
+          "reason": "A private runtime bug needs implementation guidance, not either documentation workflow."
+        }
+      ]
+    }
+  ]
+}

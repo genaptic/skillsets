@@ -1,10 +1,27 @@
-schema-version: 1
+schema-version: 2
 id: python-cli-apps
 display-name: Python CLI Applications
 description: Design, failure-contract, and test workflows for reliable Python command-line applications.
 language: python
 subject: cli-apps
 version: 1.0.0
+maturity: release-candidate
+distribution:
+  visibility: public
+publication:
+  state: unpublished
+release-gates:
+- native-evidence
+- deterministic-archive
+interface:
+  short-description: Design and test reliable Python command-line interfaces.
+  starter-prompts:
+  - skill: python-cli-command-design
+    prompt: Use $python-cli-command-design to design a clear, stable command interface for this Python CLI.
+  - skill: python-cli-error-output
+    prompt: Use $python-cli-error-output to define safe error output and exit behavior for this Python CLI.
+  - skill: python-cli-testing
+    prompt: Use $python-cli-testing to build a realistic test matrix for this Python command-line interface.
 license: Apache-2.0
 maintainers:
 - github: jecsand838

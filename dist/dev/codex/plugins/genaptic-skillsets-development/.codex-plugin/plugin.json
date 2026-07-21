@@ -1,0 +1,36 @@
+{
+  "name": "genaptic-skillsets-development",
+  "version": "1.0.0",
+  "description": "Research-led workflows for adding complete Agent Skills and independently installable skillpacks while preserving this repository's architecture, safety, eval, generation, and release guarantees.",
+  "author": {
+    "name": "Genaptic",
+    "url": "https://github.com/genaptic/skillsets"
+  },
+  "homepage": "https://github.com/genaptic/skillsets/tree/main/packs/shared/genaptic-skillsets-development",
+  "repository": "https://github.com/genaptic/skillsets",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-skills",
+    "authoring",
+    "scaffolding",
+    "repository",
+    "evals"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Genaptic Skillsets Development",
+    "shortDescription": "Author and validate skills and skillpacks for genaptic/skillsets.",
+    "longDescription": "Research-led workflows for adding complete Agent Skills and independently installable skillpacks while preserving this repository's architecture, safety, eval, generation, and release guarantees.",
+    "developerName": "Genaptic",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/genaptic/skillsets/tree/main/packs/shared/genaptic-skillsets-development",
+    "defaultPrompt": [
+      "Use $genaptic-skillsets-create-skill to research, add, and verify one Agent Skill in an existing skillpack.",
+      "Use $genaptic-skillsets-create-skillpack to design, add, and verify one independently installable skillpack."
+    ]
+  }
+}

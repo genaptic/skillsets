@@ -7,6 +7,7 @@ on:
       - "main"
     paths:
       - "packs/**"
+      - "evals/**"
       - "schemas/**"
       - "src/skillpack_tools/evals.py"
       - "tools/run-evals"
@@ -45,7 +46,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
           python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e .
-      - name: Export all prompts, assertions, prohibitions, and overlap expectations
+      - name: Export all prompts, assertions, prohibitions, and boundary expectations
         if: github.event_name != 'workflow_dispatch' || inputs.skill == ''
         run: skillpacks eval --json eval-report.json
       - name: Export one skill's complete structural definition
@@ -83,6 +84,8 @@ jobs:
               "# Structural skill eval definitions\n\n"
               f"- Skills: **{totals['skills']}**\n"
               f"- Routing cases: **{totals['routingCases']}**\n"
+              f"- Routing boundaries: **{totals['routingBoundaries']}**\n"
+              f"- Boundary cases: **{totals['boundaryCases']}**\n"
               f"- Behavior cases: **{totals['behaviorCases']}**\n\n"
               "The report contains complete eval inputs and expectations. These checks validate "
               "definitions and coverage; they do not invoke a client or model and are not native "

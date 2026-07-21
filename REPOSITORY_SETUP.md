@@ -44,18 +44,20 @@ are rejected before any configuration file is changed.
 
 ## Current publication state
 
-The repository contains six independently versioned `1.0.0` release candidates:
+The repository contains five independently versioned public `1.0.0` release candidates:
 
 - `python-best-practices`
 - `python-cli-apps`
 - `rust-best-practices`
 - `rust-cli-apps`
 - `postgres-databases`
-- `repository-development`
 
 They remain unpublished until each pack has passing Claude Code, Codex, and OpenCode reports
 for its exact candidate SHA. Repository infrastructure setup must not create a pack tag, GitHub
 release, native compatibility report, or compatibility claim.
+
+`genaptic-skillsets-development` is separately versioned, unpublished maintainer tooling. Its
+`maintainers` visibility makes it ineligible for formal publication.
 
 ## Required pull-request checks
 
@@ -78,6 +80,15 @@ conversations, linear history, and these exact check contexts:
 Required workflows instantiate on every pull request. Do not add pull-request path filters that
 can leave one of these contexts pending. The contexts and GitHub Actions integration identity
 must be copied from an observed protection-probe run, not guessed.
+
+The current validation workflow also emits a non-required Python 3.14 probe and the stable
+`required-validation` aggregate. Keep the twelve contexts above unchanged until both new checks
+have completed on a real pull request. Then read ruleset `19153852` in full, obtain the
+aggregate's actual GitHub Actions App ID, and replace only contexts 1–5 with
+`required-validation`; preserve contexts 6–12 and every other ruleset property. Read back the
+result (eight required contexts) and verify it with a documentation-only protection probe.
+Only a later pull request may remove Python 3.13, promote the 3.14 lane to the current profile,
+and add that lane to the aggregate.
 
 ## GitHub repository settings
 

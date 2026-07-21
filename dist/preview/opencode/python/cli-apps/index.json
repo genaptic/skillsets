@@ -1,0 +1,43 @@
+{
+  "skills": [
+    {
+      "name": "python-cli-command-design",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/cli-design-review-template.md",
+        "assets/command-spec.example.json",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "scripts/validate_command_spec.py"
+      ]
+    },
+    {
+      "name": "python-cli-error-output",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/cli-error-contract.example.json",
+        "assets/cli-failure-contract-template.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "scripts/check_cli_contract.py"
+      ]
+    },
+    {
+      "name": "python-cli-testing",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/cli-test-surface.example.json",
+        "assets/subprocess-test-skeleton.example.py",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "scripts/generate_cli_test_matrix.py"
+      ]
+    }
+  ]
+}

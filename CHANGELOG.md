@@ -18,8 +18,8 @@ The format follows Keep a Changelog principles, and pack versions follow Semanti
 - Twelve repository-aware Rust skills covering implementation, architecture, code structure,
   abstractions, async systems, networking, testing, dependencies, documentation, rustdoc, and
   command-line application development.
-- Repository-development workflows for creating one skill in an existing pack or a complete,
-  independently installable skillpack.
+- Genaptic Skillsets development workflows for creating one skill in an existing pack or a
+  complete, independently installable skillpack.
 - Validated repository-local request contracts and preview-first scaffold helpers.
 - GitHub Pages generation and deployment, DCO and dependency review, hardened release
   publication with provenance verification, and solo-maintainer repository protection.

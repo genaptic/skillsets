@@ -1,0 +1,7 @@
+# Adaptable target-specific dependency snippet; versions/features must follow repository policy.
+
+[target.'cfg(unix)'.dependencies]
+nix = "0.30"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_System_Console"] }

@@ -1,0 +1,48 @@
+schema-version: 2
+id: genaptic-skillsets-development
+display-name: Genaptic Skillsets Development
+description: Research-led workflows for adding complete Agent Skills and independently installable skillpacks while preserving this repository's architecture, safety, eval, generation, and release guarantees.
+language: shared
+subject: genaptic-skillsets-development
+version: 1.0.0
+maturity: release-candidate
+distribution:
+  visibility: maintainers
+publication:
+  state: unpublished
+release-gates:
+- native-evidence
+- deterministic-archive
+interface:
+  short-description: Author and validate skills and skillpacks for genaptic/skillsets.
+  starter-prompts:
+  - skill: genaptic-skillsets-create-skill
+    prompt: Use $genaptic-skillsets-create-skill to research, add, and verify one Agent Skill in an existing skillpack.
+  - skill: genaptic-skillsets-create-skillpack
+    prompt: Use $genaptic-skillsets-create-skillpack to design, add, and verify one independently installable skillpack.
+license: Apache-2.0
+maintainers:
+- github: jecsand838
+skills:
+- genaptic-skillsets-create-skill
+- genaptic-skillsets-create-skillpack
+targets:
+- claude-code
+- codex
+- opencode
+category: Developer Tools
+keywords:
+- agent-skills
+- authoring
+- scaffolding
+- repository
+- evals
+compatibility:
+  runtimes:
+    python: ">=3.11 for optional helpers"
+  notes: These repository-specific workflows are portable across supported clients. Current-source claims require web access; when access is unavailable, report the evidence gap.
+operations:
+  network: optional
+  filesystem: project-write
+  command-execution: required
+  external-writes: none

@@ -20,7 +20,7 @@
     },
     "routing": {
       "type": "array",
-      "minItems": 7,
+      "minItems": 6,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -41,8 +41,7 @@
               "explicit-positive",
               "implicit-positive",
               "contextual-positive",
-              "negative",
-              "overlap"
+              "negative"
             ]
           },
           "prompt": {
@@ -51,10 +50,6 @@
           },
           "shouldTrigger": {
             "type": "boolean"
-          },
-          "preferredSkill": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
           },
           "reason": {
             "type": "string",

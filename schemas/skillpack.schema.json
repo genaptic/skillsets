@@ -4,16 +4,97 @@
   "title": "Genaptic Skillpack manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema-version", "id", "display-name", "description", "language", "subject", "version", "license", "maintainers", "skills", "targets", "category", "keywords", "compatibility", "operations"],
+  "required": [
+    "schema-version",
+    "id",
+    "display-name",
+    "description",
+    "language",
+    "subject",
+    "version",
+    "maturity",
+    "distribution",
+    "publication",
+    "release-gates",
+    "interface",
+    "license",
+    "maintainers",
+    "skills",
+    "targets",
+    "category",
+    "keywords",
+    "compatibility",
+    "operations"
+  ],
   "properties": {
-    "schema-version": {"const": 1},
+    "schema-version": {"const": 2},
     "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 64},
     "display-name": {"type": "string", "minLength": 3, "maxLength": 80},
     "description": {"type": "string", "minLength": 40, "maxLength": 500},
     "language": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 32},
     "subject": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 48},
-    "version": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
-    "source-sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "version": {"$ref": "#/$defs/semantic-version"},
+    "maturity": {"enum": ["draft", "release-candidate", "stable", "deprecated"]},
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visibility"],
+      "properties": {
+        "visibility": {"enum": ["public", "maintainers"]}
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["unpublished", "published", "withdrawn"]},
+        "latest-release": {"$ref": "#/$defs/latest-release"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"const": "unpublished"}}, "required": ["state"]},
+          "then": {"not": {"required": ["latest-release"]}}
+        },
+        {
+          "if": {"properties": {"state": {"enum": ["published", "withdrawn"]}}, "required": ["state"]},
+          "then": {"required": ["latest-release"]}
+        }
+      ]
+    },
+    "release-gates": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["native-evidence", "deterministic-archive", "rust-assets"]}
+    },
+    "interface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["short-description", "starter-prompts"],
+      "properties": {
+        "short-description": {
+          "type": "string",
+          "minLength": 25,
+          "maxLength": 120,
+          "pattern": "^\\S(?:.*[.!?])$"
+        },
+        "starter-prompts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["skill", "prompt"],
+            "properties": {
+              "skill": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 64},
+              "prompt": {"type": "string", "minLength": 30, "maxLength": 300, "pattern": "^\\S(?:.*\\S)?$"}
+            }
+          }
+        }
+      }
+    },
     "license": {"type": "string", "minLength": 3, "maxLength": 64},
     "maintainers": {
       "type": "array", "minItems": 1, "uniqueItems": true,
@@ -39,5 +120,37 @@
         "external-writes": {"enum": ["none", "optional-explicit", "required"]}
       }
     }
-  }
+  },
+  "$defs": {
+    "semantic-version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "latest-release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "source-sha", "release-id", "released-at"],
+      "properties": {
+        "version": {"$ref": "#/$defs/semantic-version"},
+        "source-sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "release-id": {"type": "integer", "minimum": 1},
+        "released-at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"language": {"const": "rust"}}, "required": ["language"]},
+      "then": {"properties": {"release-gates": {"const": ["native-evidence", "deterministic-archive", "rust-assets"]}}},
+      "else": {"properties": {"release-gates": {"const": ["native-evidence", "deterministic-archive"]}}}
+    },
+    {
+      "if": {"properties": {"distribution": {"properties": {"visibility": {"const": "maintainers"}}, "required": ["visibility"]}}, "required": ["distribution"]},
+      "then": {"properties": {"publication": {"properties": {"state": {"const": "unpublished"}}, "required": ["state"]}}}
+    }
+  ]
 }

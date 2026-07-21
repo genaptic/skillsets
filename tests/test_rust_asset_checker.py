@@ -2,21 +2,28 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
-from pathlib import Path
+import tomllib
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
 from skillpack_tools import rust_assets
 from skillpack_tools.rust_assets import (
     MINIMUM_RUST,
+    BehaviorHarnessMember,
     ExecutableSnippet,
     ProjectContract,
     RustAssetError,
     RustAssetInventory,
+    _sorted_relative_posix,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.rust_repository_contract
 
 
 def inventory_document() -> dict[str, object]:
@@ -40,6 +47,14 @@ def inventory_document() -> dict[str, object]:
         "behaviorHarness": {
             "manifest": "tests/rust-harness/Cargo.toml",
             "lockfile": "tests/rust-harness/Cargo.lock",
+            "members": [
+                {
+                    "pack": "rust-example",
+                    "package": "genaptic-rust-example-harness",
+                    "manifest": "tests/rust-harness/rust-example/Cargo.toml",
+                    "lockfile": "tests/rust-harness/rust-example/Cargo.lock",
+                }
+            ],
         },
         "cargoPolicyTrap": {
             "manifest": "tests/rust-cargo-policy-trap/Cargo.toml",
@@ -69,8 +84,234 @@ def empty_runtime_inventory(*, projects: tuple[ProjectContract, ...] = ()) -> Ru
 def test_repository_inventory_classifies_every_rust_asset_exactly_once() -> None:
     inventory = rust_assets.load_inventory(ROOT)
     discovered = rust_assets.discover_rust_assets(ROOT)
+    assert discovered == tuple(sorted(discovered))
     assert rust_assets.validate_inventory(ROOT, inventory) == discovered
     assert len(discovered) >= 28
+
+
+@pytest.mark.parametrize(
+    ("root", "paths"),
+    [
+        (
+            PurePosixPath("/repo"),
+            [
+                PurePosixPath("/repo/assets/workspace-root/apps/tool/Cargo.toml"),
+                PurePosixPath("/repo/assets/workspace-root/Cargo.toml"),
+            ],
+        ),
+        (
+            PureWindowsPath("C:/repo"),
+            [
+                PureWindowsPath("C:/repo/assets/workspace-root/apps/tool/Cargo.toml"),
+                PureWindowsPath("C:/repo/assets/workspace-root/Cargo.toml"),
+            ],
+        ),
+    ],
+)
+def test_rust_asset_order_is_independent_of_path_flavor(
+    root: PurePosixPath | PureWindowsPath,
+    paths: list[PurePosixPath] | list[PureWindowsPath],
+) -> None:
+    assert _sorted_relative_posix(root, paths) == (
+        "assets/workspace-root/Cargo.toml",
+        "assets/workspace-root/apps/tool/Cargo.toml",
+    )
+
+
+def test_selected_inventory_ignores_unrelated_pack_asset_drift(tmp_path: Path) -> None:
+    shutil.copytree(ROOT / "packs/rust", tmp_path / "packs/rust")
+    shutil.copytree(ROOT / "tests/rust-harness", tmp_path / "tests/rust-harness")
+    shutil.copytree(
+        ROOT / "tests/rust-cargo-policy-trap",
+        tmp_path / "tests/rust-cargo-policy-trap",
+    )
+    shutil.copy2(ROOT / "tests/rust-assets.json", tmp_path / "tests/rust-assets.json")
+    unrelated = tmp_path / "packs/rust/best-practices/unclassified.rs"
+    unrelated.write_text("fn unrelated_drift() {}\n", encoding="utf-8")
+    unrelated_harness = tmp_path / "tests/rust-harness/rust-best-practices/build.rs"
+    unrelated_harness.write_text("fn main() {}\n", encoding="utf-8")
+
+    inventory = rust_assets.load_inventory(tmp_path)
+    selection = rust_assets.select_rust_pack(tmp_path, inventory, "rust-cli-apps")
+    assert selection is not None
+    selected = rust_assets.validate_inventory(
+        tmp_path,
+        inventory,
+        selected_pack=selection[0],
+    )
+    assert selected
+    assert all(path.startswith("packs/rust/cli-apps/") for path in selected)
+    with pytest.raises(RustAssetError, match="unclassified"):
+        rust_assets.validate_inventory(tmp_path, inventory)
+
+
+def test_selected_inventory_requires_its_committed_member_lockfile(tmp_path: Path) -> None:
+    shutil.copytree(ROOT / "packs/rust", tmp_path / "packs/rust")
+    shutil.copytree(ROOT / "tests/rust-harness", tmp_path / "tests/rust-harness")
+    shutil.copytree(
+        ROOT / "tests/rust-cargo-policy-trap",
+        tmp_path / "tests/rust-cargo-policy-trap",
+    )
+    shutil.copy2(ROOT / "tests/rust-assets.json", tmp_path / "tests/rust-assets.json")
+    inventory = rust_assets.load_inventory(tmp_path)
+    selection = rust_assets.select_rust_pack(tmp_path, inventory, "rust-cli-apps")
+    assert selection is not None
+    (tmp_path / selection[1].lockfile).unlink()
+
+    with pytest.raises(RustAssetError, match="missing Rust behavior member lockfile"):
+        rust_assets.validate_inventory(tmp_path, inventory, selected_pack=selection[0])
+
+
+def test_repository_behavior_workspace_has_one_member_per_rust_pack() -> None:
+    inventory = rust_assets.load_inventory(ROOT)
+    members = {member.pack_id: member for member in inventory.behavior_members}
+
+    assert set(members) == {"rust-best-practices", "rust-cli-apps"}
+    assert members["rust-best-practices"].package == ("genaptic-rust-best-practices-harness")
+    assert members["rust-cli-apps"].package == "genaptic-rust-cli-apps-harness"
+    assert members["rust-best-practices"].lockfile == (
+        "tests/rust-harness/rust-best-practices/Cargo.lock"
+    )
+    assert members["rust-cli-apps"].lockfile == ("tests/rust-harness/rust-cli-apps/Cargo.lock")
+
+
+def test_reqwest_pin_contains_the_windows_named_pipe_import_fix() -> None:
+    manifest = tomllib.loads((ROOT / "tests/rust-harness/Cargo.toml").read_text(encoding="utf-8"))
+    reqwest = manifest["workspace"]["dependencies"]["reqwest"]
+    assert reqwest == {
+        "version": "=0.12.28",
+        "default-features": False,
+        "features": ["json", "stream"],
+    }
+
+    locked_reqwest: list[tuple[str, str]] = []
+    for relative in (
+        "tests/rust-harness/Cargo.lock",
+        "tests/rust-harness/rust-best-practices/Cargo.lock",
+    ):
+        lock = tomllib.loads((ROOT / relative).read_text(encoding="utf-8"))
+        packages = [package for package in lock["package"] if package["name"] == "reqwest"]
+        assert len(packages) == 1
+        locked_reqwest.append((packages[0]["version"], packages[0]["checksum"]))
+
+    assert (
+        locked_reqwest
+        == [
+            ("0.12.28", "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"),
+        ]
+        * 2
+    )
+
+    cli_lock = tomllib.loads(
+        (ROOT / "tests/rust-harness/rust-cli-apps/Cargo.lock").read_text(encoding="utf-8")
+    )
+    assert all(package["name"] != "reqwest" for package in cli_lock["package"])
+
+
+def test_pack_selection_accepts_rust_and_rejects_unknown_or_non_rust() -> None:
+    inventory = rust_assets.load_inventory(ROOT)
+
+    selection = rust_assets.select_rust_pack(ROOT, inventory, "rust-cli-apps")
+    assert selection is not None
+    assert selection[0].id == "rust-cli-apps"
+    assert selection[1].package == "genaptic-rust-cli-apps-harness"
+
+    with pytest.raises(RustAssetError, match="unknown pack"):
+        rust_assets.select_rust_pack(ROOT, inventory, "not-a-pack")
+    with pytest.raises(RustAssetError, match="is not a Rust pack"):
+        rust_assets.select_rust_pack(ROOT, inventory, "python-best-practices")
+
+
+def test_inventory_requires_one_adjacent_lockfile_per_behavior_member(tmp_path: Path) -> None:
+    document = inventory_document()
+    member = document["behaviorHarness"]["members"][0]  # type: ignore[index]
+    member.pop("lockfile")  # type: ignore[union-attr]
+    write_inventory(tmp_path, document)
+    with pytest.raises(RustAssetError, match=r"keys must be .*lockfile"):
+        rust_assets.load_inventory(tmp_path)
+
+
+def test_workspace_member_rewrite_supports_multiline_arrays() -> None:
+    source = """[workspace]
+members = [
+  "rust-best-practices",
+  "rust-cli-apps",
+]
+default-members = ["rust-best-practices"]
+resolver = "2"
+
+[workspace.package]
+version = "0.0.0"
+"""
+    rewritten = rust_assets._replace_workspace_member_array(
+        source,
+        key="members",
+        member_name="rust-cli-apps",
+        required=True,
+    )
+    rewritten = rust_assets._replace_workspace_member_array(
+        rewritten,
+        key="default-members",
+        member_name="rust-cli-apps",
+        required=False,
+    )
+
+    parsed = rust_assets.tomllib.loads(rewritten)
+    assert parsed["workspace"]["members"] == ["rust-cli-apps"]
+    assert parsed["workspace"]["default-members"] == ["rust-cli-apps"]
+    assert parsed["workspace"]["resolver"] == "2"
+    assert parsed["workspace"]["package"]["version"] == "0.0.0"
+
+
+@pytest.mark.skipif(shutil.which("cargo") is None, reason="Cargo is unavailable")
+def test_selected_native_cargo_ignores_a_broken_unrelated_member(tmp_path: Path) -> None:
+    shutil.copytree(ROOT / "packs/rust", tmp_path / "packs/rust")
+    shutil.copytree(ROOT / "tests/rust-harness", tmp_path / "tests/rust-harness")
+    shutil.copytree(
+        ROOT / "tests/rust-cargo-policy-trap",
+        tmp_path / "tests/rust-cargo-policy-trap",
+    )
+    shutil.copy2(ROOT / "tests/rust-assets.json", tmp_path / "tests/rust-assets.json")
+    broken_manifest = tmp_path / "tests/rust-harness/rust-best-practices/Cargo.toml"
+    broken_manifest.write_text("this is deliberately invalid TOML\n", encoding="utf-8")
+
+    inventory = rust_assets.load_inventory(tmp_path)
+    selection = rust_assets.select_rust_pack(tmp_path, inventory, "rust-cli-apps")
+    assert selection is not None
+    rust_assets.validate_inventory(tmp_path, inventory, selected_pack=selection[0])
+    cargo_home = tmp_path / "cargo-home"
+    cargo_home.mkdir()
+    target = tmp_path / "target"
+    environment = rust_assets._cargo_environment(cargo_home, target, offline=True)
+
+    with rust_assets._behavior_harness_scope(
+        tmp_path,
+        inventory,
+        selection,
+    ) as (manifest, workspace_root):
+        parsed = rust_assets.tomllib.loads(manifest.read_text(encoding="utf-8"))
+        assert parsed["workspace"]["members"] == ["rust-cli-apps"]
+        assert (workspace_root / "Cargo.lock").read_bytes() == (
+            tmp_path / selection[1].lockfile
+        ).read_bytes()
+        assert not (workspace_root / "rust-best-practices").exists()
+        rust_assets._run(
+            [
+                shutil.which("cargo") or "cargo",
+                "test",
+                "--frozen",
+                "--workspace",
+                "--manifest-path",
+                str(manifest),
+                "--color",
+                "never",
+            ],
+            root=workspace_root,
+            environment=environment,
+            timeout=300,
+        )
+
+    assert broken_manifest.read_text(encoding="utf-8") == "this is deliberately invalid TOML\n"
 
 
 def test_inventory_rejects_universal_cargo_feature_and_target_flags(tmp_path: Path) -> None:
@@ -144,7 +385,7 @@ def test_toolchain_validation_requires_rust_185(
         "_run",
         lambda command, **_kwargs: versions[command[0]],
     )
-    with pytest.raises(RustAssetError, match="Rust 1.85.0 or newer"):
+    with pytest.raises(RustAssetError, match=r"Rust 1\.85\.0 or newer"):
         rust_assets.verify_toolchain(tmp_path)
 
 
@@ -162,7 +403,7 @@ def test_toolchain_validation_requires_cargo_185(
         "_run",
         lambda command, **_kwargs: versions[command[0]],
     )
-    with pytest.raises(RustAssetError, match="Cargo 1.85.0 or newer"):
+    with pytest.raises(RustAssetError, match=r"Cargo 1\.85\.0 or newer"):
         rust_assets.verify_toolchain(tmp_path)
 
 
@@ -365,13 +606,42 @@ def test_bootstrap_fetches_only_the_locked_harness_into_the_selected_cache(
     cargo_home = tmp_path / "isolated-cargo-home"
     events: list[str] = []
     calls: list[tuple[list[str], dict[str, str], int]] = []
+    selected_pack = next(
+        pack for pack in rust_assets.discover_packs(ROOT) if pack.id == "rust-cli-apps"
+    )
+    member = BehaviorHarnessMember(
+        pack_id="rust-cli-apps",
+        package="genaptic-rust-cli-apps-harness",
+        manifest="tests/rust-harness/rust-cli-apps/Cargo.toml",
+        lockfile="tests/rust-harness/rust-cli-apps/Cargo.lock",
+    )
     monkeypatch.setattr(rust_assets, "load_inventory", lambda _root: inventory)
     monkeypatch.setattr(
         rust_assets,
         "validate_inventory",
-        lambda _root, _inventory: events.append("validate") or (),
+        lambda _root, _inventory, **_kwargs: events.append("validate") or (),
+    )
+    monkeypatch.setattr(
+        rust_assets,
+        "select_rust_pack",
+        lambda _root, _inventory, pack_id: (
+            events.append(f"select:{pack_id}") or (selected_pack, member)
+        ),
     )
     monkeypatch.setattr(rust_assets, "verify_toolchain", lambda _root: {"cargo": "cargo"})
+
+    isolated_manifest = tmp_path / "isolated/Cargo.toml"
+
+    @contextmanager
+    def fake_scope(
+        _root: Path,
+        _inventory: RustAssetInventory,
+        selection: tuple[object, BehaviorHarnessMember] | None,
+    ) -> Iterator[tuple[Path, Path]]:
+        assert selection is not None and selection[1] == member
+        yield isolated_manifest, isolated_manifest.parent
+
+    monkeypatch.setattr(rust_assets, "_behavior_harness_scope", fake_scope)
 
     def fake_run(
         command: list[str],
@@ -385,11 +655,12 @@ def test_bootstrap_fetches_only_the_locked_harness_into_the_selected_cache(
         return ""
 
     monkeypatch.setattr(rust_assets, "_run", fake_run)
-    rust_assets.bootstrap_harness(tmp_path, cargo_home)
+    rust_assets.bootstrap_harness(tmp_path, cargo_home, pack_id="rust-cli-apps")
 
-    assert events == ["validate", "fetch"]
+    assert events == ["select:rust-cli-apps", "validate", "fetch"]
     command, environment, timeout = calls[0]
     assert command[:3] == ["cargo", "fetch", "--locked"]
+    assert command[command.index("--manifest-path") + 1] == os.fspath(isolated_manifest)
     assert environment["CARGO_HOME"] == str(cargo_home)
     assert "CARGO_NET_OFFLINE" not in environment
     assert timeout == 300
@@ -413,7 +684,7 @@ def test_check_orchestrates_format_projects_policy_and_frozen_harness_offline(
     monkeypatch.setattr(
         rust_assets,
         "validate_inventory",
-        lambda _root, _inventory: (
+        lambda _root, _inventory, **_kwargs: (
             "packs/rust/example.rs",
             "packs/rust/example.toml",
         ),
@@ -453,9 +724,93 @@ def test_check_orchestrates_format_projects_policy_and_frozen_harness_offline(
     assert commands[0][0][:4] == ["rustfmt", "--edition", "2024", "--check"]
     harness_command, harness_environment, harness_timeout = commands[1]
     assert "--frozen" in harness_command
+    assert "--workspace" in harness_command
     assert harness_environment is not None
     assert harness_environment["CARGO_NET_OFFLINE"] == "true"
     assert harness_timeout == 300
+
+
+def test_selected_check_runs_one_pack_member_and_keeps_shared_policy_invariants(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    selected_asset = "packs/rust/cli-apps/selected.rs"
+    other_asset = "packs/rust/best-practices/other.rs"
+    for relative in (selected_asset, other_asset):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("fn example() {}\n", encoding="utf-8")
+    selected_project = ProjectContract(
+        "packs/rust/cli-apps/project", ("test",), "generate-in-scratch"
+    )
+    other_project = ProjectContract(
+        "packs/rust/best-practices/project", ("test",), "generate-in-scratch"
+    )
+    inventory = empty_runtime_inventory(projects=(selected_project, other_project))
+    cargo_home = tmp_path / "cargo-home"
+    cargo_home.mkdir()
+    selected_pack = next(
+        pack for pack in rust_assets.discover_packs(ROOT) if pack.id == "rust-cli-apps"
+    )
+    member = BehaviorHarnessMember(
+        pack_id="rust-cli-apps",
+        package="genaptic-rust-cli-apps-harness",
+        manifest="tests/rust-harness/rust-cli-apps/Cargo.toml",
+        lockfile="tests/rust-harness/rust-cli-apps/Cargo.lock",
+    )
+    commands: list[list[str]] = []
+    projects: list[str] = []
+    shared_policy: list[bool] = []
+    monkeypatch.setattr(rust_assets, "load_inventory", lambda _root: inventory)
+    monkeypatch.setattr(
+        rust_assets,
+        "validate_inventory",
+        lambda *_args, **_kwargs: (selected_asset,),
+    )
+    monkeypatch.setattr(rust_assets, "select_rust_pack", lambda *_args: (selected_pack, member))
+    monkeypatch.setattr(
+        rust_assets,
+        "verify_toolchain",
+        lambda _root: {"cargo": "cargo", "rustfmt": "rustfmt"},
+    )
+
+    isolated_manifest = tmp_path / "isolated/Cargo.toml"
+
+    @contextmanager
+    def fake_scope(
+        _root: Path,
+        _inventory: RustAssetInventory,
+        selection: tuple[object, BehaviorHarnessMember] | None,
+    ) -> Iterator[tuple[Path, Path]]:
+        assert selection is not None and selection[1] == member
+        yield isolated_manifest, isolated_manifest.parent
+
+    monkeypatch.setattr(rust_assets, "_behavior_harness_scope", fake_scope)
+
+    monkeypatch.setattr(
+        rust_assets,
+        "_run",
+        lambda command, **_kwargs: commands.append(command) or "",
+    )
+    monkeypatch.setattr(
+        rust_assets,
+        "_build_project_once",
+        lambda _root, project, _cargo: projects.append(project.path) or b"stable-lock",
+    )
+    monkeypatch.setattr(
+        rust_assets,
+        "_check_cargo_policy_trap",
+        lambda *_args: shared_policy.append(True),
+    )
+
+    rust_assets.check_rust_assets(tmp_path, cargo_home, pack_id="rust-cli-apps")
+
+    assert selected_asset in commands[0]
+    assert other_asset not in commands[0]
+    assert projects == [selected_project.path, selected_project.path]
+    assert shared_policy == [True]
+    assert "--workspace" in commands[1]
+    assert "--package" not in commands[1]
+    assert commands[1][commands[1].index("--manifest-path") + 1] == os.fspath(isolated_manifest)
 
 
 def test_check_rejects_nondeterministic_project_locks(
@@ -467,7 +822,7 @@ def test_check_rejects_nondeterministic_project_locks(
     cargo_home = tmp_path / "cargo-home"
     cargo_home.mkdir()
     monkeypatch.setattr(rust_assets, "load_inventory", lambda _root: inventory)
-    monkeypatch.setattr(rust_assets, "validate_inventory", lambda *_args: ())
+    monkeypatch.setattr(rust_assets, "validate_inventory", lambda *_args, **_kwargs: ())
     monkeypatch.setattr(
         rust_assets,
         "verify_toolchain",
@@ -492,7 +847,9 @@ def test_check_detects_canonical_postimage_mutation(
     cargo_home.mkdir()
     monkeypatch.setattr(rust_assets, "load_inventory", lambda _root: inventory)
     monkeypatch.setattr(
-        rust_assets, "validate_inventory", lambda *_args: ("packs/rust/example.rs",)
+        rust_assets,
+        "validate_inventory",
+        lambda *_args, **_kwargs: ("packs/rust/example.rs",),
     )
     monkeypatch.setattr(
         rust_assets,
@@ -524,7 +881,7 @@ def test_check_rejects_canonical_build_residue(
     cargo_home = tmp_path / "cargo-home"
     cargo_home.mkdir()
     monkeypatch.setattr(rust_assets, "load_inventory", lambda _root: inventory)
-    monkeypatch.setattr(rust_assets, "validate_inventory", lambda *_args: ())
+    monkeypatch.setattr(rust_assets, "validate_inventory", lambda *_args, **_kwargs: ())
     monkeypatch.setattr(
         rust_assets,
         "verify_toolchain",
@@ -542,7 +899,7 @@ def test_check_requires_an_explicitly_bootstrapped_cache(
 ) -> None:
     inventory = empty_runtime_inventory()
     monkeypatch.setattr(rust_assets, "load_inventory", lambda _root: inventory)
-    monkeypatch.setattr(rust_assets, "validate_inventory", lambda *_args: ())
+    monkeypatch.setattr(rust_assets, "validate_inventory", lambda *_args, **_kwargs: ())
     monkeypatch.setattr(
         rust_assets,
         "verify_toolchain",
@@ -562,12 +919,16 @@ def test_main_routes_bootstrap_and_check_with_resolved_cache_paths(
     monkeypatch.setattr(
         rust_assets,
         "bootstrap_harness",
-        lambda root, cargo_home: calls.append(("bootstrap", root, cargo_home)),
+        lambda root, cargo_home, *, pack_id=None: calls.append(
+            (f"bootstrap:{pack_id}", root, cargo_home)
+        ),
     )
     monkeypatch.setattr(
         rust_assets,
         "check_rust_assets",
-        lambda root, cargo_home: calls.append(("check", root, cargo_home)),
+        lambda root, cargo_home, *, pack_id=None: calls.append(
+            (f"check:{pack_id}", root, cargo_home)
+        ),
     )
     explicit_cache = tmp_path / "explicit-cache"
 
@@ -579,21 +940,24 @@ def test_main_routes_bootstrap_and_check_with_resolved_cache_paths(
                 "--cargo-home",
                 str(explicit_cache),
                 "--bootstrap",
+                "--pack",
+                "rust-cli-apps",
             ]
         )
         == 0
     )
     assert rust_assets.main(["--root", str(tmp_path)]) == 0
     assert calls == [
-        ("bootstrap", tmp_path.resolve(), explicit_cache.resolve()),
-        ("check", tmp_path.resolve(), (tmp_path / ".venv/rust-cargo-home").resolve()),
+        ("bootstrap:rust-cli-apps", tmp_path.resolve(), explicit_cache.resolve()),
+        ("check:None", tmp_path.resolve(), (tmp_path / ".venv/rust-cargo-home").resolve()),
     ]
 
 
 def test_main_reports_checker_errors(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    def fail(_root: Path, _cargo_home: Path) -> None:
+    def fail(_root: Path, _cargo_home: Path, *, pack_id: str | None = None) -> None:
+        assert pack_id is None
         raise RustAssetError("deliberate checker failure")
 
     monkeypatch.setattr(rust_assets, "check_rust_assets", fail)

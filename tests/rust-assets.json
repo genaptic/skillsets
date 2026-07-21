@@ -21,35 +21,35 @@
   "executableSnippets": [
     {
       "path": "packs/rust/best-practices/skills/rust-async-concurrency/assets/templates/bounded_fanout.rs",
-      "harness": "tests/rust-harness/src/bounded_fanout.rs"
+      "harness": "tests/rust-harness/rust-best-practices/src/bounded_fanout.rs"
     },
     {
       "path": "packs/rust/best-practices/skills/rust-async-concurrency/assets/templates/graceful_shutdown.rs",
-      "harness": "tests/rust-harness/src/graceful_shutdown.rs"
+      "harness": "tests/rust-harness/rust-best-practices/src/graceful_shutdown.rs"
     },
     {
       "path": "packs/rust/best-practices/skills/rust-async-concurrency/assets/templates/sync_worker_bridge.rs",
-      "harness": "tests/rust-harness/src/sync_worker_bridge.rs"
+      "harness": "tests/rust-harness/rust-best-practices/src/sync_worker_bridge.rs"
     },
     {
       "path": "packs/rust/best-practices/skills/rust-dependency-portability/assets/templates/project_dirs.rs",
-      "harness": "tests/rust-harness/src/project_dirs.rs"
+      "harness": "tests/rust-harness/rust-best-practices/src/project_dirs.rs"
     },
     {
       "path": "packs/rust/best-practices/skills/rust-networking/assets/templates/sqlx_pool.rs",
-      "harness": "tests/rust-harness/src/sqlx_pool.rs"
+      "harness": "tests/rust-harness/rust-best-practices/src/sqlx_pool.rs"
     },
     {
       "path": "packs/rust/best-practices/skills/rust-networking/assets/templates/typed_http_client.rs",
-      "harness": "tests/rust-harness/src/typed_http_client.rs"
+      "harness": "tests/rust-harness/rust-best-practices/src/typed_http_client.rs"
     },
     {
       "path": "packs/rust/cli-apps/skills/rust-cli-application-design/assets/templates/finite_bounded_number.rs",
-      "harness": "tests/rust-harness/src/finite_bounded_number.rs"
+      "harness": "tests/rust-harness/rust-cli-apps/src/finite_bounded_number.rs"
     },
     {
       "path": "packs/rust/cli-apps/skills/rust-cli-application-design/assets/templates/removal_preview.rs",
-      "harness": "tests/rust-harness/src/removal_preview.rs"
+      "harness": "tests/rust-harness/rust-cli-apps/src/removal_preview.rs"
     }
   ],
   "syntaxOnlyFragments": [
@@ -66,7 +66,21 @@
   ],
   "behaviorHarness": {
     "manifest": "tests/rust-harness/Cargo.toml",
-    "lockfile": "tests/rust-harness/Cargo.lock"
+    "lockfile": "tests/rust-harness/Cargo.lock",
+    "members": [
+      {
+        "pack": "rust-best-practices",
+        "package": "genaptic-rust-best-practices-harness",
+        "manifest": "tests/rust-harness/rust-best-practices/Cargo.toml",
+        "lockfile": "tests/rust-harness/rust-best-practices/Cargo.lock"
+      },
+      {
+        "pack": "rust-cli-apps",
+        "package": "genaptic-rust-cli-apps-harness",
+        "manifest": "tests/rust-harness/rust-cli-apps/Cargo.toml",
+        "lockfile": "tests/rust-harness/rust-cli-apps/Cargo.lock"
+      }
+    ]
   },
   "cargoPolicyTrap": {
     "manifest": "tests/rust-cargo-policy-trap/Cargo.toml",

@@ -32,8 +32,8 @@ For every new or materially changed skill:
 - [ ] External writes or destructive effects: none / optional explicit / required — explain below.
 - [ ] Helpers do not install dependencies, download code, execute during installation, expose
       secrets, or overwrite output by default.
-- [ ] Repository-development scaffold helpers were previewed first and any apply used the
-      unchanged reviewed plan digest.
+- [ ] Genaptic Skillsets development scaffold helpers were previewed first and any apply used
+      the unchanged reviewed plan digest.
 - [ ] Any database, production, credential, privacy, or supply-chain risk is documented.
 
 Safety notes:

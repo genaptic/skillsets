@@ -18,7 +18,7 @@ jobs:
   repository:
     name: repository contracts (Python ${{ matrix.python-version }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -30,6 +30,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
@@ -58,6 +59,15 @@ jobs:
         run: python tools/generate-all --check
       - name: Validate schemas, manifests, installers, links, and placeholders
         run: python tools/validate-repository --check-generated --strict-placeholders
+      - name: Upload candidate preview distributions
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: candidate-preview-${{ github.sha }}
+          path: dist/preview
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
       - name: Export and validate complete structural eval definitions
         run: python tools/run-evals --json eval-report.json
       - name: Compile Python without source-tree residue
@@ -72,6 +82,54 @@ jobs:
       - name: Run the branch-covered unit suite
         run: python -m pytest
 
+  python-current:
+    name: Python 3.14 current compatibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Python 3.14
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Redirect Python bytecode outside the worktree
+        run: |
+          cache_root="$RUNNER_TEMP/genaptic-python-cache/3.14"
+          mkdir -p "$cache_root"
+          printf 'PYTHONPYCACHEPREFIX=%s\n' "$cache_root" >> "$GITHUB_ENV"
+      - name: Install the hash-locked toolchain
+        run: python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
+      - name: Install this project without dependency resolution
+        run: python -m pip install --disable-pip-version-check --no-deps --no-build-isolation -e .
+      - name: Verify the installed console entry point
+        run: skillpacks --help
+      - name: Run unit tests without duplicate coverage collection
+        run: python -m pytest --no-cov
+      - name: Check representative generation
+        run: skillpacks generate --check
+      - name: Build a representative draft archive
+        run: |
+          draft_tag="$(python -c 'from pathlib import Path; from skillpack_tools.models import get_pack; print(get_pack(Path.cwd(), "python-best-practices").tag)')"
+          skillpacks release python-best-practices --draft
+          test -s "dist/releases/${draft_tag}-draft.zip"
+          test -s "dist/releases/${draft_tag}-draft.zip.sha256"
+          test -s "dist/releases/${draft_tag}-draft-release-notes.md"
+      - name: Compile Python without source-tree residue
+        run: |
+          python -m compileall -q src tools tests packs
+          test -n "$(find "$PYTHONPYCACHEPREFIX" -type f -name '*.pyc' -print -quit)"
+          if find src tools tests packs \( -type d -name __pycache__ -o -type f \( -name '*.pyc' -o -name '*.pyo' \) \) -print -quit | grep -q .; then
+            echo "Python compilation left bytecode in a canonical source tree" >&2
+            exit 1
+          fi
+          skillpacks generate --check
+
   rust-assets:
     name: Rust 1.85+ asset contracts
     runs-on: ubuntu-24.04
@@ -83,10 +141,15 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install hash-locked Rust checker dependencies
+        run: python -m pip install --disable-pip-version-check --require-hashes -r requirements-dev.txt
       - name: Install the exact Rust 1.85.0 validation toolchain
         run: |
           rustup toolchain install 1.85.0 --profile minimal --component rustfmt
@@ -117,6 +180,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Install exact ShellCheck package
         run: |
           sudo apt-get update
@@ -148,6 +212,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Install exact PSScriptAnalyzer module
         shell: pwsh
         run: |
@@ -169,3 +234,36 @@ jobs:
           if ($issues) {
             $issues | Format-Table -AutoSize | Out-String | Write-Error
           }
+
+  required-validation:
+    name: required-validation
+    if: ${{ always() }}
+    needs:
+      - repository
+      - rust-assets
+      - shell-and-workflow-lint
+      - powershell-lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      REPOSITORY_RESULT: ${{ needs.repository.result }}
+      RUST_ASSETS_RESULT: ${{ needs.rust-assets.result }}
+      SHELL_AND_WORKFLOW_LINT_RESULT: ${{ needs.shell-and-workflow-lint.result }}
+      POWERSHELL_LINT_RESULT: ${{ needs.powershell-lint.result }}
+    steps:
+      - name: Require every validation job to succeed
+        shell: python
+        run: |
+          import os
+
+          results = {
+              "repository": os.environ["REPOSITORY_RESULT"],
+              "rust-assets": os.environ["RUST_ASSETS_RESULT"],
+              "shell-and-workflow-lint": os.environ["SHELL_AND_WORKFLOW_LINT_RESULT"],
+              "powershell-lint": os.environ["POWERSHELL_LINT_RESULT"],
+          }
+          unexpected = {name: result for name, result in results.items() if result != "success"}
+          if unexpected:
+              details = ", ".join(f"{name}={result or '<missing>'}" for name, result in unexpected.items())
+              raise SystemExit(f"required validation did not succeed: {details}")
+          print("All required validation jobs succeeded.")

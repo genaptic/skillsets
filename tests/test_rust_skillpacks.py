@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 RUST_ROOT = ROOT / "packs/rust"
+pytestmark = pytest.mark.rust_repository_contract
 
 PACKS = {
     RUST_ROOT / "best-practices": {
@@ -276,12 +279,12 @@ def test_rust_evals_have_exact_case_shapes_and_no_scaffold_text() -> None:
     for skill_dir in _skill_directories():
         evals = json.loads((skill_dir / "evals/evals.json").read_text(encoding="utf-8"))
         assert evals["skill"] == skill_dir.name
-        assert len(evals["routing"]) == 7
+        assert len(evals["routing"]) == 6
         assert [case["kind"] for case in evals["routing"]].count("explicit-positive") == 1
         assert [case["kind"] for case in evals["routing"]].count("implicit-positive") == 2
         assert [case["kind"] for case in evals["routing"]].count("contextual-positive") == 1
         assert [case["kind"] for case in evals["routing"]].count("negative") == 2
-        assert [case["kind"] for case in evals["routing"]].count("overlap") == 1
+        assert [case["kind"] for case in evals["routing"]].count("overlap") == 0
         assert [case["kind"] for case in evals["behavior"]] == ["focused", "end-to-end"]
         serialized = json.dumps(evals)
         assert not any(placeholder in serialized for placeholder in SCAFFOLD_TEXT)
@@ -476,4 +479,7 @@ def test_rust_compatibility_fixtures_match_manifests_and_are_executable() -> Non
         assert inventory["pack"] == expected["id"]
         assert inventory["skills"] == expected["skills"]
         smoke = pack_path / "tests/compatibility/smoke.py"
-        assert smoke.stat().st_mode & 0o111
+        if os.name != "nt":
+            assert smoke.stat().st_mode & 0o111
+        else:
+            assert smoke.read_bytes().startswith(b"#!/usr/bin/env python3\n")

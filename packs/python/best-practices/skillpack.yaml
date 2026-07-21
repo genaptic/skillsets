@@ -1,10 +1,27 @@
-schema-version: 1
+schema-version: 2
 id: python-best-practices
 display-name: Python Best Practices
 description: Reusable workflows for structuring, testing, and handling failures in production-quality Python projects.
 language: python
 subject: best-practices
 version: 1.0.0
+maturity: release-candidate
+distribution:
+  visibility: public
+publication:
+  state: unpublished
+release-gates:
+- native-evidence
+- deterministic-archive
+interface:
+  short-description: Structure, test, and harden production Python projects.
+  starter-prompts:
+  - skill: python-project-layout
+    prompt: Use $python-project-layout to review this repository and recommend a maintainable Python layout.
+  - skill: python-testing-strategy
+    prompt: Use $python-testing-strategy to design a risk-based test strategy for this Python project.
+  - skill: python-error-handling
+    prompt: Use $python-error-handling to review this exception design and propose a safe failure contract.
 license: Apache-2.0
 maintainers:
 - github: jecsand838

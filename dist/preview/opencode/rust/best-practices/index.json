@@ -1,0 +1,143 @@
+{
+  "skills": [
+    {
+      "name": "rust-core-best-practices",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/templates/baseline-package/Cargo.toml",
+        "assets/templates/baseline-package/src/lib.rs",
+        "assets/templates/member-Cargo.toml",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md"
+      ]
+    },
+    {
+      "name": "rust-project-architecture",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/templates/thin-lib-bin/Cargo.toml",
+        "assets/templates/thin-lib-bin/src/lib.rs",
+        "assets/templates/thin-lib-bin/src/main.rs",
+        "assets/templates/workspace-root/Cargo.toml",
+        "assets/templates/workspace-root/apps/tool/Cargo.toml",
+        "assets/templates/workspace-root/apps/tool/src/main.rs",
+        "assets/templates/workspace-root/crates/app-core/Cargo.toml",
+        "assets/templates/workspace-root/crates/app-core/src/lib.rs",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md"
+      ]
+    },
+    {
+      "name": "rust-code-structure",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "references/type-model-examples.md"
+      ]
+    },
+    {
+      "name": "rust-abstraction-design",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/templates/enum_dispatch.rs",
+        "assets/templates/typed_error.rs",
+        "references/checklist.md",
+        "references/enum-dispatch.md",
+        "references/guide.md",
+        "references/sources.md"
+      ]
+    },
+    {
+      "name": "rust-async-concurrency",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/templates/bounded_fanout.rs",
+        "assets/templates/graceful_shutdown.rs",
+        "assets/templates/localset_spawn_local.rs",
+        "assets/templates/sync_worker_bridge.rs",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md",
+        "references/sync-worker-bridge.md",
+        "references/tokio-patterns.md"
+      ]
+    },
+    {
+      "name": "rust-networking",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/templates/grpc_client.rs",
+        "assets/templates/sqlx_pool.rs",
+        "assets/templates/typed_http_client.rs",
+        "references/checklist.md",
+        "references/grpc-database.md",
+        "references/guide.md",
+        "references/http-reliability.md",
+        "references/sources.md"
+      ]
+    },
+    {
+      "name": "rust-testing-strategy",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/templates/bin_smoke_test.rs",
+        "assets/templates/doctest_examples.rs",
+        "assets/templates/unit_test_with_fake.rs",
+        "references/async-live-tests.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/sources.md"
+      ]
+    },
+    {
+      "name": "rust-dependency-portability",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "assets/templates/member_with_workspace_lints.toml",
+        "assets/templates/project_dirs.rs",
+        "assets/templates/target_specific_deps.toml",
+        "references/cargo-policy.md",
+        "references/checklist.md",
+        "references/guide.md",
+        "references/platform-portability.md",
+        "references/sources.md"
+      ]
+    },
+    {
+      "name": "rust-workspace-documentation",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "references/checklist.md",
+        "references/document-roles.md",
+        "references/examples.md",
+        "references/guide.md",
+        "references/sources.md"
+      ]
+    },
+    {
+      "name": "rustdoc-maintenance",
+      "version": "1.0.0",
+      "files": [
+        "SKILL.md",
+        "references/checklist.md",
+        "references/documentation-contracts.md",
+        "references/examples.md",
+        "references/guide.md",
+        "references/sources.md"
+      ]
+    }
+  ]
+}
