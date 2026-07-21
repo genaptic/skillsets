@@ -1110,7 +1110,7 @@ def test_unpublished_installer_allows_safe_dry_run_and_codex_update_is_single(
     )
     assert "gh skill install" in result.stdout
     invalid = subprocess.run(
-        ["bash", str(installer), "--pin", "not-a-sha"],
+        [bash, str(installer), "--pin", "not-a-sha"],
         check=False,
         text=True,
         capture_output=True,

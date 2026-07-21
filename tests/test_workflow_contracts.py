@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -97,7 +98,7 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     assert windows_check["env"] == {
         "PYTHONPYCACHEPREFIX": bytecode_cache,
         "PYTEST_ADDOPTS": (
-            "--no-cov -n 2 --dist=loadscope --max-worker-restart=0 --durations=25 --durations-min=1"
+            "--no-cov -n 3 --dist=loadscope --max-worker-restart=0 --durations=25 --durations-min=1"
         ),
     }
     development_inputs = (ROOT / "requirements-dev.in").read_text(encoding="utf-8")
@@ -781,7 +782,9 @@ def test_publication_handoff_issue_job_is_narrow_and_idempotent(tmp_path: Path) 
         "RUNNER_TEMP": str(tmp_path),
         "STATUS": "update-required",
     }
-    subprocess.run(["bash", "-c", body_builder], check=True, env=environment)
+    bash = shutil.which("bash")
+    assert bash is not None
+    subprocess.run([bash, "-c", body_builder], check=True, env=environment)
     body = (tmp_path / "publication-handoff.md").read_text(encoding="utf-8")
     assert "Immutable release `42`" in body
     assert "`python-best-practices-v1.0.0`" in body
