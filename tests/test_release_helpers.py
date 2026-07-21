@@ -181,3 +181,11 @@ def test_release_readiness_checks_each_skill_mirror(tmp_path: Path) -> None:
     )
     with pytest.raises(SkillpackError, match=r"metadata\.version"):
         release._require_release_readiness(pack)
+
+
+def test_release_readiness_accepts_crlf_changelog_semantics(tmp_path: Path) -> None:
+    pack = _pack(tmp_path)
+    changelog = pack.path / "CHANGELOG.md"
+    changelog.write_bytes(changelog.read_bytes().replace(b"\n", b"\r\n"))
+
+    release._require_release_readiness(pack)

@@ -124,6 +124,12 @@ def test_publication_record_rejects_withdrawn_and_conflicting_release(
 
 
 def test_publication_git_preconditions_reject_nongit_and_dirty_worktrees(tmp_path: Path) -> None:
+    assert publication._git_command("status") == [
+        "git",
+        "-c",
+        "core.longpaths=true",
+        "status",
+    ]
     with pytest.raises(SkillpackError, match="Git worktree"):
         publication._git_head(tmp_path)
 
@@ -147,7 +153,7 @@ def test_publication_snapshot_and_rollback_restore_content_modes_and_absence(
     tmp_path: Path,
 ) -> None:
     existing = tmp_path / "existing.txt"
-    existing.write_text("before\n", encoding="utf-8")
+    existing.write_bytes(b"before\n")
     existing.chmod(0o600)
     expected_mode = existing.stat().st_mode & 0o777
     changed_files = [
@@ -163,14 +169,14 @@ def test_publication_snapshot_and_rollback_restore_content_modes_and_absence(
         },
     ]
     snapshot = publication._snapshot_changed_files(tmp_path, changed_files)
-    existing.write_text("after\n", encoding="utf-8")
+    existing.write_bytes(b"after\n")
     new = tmp_path / "generated/nested/new.txt"
     new.parent.mkdir(parents=True)
-    new.write_text("generated\n", encoding="utf-8")
+    new.write_bytes(b"generated\n")
 
     publication._rollback_changed_files(tmp_path, snapshot)
 
-    assert existing.read_text(encoding="utf-8") == "before\n"
+    assert existing.read_bytes() == b"before\n"
     assert existing.stat().st_mode & 0o777 == expected_mode
     assert not new.exists()
     assert not (tmp_path / "generated").exists()
@@ -524,6 +530,99 @@ def test_openpgp_fingerprint_inventory_filters_invalid_and_failed_output(
     assert signing._openpgp_candidate_fingerprints(tmp_path) == {fingerprint}
 
 
+def test_openpgp_verification_binds_git_and_shuts_down_the_ephemeral_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fingerprint = "A" * 40
+    executables = {
+        "gpg": str((tmp_path / "tools" / "gpg").resolve()),
+        "gpgconf": str((tmp_path / "tools" / "gpgconf").resolve()),
+    }
+    monkeypatch.setattr(signing.shutil, "which", lambda name: executables[name])
+    monkeypatch.setattr(signing, "_openpgp_candidate_fingerprints", lambda _home: {fingerprint})
+    commands: list[list[str]] = []
+
+    def run(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        if command[0] == "git":
+            return _completed(
+                command,
+                stdout="",
+                stderr=f"[GNUPG:] VALIDSIG {fingerprint} 0 0 0 0 0 0 0 0\n",
+            )
+        return _completed(command)
+
+    monkeypatch.setattr(signing, "_run", run)
+    assert (
+        signing._verify_openpgp_tag(
+            tmp_path,
+            "fixture-v1.0.0",
+            {fingerprint},
+            [SigningKeyCandidate(kind="openpgp", material="public key")],
+        )
+        == fingerprint
+    )
+
+    assert commands[0][0] == executables["gpg"]
+    assert f"gpg.openpgp.program={executables['gpg']}" in commands[1]
+    assert commands[-1][0] == executables["gpgconf"]
+    assert commands[-1][1:3] == ["--homedir", commands[0][3]]
+    assert commands[-1][-2:] == ["--kill", "all"]
+
+
+def test_openpgp_shutdown_failure_does_not_mask_verification_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    executables = {
+        "gpg": str((tmp_path / "tools" / "gpg").resolve()),
+        "gpgconf": str((tmp_path / "tools" / "gpgconf").resolve()),
+    }
+    monkeypatch.setattr(signing.shutil, "which", lambda name: executables[name])
+    commands: list[list[str]] = []
+
+    def run(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        if command[0] == executables["gpgconf"]:
+            raise SkillpackError("shutdown failed")
+        raise SkillpackError("verification failed")
+
+    monkeypatch.setattr(signing, "_run", run)
+    with pytest.raises(SkillpackError, match="verification failed"):
+        signing._verify_openpgp_tag(
+            tmp_path,
+            "fixture-v1.0.0",
+            {"A" * 40},
+            [SigningKeyCandidate(kind="openpgp", material="public key")],
+        )
+    assert commands[-1][0] == executables["gpgconf"]
+
+
+def test_openpgp_home_cleanup_does_not_mask_the_original_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    temporary_root = tmp_path / "temporary"
+    temporary_root.mkdir()
+
+    class FailingTemporaryDirectory:
+        name = str(temporary_root)
+
+        def cleanup(self) -> None:
+            raise OSError("cleanup failed")
+
+    monkeypatch.setattr(
+        signing.tempfile,
+        "TemporaryDirectory",
+        lambda **_kwargs: FailingTemporaryDirectory(),
+    )
+    monkeypatch.setattr(signing, "_shutdown_gnupg_home", lambda _home: None)
+
+    with (
+        pytest.raises(SkillpackError, match="verification failed"),
+        signing._ephemeral_gnupg_home(),
+    ):
+        raise SkillpackError("verification failed")
+
+
 def test_verify_tag_enforces_signer_kind_discovery_and_commit_identity(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -553,98 +652,131 @@ def test_verify_tag_enforces_signer_kind_discovery_and_commit_identity(
 
 
 @pytest.mark.skipif(
-    shutil.which("gpg") is None or shutil.which("git") is None,
-    reason="GnuPG and Git are required for the isolated OpenPGP integration test",
+    shutil.which("gpg") is None or shutil.which("gpgconf") is None or shutil.which("git") is None,
+    reason="GnuPG, gpgconf, and Git are required for the isolated OpenPGP integration test",
 )
 def test_real_openpgp_tag_verification_uses_an_isolated_full_fingerprint(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    gpg_program = shutil.which("gpg")
+    gpgconf_program = shutil.which("gpgconf")
+    assert gpg_program is not None
+    assert gpgconf_program is not None
     short_temp_root = Path("/tmp")
     if not short_temp_root.is_dir():
         short_temp_root = Path(tempfile.gettempdir())
     temporary_home = tempfile.TemporaryDirectory(prefix="skillpacks-gpg-", dir=short_temp_root)
-    request.addfinalizer(temporary_home.cleanup)
     home = Path(temporary_home.name)
     monkeypatch.setenv("GNUPGHOME", str(home))
-    identity = "Release Fixture <release-fixture@example.com>"
-    subprocess.run(
-        [
-            "gpg",
-            "--batch",
-            "--homedir",
-            str(home),
-            "--pinentry-mode",
-            "loopback",
-            "--passphrase",
-            "",
-            "--quick-generate-key",
-            identity,
-            "ed25519",
-            "sign",
-            "1d",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    inventory = subprocess.run(
-        [
-            "gpg",
-            "--batch",
-            "--homedir",
-            str(home),
-            "--with-colons",
-            "--fingerprint",
-            "--list-secret-keys",
-            identity,
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout
-    fingerprint = next(
-        fields[9]
-        for line in inventory.splitlines()
-        if (fields := line.split(":"))[0] == "fpr" and len(fields) > 9
-    )
-    public_key = subprocess.run(
-        ["gpg", "--batch", "--homedir", str(home), "--armor", "--export", fingerprint],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout
-
-    repository = tmp_path / "repository"
-    repository.mkdir()
-
-    def git(*arguments: str) -> str:
-        return subprocess.run(
-            ["git", "-C", str(repository), *arguments],
+    original_failure: BaseException | None = None
+    try:
+        identity = "Release Fixture <release-fixture@example.com>"
+        subprocess.run(
+            [
+                gpg_program,
+                "--batch",
+                "--homedir",
+                str(home),
+                "--pinentry-mode",
+                "loopback",
+                "--passphrase",
+                "",
+                "--quick-generate-key",
+                identity,
+                "ed25519",
+                "sign",
+                "1d",
+            ],
             check=True,
             capture_output=True,
             text=True,
-        ).stdout.strip()
+        )
+        inventory = subprocess.run(
+            [
+                gpg_program,
+                "--batch",
+                "--homedir",
+                str(home),
+                "--with-colons",
+                "--fingerprint",
+                "--list-secret-keys",
+                identity,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        fingerprint = next(
+            fields[9]
+            for line in inventory.splitlines()
+            if (fields := line.split(":"))[0] == "fpr" and len(fields) > 9
+        )
+        public_key = subprocess.run(
+            [
+                gpg_program,
+                "--batch",
+                "--homedir",
+                str(home),
+                "--armor",
+                "--export",
+                fingerprint,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
 
-    git("init", "-q")
-    git("config", "user.name", "Release Fixture")
-    git("config", "user.email", "release-fixture@example.com")
-    git("config", "commit.gpgsign", "false")
-    git("config", "gpg.format", "openpgp")
-    git("config", "user.signingkey", fingerprint)
-    (repository / "release.txt").write_text("release\n", encoding="utf-8")
-    git("add", "release.txt")
-    git("commit", "-q", "--no-gpg-sign", "-m", "release")
-    git("tag", "-s", "fixture-v1.0.0", "-m", "fixture v1.0.0")
+        repository = tmp_path / "repository"
+        repository.mkdir()
 
-    verified = signing.verify_tag(
-        repository,
-        "fixture-v1.0.0",
-        [TrustedSigner(kind="openpgp", github="fixture", fingerprint=fingerprint)],
-        candidate_keys=[SigningKeyCandidate(kind="openpgp", material=public_key)],
-    )
-    assert verified.kind == "openpgp"
-    assert verified.fingerprint == fingerprint
-    assert verified.source_sha == git("rev-parse", "HEAD")
+        def git(*arguments: str) -> str:
+            return subprocess.run(
+                ["git", "-C", str(repository), *arguments],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+
+        git("init", "-q")
+        git("config", "user.name", "Release Fixture")
+        git("config", "user.email", "release-fixture@example.com")
+        git("config", "commit.gpgsign", "false")
+        git("config", "gpg.format", "openpgp")
+        git("config", "gpg.openpgp.program", gpg_program)
+        git("config", "user.signingkey", fingerprint)
+        (repository / "release.txt").write_text("release\n", encoding="utf-8")
+        git("add", "release.txt")
+        git("commit", "-q", "--no-gpg-sign", "-m", "release")
+        git("tag", "-s", "fixture-v1.0.0", "-m", "fixture v1.0.0")
+
+        verified = signing.verify_tag(
+            repository,
+            "fixture-v1.0.0",
+            [TrustedSigner(kind="openpgp", github="fixture", fingerprint=fingerprint)],
+            candidate_keys=[SigningKeyCandidate(kind="openpgp", material=public_key)],
+        )
+        assert verified.kind == "openpgp"
+        assert verified.fingerprint == fingerprint
+        assert verified.source_sha == git("rev-parse", "HEAD")
+    except BaseException as exc:
+        original_failure = exc
+        raise
+    finally:
+        try:
+            subprocess.run(
+                [gpgconf_program, "--homedir", str(home), "--kill", "all"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        except BaseException:
+            if original_failure is None:
+                raise
+        try:
+            temporary_home.cleanup()
+        except BaseException:
+            if original_failure is None:
+                raise
 
 
 @pytest.mark.parametrize("name", ["codex.envelope.json", "codex.txt", ".json"])

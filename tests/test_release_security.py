@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
 import stat
 import subprocess
 from dataclasses import dataclass
@@ -225,49 +224,43 @@ def test_full_index_patch_includes_untracked_binary_without_mutating_index(
 
 
 def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
-    tmp_path: Path,
+    generated_repo_copy: Path,
 ) -> None:
-    def ignore(_directory: str, names: list[str]) -> set[str]:
-        excluded = {
-            ".coverage",
-            ".git",
-            ".idea",
-            ".pytest_cache",
-            ".ruff_cache",
-            ".venv",
-            "__pycache__",
-            "tmp",
-        }
-        return {name for name in names if name in excluded or name.endswith((".pyc", ".pyo"))}
-
-    repository = tmp_path / "repository"
-    shutil.copytree(ROOT, repository, ignore=ignore)
+    repository = generated_repo_copy
     manifest = repository / "packs/python/best-practices/skillpack.yaml"
 
     def set_lifecycle(version: str, maturity: str) -> None:
         data = load_yaml(manifest)
         data["version"] = version
         data["maturity"] = maturity
-        manifest.write_text(dump_yaml(data), encoding="utf-8")
+        manifest.write_bytes(dump_yaml(data).encode("utf-8"))
         pack = get_pack(repository, "python-best-practices")
         for skill in pack.skills:
             skill_file = pack.path / "skills" / skill / "SKILL.md"
             text = skill_file.read_text(encoding="utf-8")
             text = re.sub(r'(?m)^  version: "[^"]+"$', f'  version: "{version}"', text)
             text = re.sub(r'(?m)^  maturity: "[^"]+"$', f'  maturity: "{maturity}"', text)
-            skill_file.write_text(text, encoding="utf-8")
+            skill_file.write_bytes(text.encode("utf-8"))
 
     set_lifecycle("1.0.0", "stable")
     apply_generated_files(repository)
-    subprocess.run(["git", "init", "-q", str(repository)], check=True)
-    subprocess.run(["git", "-C", str(repository), "config", "user.name", "Fixture"], check=True)
     subprocess.run(
-        ["git", "-C", str(repository), "config", "user.email", "fixture@example.com"],
+        ["git", "-c", "core.longpaths=true", "-C", str(repository), "add", "-A"],
         check=True,
     )
-    subprocess.run(["git", "-C", str(repository), "add", "-A"], check=True)
     subprocess.run(
-        ["git", "-C", str(repository), "commit", "-q", "-m", "released source"],
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(repository),
+            "commit",
+            "-q",
+            "--no-gpg-sign",
+            "-m",
+            "released source",
+        ],
         check=True,
     )
     source_sha = subprocess.check_output(
@@ -276,9 +269,23 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
 
     set_lifecycle("1.1.0", "release-candidate")
     apply_generated_files(repository)
-    subprocess.run(["git", "-C", str(repository), "add", "-A"], check=True)
     subprocess.run(
-        ["git", "-C", str(repository), "commit", "-q", "-m", "next candidate"],
+        ["git", "-c", "core.longpaths=true", "-C", str(repository), "add", "-A"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(repository),
+            "commit",
+            "-q",
+            "--no-gpg-sign",
+            "-m",
+            "next candidate",
+        ],
         check=True,
     )
     base_commit = subprocess.check_output(
@@ -366,8 +373,10 @@ def test_publication_apply_rolls_back_manifest_and_generated_files(
     manifest = tmp_path / "pack.yaml"
     generated = tmp_path / "generated.json"
     created = tmp_path / "created.json"
-    manifest.write_text("before manifest\n", encoding="utf-8")
-    generated.write_text("before generated\n", encoding="utf-8")
+    manifest.write_bytes(b"before manifest\n")
+    generated.write_bytes(b"before generated\n")
+    manifest_mode = stat.S_IMODE(manifest.stat().st_mode)
+    generated_mode = stat.S_IMODE(generated.stat().st_mode)
     plan = {
         "baseCommit": "c" * 40,
         "planDigest": "d" * 64,
@@ -379,14 +388,14 @@ def test_publication_apply_rolls_back_manifest_and_generated_files(
                 "path": "pack.yaml",
                 "beforeSha256": sha256_bytes(manifest.read_bytes()),
                 "afterSha256": sha256_bytes(b"after manifest\n"),
-                "beforeMode": "0644",
+                "beforeMode": f"{manifest_mode:04o}",
                 "afterMode": "0644",
             },
             {
                 "path": "generated.json",
                 "beforeSha256": sha256_bytes(generated.read_bytes()),
                 "afterSha256": sha256_bytes(b"after generated\n"),
-                "beforeMode": "0644",
+                "beforeMode": f"{generated_mode:04o}",
                 "afterMode": "0644",
             },
             {
@@ -405,8 +414,8 @@ def test_publication_apply_rolls_back_manifest_and_generated_files(
     monkeypatch.setattr("skillpack_tools.publication._git_head", lambda _root: "c" * 40)
 
     def generate(_root: Path, **_kwargs: object) -> list[str]:
-        generated.write_text("after generated\n", encoding="utf-8")
-        created.write_text("new generated\n", encoding="utf-8")
+        generated.write_bytes(b"after generated\n")
+        created.write_bytes(b"new generated\n")
         if failure_stage == "generation":
             raise SkillpackError("generation failed")
         return ["generated.json"]
@@ -427,8 +436,8 @@ def test_publication_apply_rolls_back_manifest_and_generated_files(
             apply=True,
             plan_digest="d" * 64,
         )
-    assert manifest.read_text(encoding="utf-8") == "before manifest\n"
-    assert generated.read_text(encoding="utf-8") == "before generated\n"
+    assert manifest.read_bytes() == b"before manifest\n"
+    assert generated.read_bytes() == b"before generated\n"
     assert not created.exists()
 
 

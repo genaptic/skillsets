@@ -141,10 +141,14 @@ def validate_publication_record(root: Path, record: dict[str, Any]) -> Pack:
     return pack
 
 
+def _git_command(*arguments: str) -> list[str]:
+    return ["git", "-c", "core.longpaths=true", *arguments]
+
+
 def _git_head(root: Path) -> str:
     try:
         head = subprocess.check_output(
-            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            _git_command("-C", str(root), "rev-parse", "HEAD"),
             text=True,
             stderr=subprocess.PIPE,
         ).strip()
@@ -157,7 +161,7 @@ def _git_head(root: Path) -> str:
 
 def _require_clean(root: Path) -> None:
     status = subprocess.check_output(
-        ["git", "-C", str(root), "status", "--porcelain", "--untracked-files=all"],
+        _git_command("-C", str(root), "status", "--porcelain", "--untracked-files=all"),
         text=True,
     ).strip()
     if status:
@@ -186,7 +190,7 @@ def _git_patch_and_paths(root: Path, candidates: list[str]) -> tuple[str, list[s
     with tempfile.TemporaryDirectory(prefix="publication-index-") as temporary:
         index = Path(temporary) / "index"
         git_index = subprocess.check_output(
-            ["git", "-C", str(root), "rev-parse", "--git-path", "index"],
+            _git_command("-C", str(root), "rev-parse", "--git-path", "index"),
             text=True,
         ).strip()
         git_index_path = Path(git_index)
@@ -197,8 +201,7 @@ def _git_patch_and_paths(root: Path, candidates: list[str]) -> tuple[str, list[s
         if candidates:
             pathspec = b"\0".join(path.encode("utf-8") for path in candidates) + b"\0"
             subprocess.run(
-                [
-                    "git",
+                _git_command(
                     "-C",
                     str(root),
                     "add",
@@ -206,14 +209,13 @@ def _git_patch_and_paths(root: Path, candidates: list[str]) -> tuple[str, list[s
                     "-f",
                     "--pathspec-from-file=-",
                     "--pathspec-file-nul",
-                ],
+                ),
                 input=pathspec,
                 env=environment,
                 check=True,
                 capture_output=True,
             )
-        arguments = [
-            "git",
+        arguments = _git_command(
             "-C",
             str(root),
             "diff",
@@ -221,7 +223,7 @@ def _git_patch_and_paths(root: Path, candidates: list[str]) -> tuple[str, list[s
             "--full-index",
             "--no-ext-diff",
             "--no-renames",
-        ]
+        )
         patch = subprocess.check_output(arguments, env=environment).decode("utf-8")
         names = subprocess.check_output([*arguments, "--name-only", "-z"], env=environment)
     changed = [item.decode("utf-8") for item in names.split(b"\0") if item]
@@ -249,12 +251,19 @@ def _preview_publication_changes(
         preview = Path(temporary).resolve() / "repository"
         try:
             subprocess.run(
-                ["git", "clone", "--quiet", "--shared", "--no-checkout", str(root), str(preview)],
+                _git_command(
+                    "clone",
+                    "--quiet",
+                    "--shared",
+                    "--no-checkout",
+                    str(root),
+                    str(preview),
+                ),
                 check=True,
                 capture_output=True,
             )
             subprocess.run(
-                ["git", "-C", str(preview), "checkout", "--quiet", "--detach", base_commit],
+                _git_command("-C", str(preview), "checkout", "--quiet", "--detach", base_commit),
                 check=True,
                 capture_output=True,
             )

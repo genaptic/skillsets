@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import zipfile
 from pathlib import Path
 
@@ -13,19 +12,10 @@ from skillpack_tools.models import discover_packs, load_repository
 from skillpack_tools.release import build_release
 from skillpack_tools.validate import validate_repository
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
-def copy_ignore(_directory: str, names: list[str]) -> set[str]:
-    ignored = {".git", ".pytest_cache", "__pycache__", ".venv"} & set(names)
-    ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-    return ignored
-
 
 @pytest.fixture()
-def configured_repo(tmp_path: Path) -> Path:
-    target = tmp_path / "skillsets"
-    shutil.copytree(ROOT, target, ignore=copy_ignore)
+def configured_repo(generated_repo_copy: Path) -> Path:
+    target = generated_repo_copy
     configure_repository(
         target,
         project_name="Example Skillsets",

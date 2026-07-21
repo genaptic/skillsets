@@ -9,10 +9,10 @@ import stat
 import subprocess
 import tempfile
 import tomllib
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any
 
 from .models import Pack, _load_repository_yaml, discover_packs
@@ -237,12 +237,21 @@ def load_inventory(root: Path) -> RustAssetInventory:
     )
 
 
+def _sorted_relative_posix(root: PurePath, paths: Iterable[PurePath]) -> tuple[str, ...]:
+    """Sort repository paths by their canonical POSIX spelling on every host."""
+
+    return tuple(sorted(path.relative_to(root).as_posix() for path in paths))
+
+
 def discover_rust_assets(root: Path) -> tuple[str, ...]:
     rust_root = root / "packs" / "rust"
-    return tuple(
-        path.relative_to(root).as_posix()
-        for path in sorted(rust_root.rglob("*"))
-        if path.is_file() and path.suffix.lower() in ASSET_SUFFIXES
+    return _sorted_relative_posix(
+        root,
+        (
+            path
+            for path in rust_root.rglob("*")
+            if path.is_file() and path.suffix.lower() in ASSET_SUFFIXES
+        ),
     )
 
 
@@ -501,9 +510,14 @@ def validate_inventory(
         if not manifest.is_file():
             raise RustAssetError(f"complete project is missing Cargo.toml: {project.path}")
         classified.extend(
-            path.relative_to(root).as_posix()
-            for path in sorted(project_root.rglob("*"))
-            if path.is_file() and path.suffix.lower() in ASSET_SUFFIXES
+            _sorted_relative_posix(
+                root,
+                (
+                    path
+                    for path in project_root.rglob("*")
+                    if path.is_file() and path.suffix.lower() in ASSET_SUFFIXES
+                ),
+            )
         )
     duplicates = sorted(path for path in set(classified) if classified.count(path) > 1)
     if duplicates:

@@ -80,7 +80,15 @@ def _git_object(root: Path, revision: str, relative: str) -> bytes:
 
     try:
         completed = subprocess.run(
-            ["git", "-C", str(root), "show", f"{revision}:{relative}"],
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(root),
+                "show",
+                f"{revision}:{relative}",
+            ],
             check=False,
             capture_output=True,
         )
@@ -1071,7 +1079,19 @@ def _released_skill_files(root: Path, pack: Pack, skill: str) -> list[tuple[Path
     skill_prefix = f"{pack.relative_path}/skills/{skill}"
     try:
         completed = subprocess.run(
-            ["git", "-C", str(root), "ls-tree", "-r", "-z", source_sha, "--", skill_prefix],
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(root),
+                "ls-tree",
+                "-r",
+                "-z",
+                source_sha,
+                "--",
+                skill_prefix,
+            ],
             check=False,
             capture_output=True,
         )
@@ -1125,7 +1145,16 @@ def _tracked_source_modes(root: Path) -> dict[str, int]:
 
     try:
         result = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "--stage", "-z"],
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(root),
+                "ls-files",
+                "--stage",
+                "-z",
+            ],
             check=False,
             capture_output=True,
             text=True,

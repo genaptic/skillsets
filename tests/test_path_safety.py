@@ -27,30 +27,9 @@ from skillpack_tools.validate import validate_repository
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _copy_ignore(directory: str, names: list[str]) -> set[str]:
-    ignored = {
-        ".DS_Store",
-        ".git",
-        ".idea",
-        ".mypy_cache",
-        ".pytest_cache",
-        ".ruff_cache",
-        ".venv",
-        "__pycache__",
-        "releases",
-    } & set(names)
-    if Path(directory) == ROOT / "dist":
-        ignored.update({"install", "opencode"} & set(names))
-    ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-    return ignored
-
-
 @pytest.fixture()
-def repo_copy(tmp_path: Path) -> Path:
-    target = tmp_path / "skillsets"
-    shutil.copytree(ROOT, target, ignore=_copy_ignore)
-    apply_generated_files(target)
-    return target
+def repo_copy(generated_repo_copy: Path) -> Path:
+    return generated_repo_copy
 
 
 def _symlink_or_skip(target: Path, link: Path, *, directory: bool = False) -> None:
@@ -598,6 +577,20 @@ def test_repository_validation_reports_normalized_residue_directories(
     residue = repo_copy / relative
     residue.parent.mkdir(parents=True, exist_ok=True)
     residue.write_bytes(b"must not be distributed\n")
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(repo_copy),
+            "add",
+            "-f",
+            "--",
+            relative,
+        ],
+        check=True,
+    )
 
     result = validate_repository(repo_copy)
 

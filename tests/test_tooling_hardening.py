@@ -45,11 +45,8 @@ def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
 
 
 @pytest.fixture()
-def repo_copy(tmp_path: Path) -> Path:
-    target = tmp_path / "skillsets"
-    shutil.copytree(ROOT, target, ignore=_copy_ignore)
-    configure_repository(target)
-    return target
+def repo_copy(generated_repo_copy: Path) -> Path:
+    return generated_repo_copy
 
 
 def _write_manifest(root: Path, pack_id: str, mutate) -> None:
@@ -773,16 +770,9 @@ def test_draft_release_is_marked_deterministic_and_allowlisted(repo_copy: Path) 
 
 
 def test_clean_git_draft_release_still_has_no_source_commit(repo_copy: Path) -> None:
-    subprocess.run(["git", "init", "-q", str(repo_copy)], check=True)
-    subprocess.run(["git", "-C", str(repo_copy), "config", "user.name", "Fixture"], check=True)
-    subprocess.run(
-        ["git", "-C", str(repo_copy), "config", "user.email", "fixture@example.invalid"],
-        check=True,
-    )
-    subprocess.run(["git", "-C", str(repo_copy), "add", "-A"], check=True)
-    subprocess.run(
-        ["git", "-C", str(repo_copy), "commit", "-q", "-m", "clean fixture"],
-        check=True,
+    assert (
+        subprocess.check_output(["git", "-C", str(repo_copy), "status", "--porcelain"], text=True)
+        == ""
     )
     archive, _checksum, notes = build_release(
         repo_copy,

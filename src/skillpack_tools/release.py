@@ -219,6 +219,7 @@ def _require_release_readiness(pack: Pack) -> None:
             f"release {pack.published_version}."
         )
     changelog = read_regular_text(pack.path / "CHANGELOG.md", pack.root)
+    changelog = changelog.replace("\r\n", "\n").replace("\r", "\n")
     unreleased = list(re.finditer(r"(?m)^## \[Unreleased\][ \t]*$", changelog))
     if len(unreleased) != 1:
         raise SkillpackError(

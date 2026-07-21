@@ -1,18 +1,11 @@
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
-    ignored = {".git", ".idea", ".pytest_cache", ".venv", "__pycache__", "releases"} & set(names)
-    ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-    return ignored
 
 
 def _canonical_bytecode(repository: Path) -> list[Path]:
@@ -41,9 +34,11 @@ def test_validation_job_redirects_bytecode_before_any_python_invocation() -> Non
     assert "${{ runner.temp }}" not in repository_job
 
 
-def test_compileall_external_cache_keeps_repository_validation_clean(tmp_path: Path) -> None:
-    repository = tmp_path / "skillsets"
-    shutil.copytree(ROOT, repository, ignore=_copy_ignore)
+def test_compileall_external_cache_keeps_repository_validation_clean(
+    tmp_path: Path,
+    generated_repo_copy: Path,
+) -> None:
+    repository = generated_repo_copy
     cache = tmp_path / "python-cache"
     environment = os.environ.copy()
     environment["PYTHONPYCACHEPREFIX"] = str(tmp_path / "preparation-cache")

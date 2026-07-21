@@ -7,7 +7,7 @@ import subprocess
 import tomllib
 from collections.abc import Iterator
 from contextlib import contextmanager
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -19,6 +19,7 @@ from skillpack_tools.rust_assets import (
     ProjectContract,
     RustAssetError,
     RustAssetInventory,
+    _sorted_relative_posix,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,8 +84,38 @@ def empty_runtime_inventory(*, projects: tuple[ProjectContract, ...] = ()) -> Ru
 def test_repository_inventory_classifies_every_rust_asset_exactly_once() -> None:
     inventory = rust_assets.load_inventory(ROOT)
     discovered = rust_assets.discover_rust_assets(ROOT)
+    assert discovered == tuple(sorted(discovered))
     assert rust_assets.validate_inventory(ROOT, inventory) == discovered
     assert len(discovered) >= 28
+
+
+@pytest.mark.parametrize(
+    ("root", "paths"),
+    [
+        (
+            PurePosixPath("/repo"),
+            [
+                PurePosixPath("/repo/assets/workspace-root/apps/tool/Cargo.toml"),
+                PurePosixPath("/repo/assets/workspace-root/Cargo.toml"),
+            ],
+        ),
+        (
+            PureWindowsPath("C:/repo"),
+            [
+                PureWindowsPath("C:/repo/assets/workspace-root/apps/tool/Cargo.toml"),
+                PureWindowsPath("C:/repo/assets/workspace-root/Cargo.toml"),
+            ],
+        ),
+    ],
+)
+def test_rust_asset_order_is_independent_of_path_flavor(
+    root: PurePosixPath | PureWindowsPath,
+    paths: list[PurePosixPath] | list[PureWindowsPath],
+) -> None:
+    assert _sorted_relative_posix(root, paths) == (
+        "assets/workspace-root/Cargo.toml",
+        "assets/workspace-root/apps/tool/Cargo.toml",
+    )
 
 
 def test_selected_inventory_ignores_unrelated_pack_asset_drift(tmp_path: Path) -> None:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ from skillpack_tools import cli
 from skillpack_tools.evals import validate_eval_file
 from skillpack_tools.generate import (
     _portable_source_mode,
+    _tracked_source_modes,
     apply_generated_files,
     build_generated_files,
 )
@@ -76,19 +78,9 @@ def test_operational_section_validation_accepts_both_supported_heading_styles() 
     assert _missing_operational_sections(f"## Outcome\n{common}\n") == {"Safety"}
 
 
-def copy_ignore(directory: str, names: list[str]) -> set[str]:
-    ignored = {".git", ".pytest_cache", "__pycache__", ".venv", "releases"} & set(names)
-    if Path(directory) == ROOT / "dist":
-        ignored.update({"install", "opencode"} & set(names))
-    ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-    return ignored
-
-
 @pytest.fixture()
-def repo_copy(tmp_path: Path) -> Path:
-    target = tmp_path / "skillsets"
-    shutil.copytree(ROOT, target, ignore=copy_ignore)
-    return target
+def repo_copy(generated_repo_copy: Path) -> Path:
+    return generated_repo_copy
 
 
 def test_utilities_cover_success_and_error_paths(tmp_path: Path) -> None:
@@ -182,6 +174,44 @@ def test_portable_source_mode_infers_executable_shebang_without_git(tmp_path: Pa
 
     assert _portable_source_mode(tmp_path, script, tracked_modes={}) == 0o755
     assert _portable_source_mode(tmp_path, data, tracked_modes={}) == 0o644
+
+
+def test_tracked_source_modes_enables_windows_long_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    captured: list[str] = []
+
+    def run(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured.extend(command)
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            "\0".join(
+                (
+                    "100755 abcdef 0\tscripts/helper.py",
+                    "100644 abcdef 0\tassets/data.json",
+                )
+            )
+            + "\0",
+            "",
+        )
+
+    monkeypatch.setattr("skillpack_tools.generate.subprocess.run", run)
+
+    assert _tracked_source_modes(tmp_path) == {
+        "scripts/helper.py": 0o755,
+        "assets/data.json": 0o644,
+    }
+    assert captured == [
+        "git",
+        "-c",
+        "core.longpaths=true",
+        "-C",
+        str(tmp_path),
+        "ls-files",
+        "--stage",
+        "-z",
+    ]
 
 
 def test_model_accessors_and_unknown_pack() -> None:

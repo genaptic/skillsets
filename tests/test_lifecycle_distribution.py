@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
 import subprocess
 from copy import deepcopy
 from html import escape as html_escape
@@ -77,27 +76,30 @@ def test_semantic_versions_accept_valid_identifiers(version: str) -> None:
     semantic_version_key(version)
 
 
-def _copy_repository(tmp_path: Path, *, stable_packs: tuple[str, ...] = ()) -> Path:
-    target = tmp_path / "repository"
-    shutil.copytree(
-        ROOT,
-        target,
-        ignore=shutil.ignore_patterns(".git", ".venv", ".pytest_cache", "__pycache__"),
-    )
+def _prepare_repository(root: Path, *, stable_packs: tuple[str, ...] = ()) -> Path:
     for pack_id in stable_packs:
-        _set_lifecycle(target, pack_id, maturity="stable")
-    subprocess.run(["git", "init", "-q", str(target)], check=True)
-    subprocess.run(["git", "-C", str(target), "config", "user.name", "Fixture"], check=True)
-    subprocess.run(
-        ["git", "-C", str(target), "config", "user.email", "fixture@example.invalid"],
-        check=True,
-    )
-    subprocess.run(["git", "-C", str(target), "add", "packs"], check=True)
-    subprocess.run(
-        ["git", "-C", str(target), "commit", "-q", "--no-gpg-sign", "-m", "fixture"],
-        check=True,
-    )
-    return target
+        _set_lifecycle(root, pack_id, maturity="stable")
+    if stable_packs:
+        subprocess.run(
+            ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "packs"],
+            check=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(root),
+                "commit",
+                "-q",
+                "--no-gpg-sign",
+                "-m",
+                "fixture",
+            ],
+            check=True,
+        )
+    return root
 
 
 def _set_lifecycle(root: Path, pack_id: str, **values: object) -> None:
@@ -116,7 +118,7 @@ def _set_lifecycle(root: Path, pack_id: str, **values: object) -> None:
                 data["publication"]["latest-release"] = value
         else:
             data[key.replace("_", "-")] = value
-    path.write_text(yaml.safe_dump(data, sort_keys=False, width=1000), encoding="utf-8")
+    path.write_bytes(yaml.safe_dump(data, sort_keys=False, width=1000).encode("utf-8"))
 
 
 def _release(root: Path, version: str = "1.0.0") -> dict[str, object]:
@@ -268,8 +270,10 @@ def test_opencode_v1_18_3_protocol_and_self_contained_marketplaces() -> None:
         assert ".." not in path.parts
 
 
-def test_published_old_release_survives_new_candidate_and_withdrawal(tmp_path: Path) -> None:
-    root = _copy_repository(tmp_path, stable_packs=("python-best-practices",))
+def test_published_old_release_survives_new_candidate_and_withdrawal(
+    generated_repo_copy: Path,
+) -> None:
+    root = _prepare_repository(generated_repo_copy, stable_packs=("python-best-practices",))
     skill_path = root / "packs/python/best-practices/skills/python-project-layout/SKILL.md"
     released_skill = skill_path.read_bytes()
     skill_path.write_bytes(released_skill + b"\nCandidate-only guidance.\n")
@@ -333,10 +337,10 @@ def test_published_old_release_survives_new_candidate_and_withdrawal(tmp_path: P
 
 
 def test_mixed_publication_membership_excludes_unpublished_withdrawn_and_maintainers(
-    tmp_path: Path,
+    generated_repo_copy: Path,
 ) -> None:
-    root = _copy_repository(
-        tmp_path,
+    root = _prepare_repository(
+        generated_repo_copy,
         stable_packs=("python-best-practices", "python-cli-apps"),
     )
     release = _release(root)
@@ -383,8 +387,10 @@ def test_mixed_publication_membership_excludes_unpublished_withdrawn_and_maintai
     assert "python-cli-apps" not in development_ids
 
 
-def test_published_pages_card_escapes_released_metadata(tmp_path: Path) -> None:
-    root = _copy_repository(tmp_path, stable_packs=("python-best-practices",))
+def test_published_pages_card_escapes_released_metadata(
+    generated_repo_copy: Path,
+) -> None:
+    root = _prepare_repository(generated_repo_copy, stable_packs=("python-best-practices",))
     pack = get_pack(root, "python-best-practices")
     manifest_path = pack.path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -397,9 +403,23 @@ def test_published_pages_card_escapes_released_metadata(tmp_path: Path) -> None:
     manifest_path.write_text(
         yaml.safe_dump(manifest, sort_keys=False, width=1000), encoding="utf-8"
     )
-    subprocess.run(["git", "-C", str(root), "add", "packs"], check=True)
     subprocess.run(
-        ["git", "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "released metadata"],
+        ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "packs"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(root),
+            "commit",
+            "-q",
+            "--no-gpg-sign",
+            "-m",
+            "released metadata",
+        ],
         check=True,
     )
     _set_lifecycle(
@@ -473,8 +493,10 @@ def test_interface_policy_rejects_duplicate_and_boilerplate_prompts() -> None:
     assert any("truncated fragments" in error for error in validate_pack_lifecycle(fragment))
 
 
-def test_vendor_validation_rejects_presentation_metadata_drift(tmp_path: Path) -> None:
-    root = _copy_repository(tmp_path)
+def test_vendor_validation_rejects_presentation_metadata_drift(
+    generated_repo_copy: Path,
+) -> None:
+    root = _prepare_repository(generated_repo_copy)
     apply_generated_files(root)
     pack = get_pack(root, "python-best-practices")
     path = pack.path / ".codex-plugin/plugin.json"
@@ -489,8 +511,10 @@ def test_vendor_validation_rejects_presentation_metadata_drift(tmp_path: Path) -
     assert any("interface.defaultPrompt" in error for error in errors)
 
 
-def test_codex_short_description_fallback_never_slices_a_word(tmp_path: Path) -> None:
-    root = _copy_repository(tmp_path)
+def test_codex_short_description_fallback_never_slices_a_word(
+    generated_repo_copy: Path,
+) -> None:
+    root = _prepare_repository(generated_repo_copy)
     pack = get_pack(root, "python-best-practices")
     manifest_path = pack.path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))

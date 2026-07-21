@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 import pytest
@@ -8,20 +7,10 @@ import yaml
 
 from skillpack_tools.configure import configure_repository
 
-ROOT = Path(__file__).resolve().parents[1]
-
 
 @pytest.fixture()
-def repo_copy(tmp_path: Path) -> Path:
-    target = tmp_path / "repo"
-
-    def ignore(_directory: str, names: list[str]) -> set[str]:
-        ignored = {".git", ".pytest_cache", ".venv", "__pycache__"} & set(names)
-        ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
-        return ignored
-
-    shutil.copytree(ROOT, target, ignore=ignore)
-    return target
+def repo_copy(generated_repo_copy: Path) -> Path:
+    return generated_repo_copy
 
 
 def test_configure_rewrites_issue_routing_identity(repo_copy: Path) -> None:

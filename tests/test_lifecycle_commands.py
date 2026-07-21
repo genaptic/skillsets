@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime as dt
 import re
-import shutil
 import subprocess
 from pathlib import Path
 from types import SimpleNamespace
@@ -24,43 +23,12 @@ from skillpack_tools.util import SkillpackError, parse_skill_markdown_text
 from skillpack_tools.validate import validate_repository
 
 ROOT = Path(__file__).resolve().parents[1]
+GIT = ("git", "-c", "core.longpaths=true")
 
 
 @pytest.fixture(scope="module")
-def lifecycle_repository_template(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root = tmp_path_factory.mktemp("lifecycle-template") / "repository"
-    shutil.copytree(
-        ROOT,
-        root,
-        ignore=shutil.ignore_patterns(".git", ".venv", ".pytest_cache", "__pycache__", "releases"),
-    )
-    apply_generated_files(root)
-    subprocess.run(["git", "init", "-q", str(root)], check=True)
-    subprocess.run(["git", "-C", str(root), "config", "user.name", "Fixture"], check=True)
-    subprocess.run(
-        ["git", "-C", str(root), "config", "user.email", "fixture@example.invalid"],
-        check=True,
-    )
-    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
-    subprocess.run(
-        ["git", "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "fixture"],
-        check=True,
-    )
-    return root
-
-
-def _repository_copy(tmp_path: Path, template: Path) -> Path:
-    root = tmp_path / "repository"
-    subprocess.run(
-        ["git", "clone", "-q", "--shared", "--", str(template), str(root)],
-        check=True,
-    )
-    subprocess.run(["git", "-C", str(root), "config", "user.name", "Fixture"], check=True)
-    subprocess.run(
-        ["git", "-C", str(root), "config", "user.email", "fixture@example.invalid"],
-        check=True,
-    )
-    return root
+def lifecycle_repository_template(generated_repository_template: Path) -> Path:
+    return generated_repository_template
 
 
 @pytest.fixture(scope="module")
@@ -75,7 +43,7 @@ def prepared_release_plan(lifecycle_repository_template: Path) -> dict[str, Any]
 
 def _status(root: Path) -> str:
     return subprocess.check_output(
-        ["git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
+        [*GIT, "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
         text=True,
     )
 
@@ -85,46 +53,58 @@ def test_preview_uses_exact_shared_head_and_preserves_bytes(
 ) -> None:
     root = tmp_path / "source"
     root.mkdir()
-    subprocess.run(["git", "init", "-q", str(root)], check=True)
-    subprocess.run(["git", "-C", str(root), "config", "user.name", "Fixture"], check=True)
+    subprocess.run([*GIT, "init", "-q", str(root)], check=True)
+    subprocess.run([*GIT, "-C", str(root), "config", "user.name", "Fixture"], check=True)
     subprocess.run(
-        ["git", "-C", str(root), "config", "user.email", "fixture@example.invalid"],
+        [*GIT, "-C", str(root), "config", "user.email", "fixture@example.invalid"],
         check=True,
     )
     tracked = root / "tracked.txt"
     tracked.write_bytes(b"old\n")
-    subprocess.run(["git", "-C", str(root), "add", "tracked.txt"], check=True)
+    subprocess.run([*GIT, "-C", str(root), "add", "tracked.txt"], check=True)
     subprocess.run(
-        ["git", "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "old"],
+        [*GIT, "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "old"],
         check=True,
     )
     old_head = subprocess.check_output(
-        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
+        [*GIT, "-C", str(root), "rev-parse", "HEAD"], text=True
     ).strip()
     tracked.write_bytes(b"new\n")
     (root / "new-only.txt").write_bytes(b"new commit\n")
-    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    subprocess.run([*GIT, "-C", str(root), "add", "-A"], check=True)
     subprocess.run(
-        ["git", "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "new"],
+        [*GIT, "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "new"],
         check=True,
     )
     new_head = subprocess.check_output(
-        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
+        [*GIT, "-C", str(root), "rev-parse", "HEAD"], text=True
     ).strip()
 
     redirected = tmp_path / "redirected"
     redirected.mkdir()
-    subprocess.run(["git", "init", "-q", str(redirected)], check=True)
-    subprocess.run(["git", "-C", str(redirected), "config", "user.name", "Fixture"], check=True)
+    subprocess.run([*GIT, "init", "-q", str(redirected)], check=True)
     subprocess.run(
-        ["git", "-C", str(redirected), "config", "user.email", "fixture@example.invalid"],
+        [*GIT, "-C", str(redirected), "config", "user.name", "Fixture"],
+        check=True,
+    )
+    subprocess.run(
+        [*GIT, "-C", str(redirected), "config", "user.email", "fixture@example.invalid"],
         check=True,
     )
     sentinel = redirected / "sentinel.txt"
     sentinel.write_bytes(b"must remain unchanged\n")
-    subprocess.run(["git", "-C", str(redirected), "add", "sentinel.txt"], check=True)
+    subprocess.run([*GIT, "-C", str(redirected), "add", "sentinel.txt"], check=True)
     subprocess.run(
-        ["git", "-C", str(redirected), "commit", "-q", "--no-gpg-sign", "-m", "sentinel"],
+        [
+            *GIT,
+            "-C",
+            str(redirected),
+            "commit",
+            "-q",
+            "--no-gpg-sign",
+            "-m",
+            "sentinel",
+        ],
         check=True,
     )
     redirected_status = _status(redirected)
@@ -173,7 +153,7 @@ def test_preview_uses_exact_shared_head_and_preserves_bytes(
         assert (preview / ".git/objects/info/alternates").is_file()
         assert (
             subprocess.check_output(
-                ["git", "-C", str(preview), "rev-parse", "HEAD"], text=True
+                [*GIT, "-C", str(preview), "rev-parse", "HEAD"], text=True
             ).strip()
             == old_head
         )
@@ -217,12 +197,11 @@ def test_temporary_tree_cleanup_removes_readonly_files(tmp_path: Path) -> None:
 
 
 def test_prepare_release_preview_digest_and_atomic_apply(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    lifecycle_repository_template: Path,
+    generated_repo_copy: Path,
     prepared_release_plan: dict[str, Any],
 ) -> None:
-    root = _repository_copy(tmp_path, lifecycle_repository_template)
+    root = generated_repo_copy
     release_date = dt.date.today().isoformat()
 
     plan = prepared_release_plan
@@ -276,28 +255,21 @@ def test_prepare_release_preview_digest_and_atomic_apply(
 
 
 def test_prepare_release_can_raise_version_without_stale_candidate_wording(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    lifecycle_repository_template: Path,
+    generated_repo_copy: Path,
 ) -> None:
-    root = _repository_copy(tmp_path, lifecycle_repository_template)
+    root = generated_repo_copy
     release_date = dt.date.today().isoformat()
-    plan = build_lifecycle_plan(
+    candidate, changes = _prepare_canonical_changes(
         root,
         "python-best-practices",
         operation="prepare-release",
         release_date=release_date,
         version="1.0.1",
     )
-    monkeypatch.setattr(lifecycle_commands, "build_lifecycle_plan", lambda *_args, **_kwargs: plan)
-    apply_lifecycle_plan(
-        root,
-        "python-best-practices",
-        operation="prepare-release",
-        release_date=release_date,
-        version="1.0.1",
-        plan_digest=plan["planDigest"],
-    )
+    assert candidate.version == "1.0.1"
+    for relative, content in changes.items():
+        (root / relative).write_bytes(content.encode("utf-8"))
+    apply_generated_files(root)
     pack = get_pack(root, "python-best-practices")
     changelog = (pack.path / "CHANGELOG.md").read_text(encoding="utf-8")
     assert f"## [1.0.1] - {release_date}" in changelog
@@ -331,22 +303,19 @@ def test_skill_local_lifecycle_drift_fails_validation_and_release_readiness(
     drifted: str,
     validation_message: str,
     release_message: str,
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    lifecycle_repository_template: Path,
-    prepared_release_plan: dict[str, Any],
+    generated_repo_copy: Path,
 ) -> None:
-    root = _repository_copy(tmp_path, lifecycle_repository_template)
+    root = generated_repo_copy
     release_date = dt.date.today().isoformat()
-    plan = prepared_release_plan
-    monkeypatch.setattr(lifecycle_commands, "build_lifecycle_plan", lambda *_args, **_kwargs: plan)
-    apply_lifecycle_plan(
+    _candidate, changes = _prepare_canonical_changes(
         root,
         "python-best-practices",
         operation="prepare-release",
         release_date=release_date,
-        plan_digest=plan["planDigest"],
     )
+    for relative, content in changes.items():
+        (root / relative).write_bytes(content.encode("utf-8"))
+    apply_generated_files(root)
     pack = get_pack(root, "python-best-practices")
     skill = pack.skills[0]
     skill_file = pack.path / "skills" / skill / "SKILL.md"
@@ -372,13 +341,8 @@ def test_skill_local_lifecycle_drift_fails_validation_and_release_readiness(
         "postgres-databases",
     ],
 )
-def test_every_public_pack_changelog_can_be_finalized(pack_id: str, tmp_path: Path) -> None:
-    root = tmp_path / "repository"
-    shutil.copytree(
-        ROOT,
-        root,
-        ignore=shutil.ignore_patterns(".git", ".venv", ".pytest_cache", "__pycache__"),
-    )
+def test_every_public_pack_changelog_can_be_finalized(pack_id: str) -> None:
+    root = ROOT
     _candidate, changes = _prepare_canonical_changes(
         root,
         pack_id,
@@ -393,12 +357,11 @@ def test_every_public_pack_changelog_can_be_finalized(pack_id: str, tmp_path: Pa
 
 
 def test_prepare_release_rolls_back_canonical_and_generated_files(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    lifecycle_repository_template: Path,
+    generated_repo_copy: Path,
     prepared_release_plan: dict[str, Any],
 ) -> None:
-    root = _repository_copy(tmp_path, lifecycle_repository_template)
+    root = generated_repo_copy
     release_date = dt.date.today().isoformat()
     plan = prepared_release_plan
     original = lifecycle_commands.apply_generated_files
@@ -423,13 +386,12 @@ def test_prepare_release_rolls_back_canonical_and_generated_files(
 
 @pytest.mark.parametrize("failure", [KeyboardInterrupt(), SystemExit(23)])
 def test_prepare_release_rolls_back_process_interrupts(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     failure: BaseException,
-    lifecycle_repository_template: Path,
+    generated_repo_copy: Path,
     prepared_release_plan: dict[str, Any],
 ) -> None:
-    root = _repository_copy(tmp_path, lifecycle_repository_template)
+    root = generated_repo_copy
     release_date = dt.date.today().isoformat()
     plan = prepared_release_plan
     original = lifecycle_commands.apply_generated_files
@@ -459,11 +421,10 @@ def test_prepare_release_rolls_back_process_interrupts(
 
 
 def test_begin_development_rollback_removes_new_generated_directories(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    lifecycle_repository_template: Path,
+    generated_repo_copy: Path,
 ) -> None:
-    root = _repository_copy(tmp_path, lifecycle_repository_template)
+    root = generated_repo_copy
     pack = get_pack(root, "python-best-practices")
     manifest_path = pack.path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -476,13 +437,13 @@ def test_begin_development_rollback_removes_new_generated_directories(
     ).items():
         (root / relative).write_text(content, encoding="utf-8")
     apply_generated_files(root)
-    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    subprocess.run([*GIT, "-C", str(root), "add", "-A"], check=True)
     subprocess.run(
-        ["git", "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "stable"],
+        [*GIT, "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "stable"],
         check=True,
     )
     source_sha = subprocess.check_output(
-        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
+        [*GIT, "-C", str(root), "rev-parse", "HEAD"], text=True
     ).strip()
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     manifest["publication"] = {
@@ -496,9 +457,9 @@ def test_begin_development_rollback_removes_new_generated_directories(
     }
     manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
     apply_generated_files(root)
-    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    subprocess.run([*GIT, "-C", str(root), "add", "-A"], check=True)
     subprocess.run(
-        ["git", "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "published"],
+        [*GIT, "-C", str(root), "commit", "-q", "--no-gpg-sign", "-m", "published"],
         check=True,
     )
     preview_tree = root / "dist/preview/opencode/python/best-practices"
@@ -533,13 +494,10 @@ def test_begin_development_rollback_removes_new_generated_directories(
     assert not preview_tree.exists()
 
 
-def test_begin_development_preserves_latest_public_release(tmp_path: Path) -> None:
-    root = tmp_path / "repository"
-    shutil.copytree(
-        ROOT,
-        root,
-        ignore=shutil.ignore_patterns(".git", ".venv", ".pytest_cache", "__pycache__"),
-    )
+def test_begin_development_preserves_latest_public_release(
+    generated_repo_copy: Path,
+) -> None:
+    root = generated_repo_copy
     pack = get_pack(root, "python-best-practices")
     manifest_path = pack.path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -573,15 +531,10 @@ def test_begin_development_preserves_latest_public_release(tmp_path: Path) -> No
 
 @pytest.mark.parametrize("maturity", ["stable", "release-candidate"])
 def test_begin_development_rejects_source_already_ahead_of_latest_release(
-    tmp_path: Path,
     maturity: str,
+    generated_repo_copy: Path,
 ) -> None:
-    root = tmp_path / "repository"
-    shutil.copytree(
-        ROOT,
-        root,
-        ignore=shutil.ignore_patterns(".git", ".venv", ".pytest_cache", "__pycache__"),
-    )
+    root = generated_repo_copy
     manifest_path = get_pack(root, "python-best-practices").path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     manifest["version"] = "1.0.1"
@@ -609,14 +562,9 @@ def test_begin_development_rejects_source_already_ahead_of_latest_release(
 
 
 def test_lifecycle_commands_reject_maintainer_release_and_non_increasing_version(
-    tmp_path: Path,
+    generated_repo_copy: Path,
 ) -> None:
-    root = tmp_path / "repository"
-    shutil.copytree(
-        ROOT,
-        root,
-        ignore=shutil.ignore_patterns(".git", ".venv", ".pytest_cache", "__pycache__"),
-    )
+    root = generated_repo_copy
     with pytest.raises(SkillpackError, match="Maintainer-only"):
         _prepare_canonical_changes(
             root,

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import tempfile
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -52,6 +54,50 @@ def _run(
         )
     except OSError as exc:
         raise SkillpackError(f"Required signing command is unavailable: {command[0]}") from exc
+
+
+def _resolved_command(name: str) -> str:
+    """Return the exact executable selected from PATH when one is available."""
+
+    executable = shutil.which(name)
+    return str(Path(executable).resolve()) if executable is not None else name
+
+
+def _shutdown_gnupg_home(home: Path) -> None:
+    """Best-effort shutdown for processes that can retain an ephemeral GnuPG home."""
+
+    with suppress(SkillpackError):
+        _run(
+            [
+                _resolved_command("gpgconf"),
+                "--homedir",
+                str(home),
+                "--kill",
+                "all",
+            ]
+        )
+
+
+@contextmanager
+def _ephemeral_gnupg_home() -> Iterator[Path]:
+    """Yield a private GnuPG home while preserving any failure from its use."""
+
+    temporary = tempfile.TemporaryDirectory(prefix="skillpack-openpgp-")
+    home = Path(temporary.name) / "gnupg"
+    home.mkdir(mode=0o700)
+    original_failure: BaseException | None = None
+    try:
+        yield home
+    except BaseException as exc:
+        original_failure = exc
+        raise
+    finally:
+        try:
+            _shutdown_gnupg_home(home)
+            temporary.cleanup()
+        except BaseException:
+            if original_failure is None:
+                raise
 
 
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -135,7 +181,15 @@ def _read_openpgp_candidates(signers: Iterable[TrustedSigner]) -> list[SigningKe
     for signer in signers:
         if signer.kind != "openpgp":
             continue
-        result = _run(["gpg", "--batch", "--armor", "--export", signer.fingerprint])
+        result = _run(
+            [
+                _resolved_command("gpg"),
+                "--batch",
+                "--armor",
+                "--export",
+                signer.fingerprint,
+            ]
+        )
         if result.returncode == 0 and result.stdout.strip():
             candidates.append(SigningKeyCandidate(kind="openpgp", material=result.stdout))
     return candidates
@@ -213,7 +267,7 @@ def _verify_ssh_tag(
 def _openpgp_candidate_fingerprints(home: Path) -> set[str]:
     result = _run(
         [
-            "gpg",
+            _resolved_command("gpg"),
             "--batch",
             "--homedir",
             str(home),
@@ -241,14 +295,13 @@ def _verify_openpgp_tag(
     candidates: Iterable[SigningKeyCandidate],
 ) -> str:
     successful: set[str] = set()
+    gpg_program = _resolved_command("gpg")
     for candidate in candidates:
         if candidate.kind != "openpgp":
             continue
-        with tempfile.TemporaryDirectory(prefix="skillpack-openpgp-") as temporary:
-            home = Path(temporary) / "gnupg"
-            home.mkdir(mode=0o700)
+        with _ephemeral_gnupg_home() as home:
             import_result = _run(
-                ["gpg", "--batch", "--homedir", str(home), "--import"],
+                [gpg_program, "--batch", "--homedir", str(home), "--import"],
                 input_text=candidate.material,
             )
             if import_result.returncode or not (_openpgp_candidate_fingerprints(home) & trusted):
@@ -262,6 +315,8 @@ def _verify_openpgp_tag(
                     str(root),
                     "-c",
                     "gpg.format=openpgp",
+                    "-c",
+                    f"gpg.openpgp.program={gpg_program}",
                     "verify-tag",
                     "--raw",
                     tag,
