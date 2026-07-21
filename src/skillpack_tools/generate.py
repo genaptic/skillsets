@@ -1147,7 +1147,7 @@ def _tracked_source_modes(root: Path) -> dict[str, int]:
 def _portable_source_mode(
     root: Path, path: Path, tracked_modes: dict[str, int] | None = None
 ) -> int:
-    """Read the tracked executable bit portably, falling back to filesystem mode."""
+    """Read executable intent portably, even when Git metadata is unavailable."""
 
     try:
         relative = path.relative_to(root).as_posix()
@@ -1156,6 +1156,8 @@ def _portable_source_mode(
     modes = tracked_modes if tracked_modes is not None else _tracked_source_modes(root)
     if relative in modes:
         return modes[relative]
+    if read_regular_bytes(path, root).startswith(b"#!/"):
+        return 0o755
     metadata = inspect_path(path, root, leaf_kind="file")
     assert metadata is not None
     return 0o755 if metadata.st_mode & 0o111 else 0o644

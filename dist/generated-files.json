@@ -99,8 +99,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/genaptic-skillsets-development/skills/genaptic-skillsets-create-skill/scripts/scaffold_skill.py",
-      "sha256": "5356332a7ec693e853e0b27b3414aedef10cfa6c0ddcb8e6b44fd6056ffcf24f",
-      "size": 35918,
+      "sha256": "74ab9cd28f288abbf0e6b2d8d6cbede2d4d5aba55278e3ac65c35996503809a9",
+      "size": 35966,
       "mode": "0755"
     },
     {
@@ -159,8 +159,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/genaptic-skillsets-development/skills/genaptic-skillsets-create-skillpack/scripts/scaffold_skillpack.py",
-      "sha256": "aa0f8809516157290f7f8d35ac31627c90789c7665099761b1ebda8554e50e4a",
-      "size": 48702,
+      "sha256": "0ca747af6bef7d442436e14cdf89bf5167e60ef1ed49b1793682d7e615724049",
+      "size": 48670,
       "mode": "0755"
     },
     {
@@ -1359,8 +1359,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/genaptic-skillsets-development/skills/genaptic-skillsets-create-skill/scripts/scaffold_skill.py",
-      "sha256": "5356332a7ec693e853e0b27b3414aedef10cfa6c0ddcb8e6b44fd6056ffcf24f",
-      "size": 35918,
+      "sha256": "74ab9cd28f288abbf0e6b2d8d6cbede2d4d5aba55278e3ac65c35996503809a9",
+      "size": 35966,
       "mode": "0755"
     },
     {
@@ -1425,8 +1425,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/genaptic-skillsets-development/skills/genaptic-skillsets-create-skillpack/scripts/scaffold_skillpack.py",
-      "sha256": "aa0f8809516157290f7f8d35ac31627c90789c7665099761b1ebda8554e50e4a",
-      "size": 48702,
+      "sha256": "0ca747af6bef7d442436e14cdf89bf5167e60ef1ed49b1793682d7e615724049",
+      "size": 48670,
       "mode": "0755"
     },
     {
@@ -3699,8 +3699,8 @@
     },
     {
       "path": "dist/dev/opencode/shared/genaptic-skillsets-development/genaptic-skillsets-create-skill/scripts/scaffold_skill.py",
-      "sha256": "5356332a7ec693e853e0b27b3414aedef10cfa6c0ddcb8e6b44fd6056ffcf24f",
-      "size": 35918,
+      "sha256": "74ab9cd28f288abbf0e6b2d8d6cbede2d4d5aba55278e3ac65c35996503809a9",
+      "size": 35966,
       "mode": "0755"
     },
     {
@@ -3759,8 +3759,8 @@
     },
     {
       "path": "dist/dev/opencode/shared/genaptic-skillsets-development/genaptic-skillsets-create-skillpack/scripts/scaffold_skillpack.py",
-      "sha256": "aa0f8809516157290f7f8d35ac31627c90789c7665099761b1ebda8554e50e4a",
-      "size": 48702,
+      "sha256": "0ca747af6bef7d442436e14cdf89bf5167e60ef1ed49b1793682d7e615724049",
+      "size": 48670,
       "mode": "0755"
     },
     {

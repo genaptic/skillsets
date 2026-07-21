@@ -70,6 +70,7 @@ jobs:
         shell: pwsh
         run: ./scripts/check.ps1
       - name: Run cross-platform filesystem safety fixtures
+        if: runner.os != 'Windows'
         shell: python
         run: |
           import os

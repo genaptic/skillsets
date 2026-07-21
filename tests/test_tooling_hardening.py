@@ -253,7 +253,7 @@ def test_generation_is_byte_safe_filtered_mode_aware_and_target_aware(
     (skill / "assets" / "id_ed25519").write_text("secret\n", encoding="utf-8")
     (skill / "assets" / "ignored.pyc").write_bytes(b"bytecode")
     executable_asset = skill / "assets" / "fixture-tool"
-    executable_asset.write_text("fixture\n", encoding="utf-8")
+    executable_asset.write_text("#!/bin/sh\nfixture\n", encoding="utf-8")
     executable_asset.chmod(0o755)
     script_data = skill / "scripts" / "data.json"
     script_data.write_text('{"fixture": true}\n', encoding="utf-8")

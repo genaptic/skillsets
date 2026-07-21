@@ -464,7 +464,10 @@ def test_recovery_artifact_handoff_safely_extracts_exact_flat_inventory(tmp_path
     for name, payload in payloads.items():
         extracted = destination / name
         assert extracted.read_bytes() == payload
-        assert stat.S_IMODE(extracted.stat().st_mode) == 0o644
+        if os.name != "nt":
+            assert stat.S_IMODE(extracted.stat().st_mode) == 0o644
+        else:
+            assert os.access(extracted, os.R_OK | os.W_OK)
 
 
 def test_recovery_artifact_handoff_rejects_symlink_members(tmp_path: Path) -> None:

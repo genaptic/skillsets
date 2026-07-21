@@ -5,8 +5,11 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
+import sys
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -44,9 +47,37 @@ class _Snapshot:
     mode: int
 
 
-def _require_clean_worktree(root: Path) -> str | None:
+def _remove_readonly_and_retry(
+    function: Callable[[str], object],
+    path: str,
+    error: BaseException,
+) -> None:
+    """Clear a Windows read-only bit and retry exactly one failed removal."""
+
+    if os.name != "nt" or not isinstance(error, PermissionError):
+        raise error
+    os.chmod(path, stat.S_IWRITE)
+    function(path)
+
+
+def _remove_temporary_tree(path: Path) -> None:
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=_remove_readonly_and_retry)
+        return
+
+    def legacy_callback(
+        function: Callable[[str], object],
+        failed_path: str,
+        exc_info: tuple[type[BaseException], BaseException, object],
+    ) -> None:
+        _remove_readonly_and_retry(function, failed_path, exc_info[1])
+
+    shutil.rmtree(path, onerror=legacy_callback)
+
+
+def _require_clean_worktree(root: Path) -> str:
     if not (root / ".git").exists():
-        return None
+        raise SkillpackError("Lifecycle preparation requires a Git worktree.")
     completed = subprocess.run(
         ["git", "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
         check=False,
@@ -225,19 +256,74 @@ def _prepare_canonical_changes(
     return candidate, dict(sorted(changes.items()))
 
 
-def _copy_for_preview(root: Path, changes: dict[str, str]) -> Path:
+def _copy_for_preview(root: Path, changes: dict[str, str], *, head: str) -> Path:
+    """Create an isolated preview without duplicating a Git object database."""
+
     temporary_parent = Path(os.path.realpath(tempfile.mkdtemp(prefix="skillpack-lifecycle-")))
     temporary = temporary_parent / "repository"
+    hooks = temporary_parent / "empty-hooks"
+    hooks.mkdir()
+    git_environment = {
+        **os.environ,
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_LFS_SKIP_SMUDGE": "1",
+        "GIT_TERMINAL_PROMPT": "0",
+    }
 
-    def ignore(_directory: str, names: list[str]) -> set[str]:
-        return {
-            name for name in names if name in {".venv", ".pytest_cache", "__pycache__", "releases"}
-        }
-
-    shutil.copytree(root, temporary, ignore=ignore)
-    for relative, content in changes.items():
-        path = temporary / relative
-        path.write_text(content, encoding="utf-8")
+    try:
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                f"core.hooksPath={hooks}",
+                "clone",
+                "--quiet",
+                "--shared",
+                "--no-checkout",
+                "--",
+                str(root),
+                str(temporary),
+            ],
+            check=True,
+            capture_output=True,
+            env=git_environment,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                f"core.hooksPath={hooks}",
+                "-C",
+                str(temporary),
+                "checkout",
+                "--quiet",
+                "--detach",
+                head,
+            ],
+            check=True,
+            capture_output=True,
+            env=git_environment,
+        )
+        for relative, content in changes.items():
+            path = temporary / relative
+            metadata = inspect_path(path, temporary, leaf_kind="file", allow_missing=True)
+            safe_atomic_write_bytes(
+                path,
+                content.encode("utf-8"),
+                temporary,
+                mode=(metadata.st_mode & 0o777) if metadata is not None else 0o644,
+                expected=metadata,
+            )
+    except BaseException as exc:
+        rollback_after_failure(
+            exc,
+            lambda: _remove_temporary_tree(temporary_parent),
+            label="Lifecycle preview creation",
+        )
+        if isinstance(exc, (OSError, subprocess.CalledProcessError)):
+            raise SkillpackError("Could not create the exact-HEAD lifecycle preview.") from exc
+        raise
     return temporary
 
 
@@ -267,7 +353,7 @@ def build_lifecycle_plan(
     preimages = {
         relative: sha256_bytes(read_regular_bytes(root / relative, root)) for relative in changes
     }
-    preview_root = _copy_for_preview(root, changes)
+    preview_root = _copy_for_preview(root, changes, head=head)
     try:
         apply_generated_files(preview_root)
         from .publication import (
@@ -305,8 +391,15 @@ def build_lifecycle_plan(
             )
         generated_outputs = _generated_output_records(preview_root)
         generated_changes = [item for item in changed_files if item["path"] not in changes]
-    finally:
-        shutil.rmtree(preview_root.parent)
+    except BaseException as exc:
+        rollback_after_failure(
+            exc,
+            lambda: _remove_temporary_tree(preview_root.parent),
+            label="Lifecycle preview",
+        )
+        raise
+    else:
+        _remove_temporary_tree(preview_root.parent)
     base = {
         "schemaVersion": 2,
         "operation": operation,

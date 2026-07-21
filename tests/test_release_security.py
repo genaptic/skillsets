@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import stat
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -444,6 +445,8 @@ def test_publication_apply_rolls_back_process_interrupts(
     generated.write_text("before generated\n", encoding="utf-8")
     manifest.chmod(0o600)
     generated.chmod(0o640)
+    manifest_mode = stat.S_IMODE(manifest.stat().st_mode)
+    generated_mode = stat.S_IMODE(generated.stat().st_mode)
     plan = {
         "baseCommit": "c" * 40,
         "planDigest": "d" * 64,
@@ -455,14 +458,14 @@ def test_publication_apply_rolls_back_process_interrupts(
                 "path": "pack.yaml",
                 "beforeSha256": sha256_bytes(manifest.read_bytes()),
                 "afterSha256": sha256_bytes(b"after manifest\n"),
-                "beforeMode": "0600",
+                "beforeMode": f"{manifest_mode:04o}",
                 "afterMode": "0644",
             },
             {
                 "path": "generated.json",
                 "beforeSha256": sha256_bytes(generated.read_bytes()),
                 "afterSha256": sha256_bytes(b"after generated\n"),
-                "beforeMode": "0640",
+                "beforeMode": f"{generated_mode:04o}",
                 "afterMode": "0640",
             },
             {
@@ -493,8 +496,8 @@ def test_publication_apply_rolls_back_process_interrupts(
         assert raised.value.code == 29
     assert manifest.read_text(encoding="utf-8") == "before manifest\n"
     assert generated.read_text(encoding="utf-8") == "before generated\n"
-    assert manifest.stat().st_mode & 0o777 == 0o600
-    assert generated.stat().st_mode & 0o777 == 0o640
+    assert stat.S_IMODE(manifest.stat().st_mode) == manifest_mode
+    assert stat.S_IMODE(generated.stat().st_mode) == generated_mode
     assert not created.exists()
     assert not created.parent.exists()
 

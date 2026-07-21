@@ -1013,17 +1013,15 @@ def build_plan(root: Path, request_path: Path) -> dict[str, Any]:
         for skill in skills
     ]
     new_files = [
-        str((destination / path.relative_to(pack_template)).relative_to(root))
+        (destination / path.relative_to(pack_template)).relative_to(root).as_posix()
         for path in pack_template_files
     ]
     for skill in skills:
         for path in template_files:
             new_files.append(
-                str(
-                    (destination / "skills" / skill.name / path.relative_to(template)).relative_to(
-                        root
-                    )
-                )
+                (destination / "skills" / skill.name / path.relative_to(template))
+                .relative_to(root)
+                .as_posix()
             )
 
     preimages = {
@@ -1059,7 +1057,7 @@ def build_plan(root: Path, request_path: Path) -> dict[str, Any]:
         "interface": interface,
         "operations": operations,
         "skills": skill_dicts,
-        "destination": str(destination.relative_to(root)),
+        "destination": destination.relative_to(root).as_posix(),
         "newFiles": new_files,
         "preimages": dict(sorted(preimages.items())),
         "notes": [

@@ -10,7 +10,11 @@ import yaml
 
 from skillpack_tools import cli
 from skillpack_tools.evals import validate_eval_file
-from skillpack_tools.generate import apply_generated_files, build_generated_files
+from skillpack_tools.generate import (
+    _portable_source_mode,
+    apply_generated_files,
+    build_generated_files,
+)
 from skillpack_tools.models import get_pack, load_repository
 from skillpack_tools.util import (
     SkillpackError,
@@ -138,10 +142,14 @@ def test_utilities_cover_success_and_error_paths(tmp_path: Path) -> None:
     target = tmp_path / "nested" / "file.txt"
     atomic_write(target, "first\n", executable=True)
     assert target.read_text(encoding="utf-8") == "first\n"
-    assert os.access(target, os.X_OK)
+    if os.name != "nt":
+        assert os.access(target, os.X_OK)
+    else:
+        assert os.access(target, os.R_OK | os.W_OK)
     target.chmod(0o640)
+    expected_mode = target.stat().st_mode & 0o777
     atomic_write(target, "second\n")
-    assert target.stat().st_mode & 0o777 == 0o640
+    assert target.stat().st_mode & 0o777 == expected_mode
 
     replaced = replace_marked_section(
         "before\n  <!-- B -->\nold\n  <!-- E -->\nafter\n",
@@ -163,6 +171,17 @@ def test_utilities_cover_success_and_error_paths(tmp_path: Path) -> None:
 def _write_bytes(path: Path, content: bytes) -> Path:
     path.write_bytes(content)
     return path
+
+
+def test_portable_source_mode_infers_executable_shebang_without_git(tmp_path: Path) -> None:
+    script = tmp_path / "scripts" / "helper.py"
+    script.parent.mkdir()
+    script.write_text("#!/usr/bin/env python3\nprint('ok')\n", encoding="utf-8")
+    data = script.with_name("data.json")
+    data.write_text('{"fixture": true}\n', encoding="utf-8")
+
+    assert _portable_source_mode(tmp_path, script, tracked_modes={}) == 0o755
+    assert _portable_source_mode(tmp_path, data, tracked_modes={}) == 0o644
 
 
 def test_model_accessors_and_unknown_pack() -> None:

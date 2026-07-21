@@ -111,6 +111,9 @@ def test_preview_is_deterministic_relative_redacted_and_lists_templates(repo: Pa
     assert plan["repository"] == "."
     assert plan["request"] == "request"
     assert str(repo) not in first.stdout
+    assert "\\" not in plan["destination"]
+    assert all("\\" not in path for path in plan["newFiles"])
+    assert all("\\" not in path for path in plan["preimages"] if path != "request")
     assert before == after
 
     skillpack_request = write_request(repo, SKILLPACK_EXAMPLE, "skillpack.json")
@@ -118,6 +121,9 @@ def test_preview_is_deterministic_relative_redacted_and_lists_templates(repo: Pa
     assert skillpack_plan["operation"] == "genaptic-skillsets-create-skillpack"
     assert skillpack_plan["skillpackName"] == "Go Service Observability"
     assert any(path.endswith("tests/compatibility/smoke.py") for path in skillpack_plan["newFiles"])
+    assert "\\" not in skillpack_plan["destination"]
+    assert all("\\" not in path for path in skillpack_plan["newFiles"])
+    assert all("\\" not in path for path in skillpack_plan["preimages"] if path != "request")
     assert str(repo) not in json.dumps(skillpack_plan)
     assert "details" not in skillpack_plan
     assert "scope" not in skillpack_plan
@@ -278,7 +284,8 @@ def test_one_skill_pack_apply_uses_runtime_map_and_unreleased_changelog(repo: Pa
     skill_markdown = next((destination / "skills").glob("*/SKILL.md")).read_text(encoding="utf-8")
     assert 'version: "1.0.0"' in skill_markdown
     assert 'maturity: "release-candidate"' in skill_markdown
-    assert (destination / "tests/compatibility/smoke.py").stat().st_mode & 0o111
+    if os.name == "posix":
+        assert (destination / "tests/compatibility/smoke.py").stat().st_mode & 0o111
     assert not (repo / ".tmp").exists()
 
 
@@ -298,7 +305,8 @@ def test_helpers_are_standalone_offline_and_executable() -> None:
         assert "import subprocess" not in source
         assert "urllib.request" not in source
         assert "requests" not in source
-        assert script.stat().st_mode & 0o111
+        if os.name == "posix":
+            assert script.stat().st_mode & 0o111
         help_result = subprocess.run(
             [sys.executable, "-I", "-S", str(script), "--help"],
             text=True,

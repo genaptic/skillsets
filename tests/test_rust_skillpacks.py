@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -478,4 +479,7 @@ def test_rust_compatibility_fixtures_match_manifests_and_are_executable() -> Non
         assert inventory["pack"] == expected["id"]
         assert inventory["skills"] == expected["skills"]
         smoke = pack_path / "tests/compatibility/smoke.py"
-        assert smoke.stat().st_mode & 0o111
+        if os.name != "nt":
+            assert smoke.stat().st_mode & 0o111
+        else:
+            assert smoke.read_bytes().startswith(b"#!/usr/bin/env python3\n")

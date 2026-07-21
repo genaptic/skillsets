@@ -73,6 +73,30 @@ def test_required_check_contexts_are_stable() -> None:
     ]
 
 
+def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
+    workflow = yaml.safe_load(_workflow("compatibility.yml"))
+    job = workflow["jobs"]["adapters-and-installers"]
+    assert job["timeout-minutes"] == 35
+    assert job["strategy"]["fail-fast"] is False
+
+    windows_check = next(
+        step
+        for step in job["steps"]
+        if step["name"] == "Exercise the documented Windows full-check path"
+    )
+    assert windows_check["if"] == "runner.os == 'Windows'"
+    assert windows_check["run"] == "./scripts/check.ps1"
+
+    path_safety = next(
+        step
+        for step in job["steps"]
+        if step["name"] == "Run cross-platform filesystem safety fixtures"
+    )
+    assert path_safety["if"] == "runner.os != 'Windows'"
+    assert "tests/test_path_safety.py" in path_safety["run"]
+    assert "--no-cov" in path_safety["run"]
+
+
 def test_python_current_probe_and_required_validation_are_fail_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

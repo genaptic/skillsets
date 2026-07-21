@@ -726,11 +726,11 @@ def build_plan(root: Path, request_path: Path) -> tuple[dict[str, Any], Pack, Pa
     preimages = {
         "request": sha256(request_path),
         "repository.yaml": sha256(repository_file),
-        str(manifest_path.relative_to(root)): sha256(manifest_path),
-        str(changelog.relative_to(root)): sha256(changelog),
-        str(expected_path.relative_to(root)): sha256(expected_path),
+        manifest_path.relative_to(root).as_posix(): sha256(manifest_path),
+        changelog.relative_to(root).as_posix(): sha256(changelog),
+        expected_path.relative_to(root).as_posix(): sha256(expected_path),
     }
-    preimages.update({str(path.relative_to(root)): sha256(path) for path in template_files})
+    preimages.update({path.relative_to(root).as_posix(): sha256(path) for path in template_files})
 
     plan = {
         "schemaVersion": 1,
@@ -740,13 +740,13 @@ def build_plan(root: Path, request_path: Path) -> tuple[dict[str, Any], Pack, Pa
         "skillName": name,
         "packId": pack.id,
         "packVersion": pack.version,
-        "destination": str(destination.relative_to(root)),
+        "destination": destination.relative_to(root).as_posix(),
         "canonicalUpdates": [
-            str(manifest_path.relative_to(root)),
-            str(expected_path.relative_to(root)),
+            manifest_path.relative_to(root).as_posix(),
+            expected_path.relative_to(root).as_posix(),
         ],
         "newFiles": [
-            str((destination / path.relative_to(template)).relative_to(root))
+            (destination / path.relative_to(template)).relative_to(root).as_posix()
             for path in template_files
         ],
         "preimages": dict(sorted(preimages.items())),

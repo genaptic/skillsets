@@ -223,7 +223,8 @@ def test_cli_release_forwards_the_explicit_resolved_policy_root(
             "policy_root": policy_root.resolve(),
         }
     ]
-    assert "Archive: dist/releases/pack.zip" in capsys.readouterr().out
+    expected_archive = Path("dist") / "releases" / "pack.zip"
+    assert f"Archive: {expected_archive}" in capsys.readouterr().out
 
 
 def test_cli_compatibility_eval_warning_and_noop_configuration(
@@ -414,7 +415,8 @@ def test_lifecycle_validation_collects_all_cross_field_errors() -> None:
 def test_clean_worktree_guard_covers_non_git_and_git_failures(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert lifecycle_commands._require_clean_worktree(tmp_path) is None
+    with pytest.raises(SkillpackError, match="requires a Git worktree"):
+        lifecycle_commands._require_clean_worktree(tmp_path)
     (tmp_path / ".git").mkdir()
 
     monkeypatch.setattr(
@@ -590,6 +592,8 @@ def test_candidate_validation_restore_and_controlled_path_helpers(
     created = root / "nested" / "created.txt"
     existing.parent.mkdir(parents=True)
     existing.write_text("changed", encoding="utf-8")
+    existing.chmod(0o640)
+    expected_mode = existing.stat().st_mode & 0o777
     created.parent.mkdir(parents=True)
     created.write_text("created", encoding="utf-8")
     lifecycle_commands._restore(
@@ -600,7 +604,7 @@ def test_candidate_validation_restore_and_controlled_path_helpers(
         },
     )
     assert existing.read_bytes() == b"original"
-    assert existing.stat().st_mode & 0o777 == 0o640
+    assert existing.stat().st_mode & 0o777 == expected_mode
     assert not created.exists() and not created.parent.exists()
 
     (root / "dist").mkdir(exist_ok=True)

@@ -149,11 +149,12 @@ def test_publication_snapshot_and_rollback_restore_content_modes_and_absence(
     existing = tmp_path / "existing.txt"
     existing.write_text("before\n", encoding="utf-8")
     existing.chmod(0o600)
+    expected_mode = existing.stat().st_mode & 0o777
     changed_files = [
         {
             "path": "existing.txt",
             "beforeSha256": sha256_bytes(b"before\n"),
-            "beforeMode": "0600",
+            "beforeMode": f"{expected_mode:04o}",
         },
         {
             "path": "generated/nested/new.txt",
@@ -170,7 +171,7 @@ def test_publication_snapshot_and_rollback_restore_content_modes_and_absence(
     publication._rollback_changed_files(tmp_path, snapshot)
 
     assert existing.read_text(encoding="utf-8") == "before\n"
-    assert existing.stat().st_mode & 0o777 == 0o600
+    assert existing.stat().st_mode & 0o777 == expected_mode
     assert not new.exists()
     assert not (tmp_path / "generated").exists()
 
