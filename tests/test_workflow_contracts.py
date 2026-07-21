@@ -75,10 +75,15 @@ def test_required_check_contexts_are_stable() -> None:
 
 
 def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
-    workflow = yaml.safe_load(_workflow("compatibility.yml"))
+    workflow_text = _workflow("compatibility.yml")
+    workflow = yaml.safe_load(workflow_text)
     job = workflow["jobs"]["adapters-and-installers"]
     assert job["timeout-minutes"] == 20
     assert job["strategy"]["fail-fast"] is False
+    push_trigger = _event_block(workflow_text, "push")
+    assert '      - "tests/**"\n' in push_trigger
+    assert "tests/test_path_safety.py" not in push_trigger
+    assert "tests/test_tooling_hardening.py" not in push_trigger
     bytecode_cache = "${{ runner.temp }}/genaptic-structural-pycache"
 
     windows_bootstrap = next(
@@ -86,6 +91,8 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
         for step in job["steps"]
         if step["name"] == "Exercise the documented Windows bootstrap path"
     )
+    assert windows_bootstrap["if"] == "runner.os == 'Windows'"
+    assert windows_bootstrap["run"] == "./scripts/bootstrap.ps1"
     assert windows_bootstrap["env"] == {"PYTHONPYCACHEPREFIX": bytecode_cache}
 
     windows_check = next(

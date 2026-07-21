@@ -16,8 +16,7 @@ on:
       - "tools/**"
       - "scripts/**"
       - ".github/workflows/compatibility.yml"
-      - "tests/test_path_safety.py"
-      - "tests/test_tooling_hardening.py"
+      - "tests/**"
   workflow_dispatch:
 
 permissions:
