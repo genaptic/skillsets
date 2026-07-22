@@ -105,7 +105,8 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     assert windows_check["env"] == {
         "PYTHONPYCACHEPREFIX": bytecode_cache,
         "PYTEST_ADDOPTS": (
-            "--no-cov -n 3 --dist=worksteal --max-worker-restart=0 --durations=25 --durations-min=1"
+            "--no-cov -n 3 --dist=load --maxschedchunk=1 --max-worker-restart=0 "
+            "--durations=25 --durations-min=1"
         ),
     }
     loadscope_isolation = next(

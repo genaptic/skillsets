@@ -19,6 +19,20 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+_COPY_IGNORED_NAMES = {
+    ".coverage",
+    ".DS_Store",
+    ".git",
+    ".idea",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "releases",
+    "tmp",
+}
+
 
 @dataclass(frozen=True)
 class _ReusableRepository:
@@ -33,19 +47,7 @@ class _ReusableRepository:
 
 
 def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
-    ignored = {
-        ".coverage",
-        ".DS_Store",
-        ".git",
-        ".idea",
-        ".mypy_cache",
-        ".pytest_cache",
-        ".ruff_cache",
-        ".venv",
-        "__pycache__",
-        "releases",
-        "tmp",
-    } & set(names)
+    ignored = _COPY_IGNORED_NAMES & set(names)
     ignored.update(name for name in names if name.endswith((".pyc", ".pyo")))
     return ignored
 
@@ -79,6 +81,135 @@ def _configure_fixture_repository(root: Path, hooks: Path, environment: dict[str
             check=True,
             env=environment,
         )
+
+
+def _repository_head_and_status(
+    root: Path,
+    environment: dict[str, str],
+) -> tuple[str, str]:
+    """Read one stable repository HEAD and its complete working-tree status."""
+
+    command = ["git", "-c", "core.longpaths=true", "-C", str(root)]
+    head_before = subprocess.run(
+        [*command, "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    ).stdout.strip()
+    status = subprocess.run(
+        [*command, "status", "--porcelain=v1", "--untracked-files=all"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    ).stdout
+    head_after = subprocess.run(
+        [*command, "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    ).stdout.strip()
+    if head_before != head_after:
+        raise AssertionError("fixture source HEAD changed while its state was inspected")
+    return head_before, status
+
+
+def _ignored_source_requires_copy(root: Path, environment: dict[str, str]) -> bool:
+    """Return whether ignored content would be retained by the copy fallback."""
+
+    completed = subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(root),
+            "status",
+            "--porcelain=v1",
+            "-z",
+            "--ignored=matching",
+            "--untracked-files=all",
+        ],
+        check=True,
+        capture_output=True,
+        env=environment,
+    )
+    for record in completed.stdout.split(b"\0"):
+        if not record.startswith(b"!! "):
+            continue
+        relative = (
+            record.removeprefix(b"!! ")
+            .rstrip(b"/")
+            .decode(
+                "utf-8",
+                errors="surrogateescape",
+            )
+        )
+        parts = relative.split("/")
+        safely_excluded = any(
+            part in _COPY_IGNORED_NAMES or part.endswith((".pyc", ".pyo")) for part in parts
+        )
+        if not safely_excluded:
+            return True
+    return False
+
+
+def _clone_clean_generated_source(
+    source: Path,
+    destination: Path,
+    hooks: Path,
+    environment: dict[str, str],
+) -> str | None:
+    """Clone an exact clean source commit, or return ``None`` for a dirty source tree."""
+
+    source_head, source_status = _repository_head_and_status(source, environment)
+    if source_status or _ignored_source_requires_copy(source, environment):
+        return None
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "clone",
+            "-q",
+            "--shared",
+            "--no-checkout",
+            "--",
+            str(source),
+            str(destination),
+        ],
+        check=True,
+        env=environment,
+    )
+    _configure_fixture_repository(destination, hooks, environment)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(destination),
+            "checkout",
+            "-q",
+            "--detach",
+            source_head,
+        ],
+        check=True,
+        env=environment,
+    )
+    cloned_head, cloned_status = _repository_head_and_status(destination, environment)
+    final_source_head, final_source_status = _repository_head_and_status(source, environment)
+    if (
+        final_source_head != source_head
+        or final_source_status
+        or _ignored_source_requires_copy(source, environment)
+    ):
+        raise AssertionError("fixture source changed while its clean commit was cloned")
+    if cloned_head != source_head or cloned_status:
+        raise AssertionError("clean fixture clone does not match its source commit")
+    return source_head
 
 
 def _restore_metadata_file(path: Path, content: bytes, mode: int) -> None:
@@ -214,43 +345,71 @@ def _materialize_generated_repository_template(fixture_root: Path) -> Path:
     from skillpack_tools.generate import apply_generated_files
 
     root = fixture_root / "w"
-    shutil.copytree(ROOT, root, ignore=_copy_ignore)
     environment = _isolated_git_environment()
-    subprocess.run(
-        ["git", "-c", "core.longpaths=true", "init", "-q", str(root)],
-        check=True,
-        env=environment,
-    )
     empty_hooks = fixture_root / "h"
     empty_hooks.mkdir()
-    _configure_fixture_repository(root, empty_hooks, environment)
-    subprocess.run(
-        ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "-A"],
-        check=True,
-        env=environment,
+    clean_source_head = _clone_clean_generated_source(
+        ROOT,
+        root,
+        empty_hooks,
+        environment,
     )
-    source_index = subprocess.run(
-        [
-            "git",
-            "-c",
-            "core.longpaths=true",
-            "-C",
-            str(ROOT),
-            "ls-files",
-            "--stage",
-            "-z",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-        env=environment,
-    ).stdout
-    executable_paths = [
-        entry.split("\t", 1)[1]
-        for entry in source_index.split("\0")
-        if entry.startswith("100755 ") and "\t" in entry
-    ]
-    if executable_paths:
+    if clean_source_head is None:
+        shutil.copytree(ROOT, root, ignore=_copy_ignore)
+        subprocess.run(
+            ["git", "-c", "core.longpaths=true", "init", "-q", str(root)],
+            check=True,
+            env=environment,
+        )
+        _configure_fixture_repository(root, empty_hooks, environment)
+        subprocess.run(
+            ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "-A"],
+            check=True,
+            env=environment,
+        )
+        source_index = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(ROOT),
+                "ls-files",
+                "--stage",
+                "-z",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            env=environment,
+        ).stdout
+        executable_paths = [
+            entry.split("\t", 1)[1]
+            for entry in source_index.split("\0")
+            if entry.startswith("100755 ") and "\t" in entry
+        ]
+        if executable_paths:
+            subprocess.run(
+                [
+                    "git",
+                    "-c",
+                    "core.longpaths=true",
+                    "-C",
+                    str(root),
+                    "update-index",
+                    "--chmod=+x",
+                    "--",
+                    *executable_paths,
+                ],
+                check=True,
+                env=environment,
+            )
+        apply_generated_files(root)
+        subprocess.run(
+            ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "-A"],
+            check=True,
+            env=environment,
+        )
         subprocess.run(
             [
                 "git",
@@ -258,36 +417,27 @@ def _materialize_generated_repository_template(fixture_root: Path) -> Path:
                 "core.longpaths=true",
                 "-C",
                 str(root),
-                "update-index",
-                "--chmod=+x",
-                "--",
-                *executable_paths,
+                "commit",
+                "-q",
+                "--no-gpg-sign",
+                "-m",
+                "generated repository fixture",
             ],
             check=True,
             env=environment,
         )
-    apply_generated_files(root)
-    subprocess.run(
-        ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "-A"],
-        check=True,
-        env=environment,
-    )
-    subprocess.run(
-        [
-            "git",
-            "-c",
-            "core.longpaths=true",
-            "-C",
-            str(root),
-            "commit",
-            "-q",
-            "--no-gpg-sign",
-            "-m",
-            "generated repository fixture",
-        ],
-        check=True,
-        env=environment,
-    )
+    else:
+        apply_generated_files(root, check=True)
+        final_source_head, final_source_status = _repository_head_and_status(
+            ROOT,
+            environment,
+        )
+        if (
+            final_source_head != clean_source_head
+            or final_source_status
+            or _ignored_source_requires_copy(ROOT, environment)
+        ):
+            raise AssertionError("fixture source changed while generated state was verified")
     return root
 
 
