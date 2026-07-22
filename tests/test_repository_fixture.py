@@ -82,6 +82,11 @@ def _initialize_source_repository(tmp_path: Path) -> tuple[Path, dict[str, str],
     executable.chmod(0o755)
     subprocess.run([*GIT, "-C", str(source), "add", "-A"], check=True, env=environment)
     subprocess.run(
+        [*GIT, "-C", str(source), "update-index", "--chmod=+x", "--", "script.sh"],
+        check=True,
+        env=environment,
+    )
+    subprocess.run(
         [*GIT, "-C", str(source), "commit", "-q", "--no-gpg-sign", "-m", "source"],
         check=True,
         env=environment,
@@ -143,6 +148,14 @@ def test_clean_source_clone_preserves_exact_commit_and_modes(tmp_path: Path) -> 
         text=True,
         env=environment,
     ).stdout.strip()
+    source_mode = subprocess.run(
+        [*GIT, "-C", str(source), "ls-files", "--stage", "script.sh"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env=environment,
+    ).stdout
+    assert source_mode.startswith("100755 ")
 
     actual_head = _clone_clean_generated_source(
         source,
