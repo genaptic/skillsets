@@ -60,6 +60,11 @@ jobs:
         run: |
           skillpacks generate --check
           skillpacks validate --check-generated --strict-placeholders
+      - name: Exercise reusable repository isolation under loadscope
+        if: runner.os == 'Linux'
+        run: >-
+          python -m pytest tests/test_repository_fixture.py --no-cov -n 3
+          --dist=loadscope --max-worker-restart=0
       - name: Exercise the documented Windows bootstrap path
         if: runner.os == 'Windows'
         shell: pwsh
@@ -72,7 +77,7 @@ jobs:
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-structural-pycache
           PYTEST_ADDOPTS: >-
-            --no-cov -n 3 --dist=loadscope --max-worker-restart=0
+            --no-cov -n 3 --dist=worksteal --max-worker-restart=0
             --durations=25 --durations-min=1
         run: ./scripts/check.ps1
       - name: Run cross-platform filesystem safety fixtures

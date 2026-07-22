@@ -105,9 +105,19 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     assert windows_check["env"] == {
         "PYTHONPYCACHEPREFIX": bytecode_cache,
         "PYTEST_ADDOPTS": (
-            "--no-cov -n 3 --dist=loadscope --max-worker-restart=0 --durations=25 --durations-min=1"
+            "--no-cov -n 3 --dist=worksteal --max-worker-restart=0 --durations=25 --durations-min=1"
         ),
     }
+    loadscope_isolation = next(
+        step
+        for step in job["steps"]
+        if step["name"] == "Exercise reusable repository isolation under loadscope"
+    )
+    assert loadscope_isolation["if"] == "runner.os == 'Linux'"
+    assert loadscope_isolation["run"] == (
+        "python -m pytest tests/test_repository_fixture.py --no-cov -n 3 "
+        "--dist=loadscope --max-worker-restart=0"
+    )
     development_inputs = (ROOT / "requirements-dev.in").read_text(encoding="utf-8")
     dependency_lock = (ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
     assert development_inputs.splitlines().count("pytest-xdist==3.8.0") == 1
