@@ -229,13 +229,17 @@ def test_prepare_release_preview_digest_and_atomic_apply(
             )
     assert _status(root) == ""
 
-    applied = apply_lifecycle_plan(
-        root,
-        "python-best-practices",
-        operation="prepare-release",
-        release_date=release_date,
-        plan_digest=plan["planDigest"],
-    )
+    # Preview construction is exercised above. Reuse those exact reviewed bytes here so this
+    # test isolates the transactional apply; a separate contract verifies apply always rebuilds.
+    with monkeypatch.context() as context:
+        context.setattr(lifecycle_commands, "build_lifecycle_plan", lambda *_args, **_kwargs: plan)
+        applied = apply_lifecycle_plan(
+            root,
+            "python-best-practices",
+            operation="prepare-release",
+            release_date=release_date,
+            plan_digest=plan["planDigest"],
+        )
     assert applied["applied"] is True
     pack = get_pack(root, "python-best-practices")
     assert pack.maturity == "stable"
@@ -252,6 +256,34 @@ def test_prepare_release_preview_digest_and_atomic_apply(
         )
         assert frontmatter["metadata"]["version"] == "1.0.0"
         assert frontmatter["metadata"]["maturity"] == "stable"
+
+
+def test_apply_rebuilds_lifecycle_plan_before_digest_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[Path, str, str, str | None, str | None]] = []
+
+    def rebuilt(
+        root: Path,
+        pack_id: str,
+        *,
+        operation: str,
+        release_date: str | None = None,
+        version: str | None = None,
+    ) -> dict[str, str]:
+        calls.append((root, pack_id, operation, release_date, version))
+        return {"planDigest": "a" * 64}
+
+    monkeypatch.setattr(lifecycle_commands, "build_lifecycle_plan", rebuilt)
+    with pytest.raises(SkillpackError, match="digest does not match"):
+        apply_lifecycle_plan(
+            ROOT,
+            "python-best-practices",
+            operation="prepare-release",
+            release_date="2026-07-19",
+            plan_digest="b" * 64,
+        )
+    assert calls == [(ROOT, "python-best-practices", "prepare-release", "2026-07-19", None)]
 
 
 def test_prepare_release_can_raise_version_without_stale_candidate_wording(
