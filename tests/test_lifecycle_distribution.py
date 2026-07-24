@@ -78,27 +78,44 @@ def test_semantic_versions_accept_valid_identifiers(version: str) -> None:
 
 def _prepare_repository(root: Path, *, stable_packs: tuple[str, ...] = ()) -> Path:
     for pack_id in stable_packs:
+        pack = get_pack(root, pack_id)
         _set_lifecycle(root, pack_id, maturity="stable")
+        for skill in pack.skills:
+            skill_path = pack.path / "skills" / skill / "SKILL.md"
+            skill_text = skill_path.read_text(encoding="utf-8")
+            skill_text, replacements = re.subn(
+                r"(?m)^  maturity: .+$",
+                "  maturity: stable",
+                skill_text,
+            )
+            assert replacements == 1
+            skill_path.write_text(skill_text, encoding="utf-8")
     if stable_packs:
         subprocess.run(
             ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "packs"],
             check=True,
         )
-        subprocess.run(
-            [
-                "git",
-                "-c",
-                "core.longpaths=true",
-                "-C",
-                str(root),
-                "commit",
-                "-q",
-                "--no-gpg-sign",
-                "-m",
-                "fixture",
-            ],
-            check=True,
+        staged = subprocess.run(
+            ["git", "-c", "core.longpaths=true", "-C", str(root), "diff", "--cached", "--quiet"],
+            check=False,
         )
+        assert staged.returncode in {0, 1}
+        if staged.returncode == 1:
+            subprocess.run(
+                [
+                    "git",
+                    "-c",
+                    "core.longpaths=true",
+                    "-C",
+                    str(root),
+                    "commit",
+                    "-q",
+                    "--no-gpg-sign",
+                    "-m",
+                    "fixture",
+                ],
+                check=True,
+            )
     return root
 
 

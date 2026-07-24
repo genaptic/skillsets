@@ -494,7 +494,8 @@ def test_lifecycle_validation_collects_all_cross_field_errors() -> None:
     assert "cannot precede" in "\n".join(lifecycle.validate_pack_lifecycle(behind))
 
     equal_candidate = _pack(
-        publication={"state": "published", "latest-release": {"version": "1.0.0"}}
+        maturity="release-candidate",
+        publication={"state": "published", "latest-release": {"version": "1.0.0"}},
     )
     assert "requires stable or deprecated" in "\n".join(
         lifecycle.validate_pack_lifecycle(equal_candidate)

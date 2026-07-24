@@ -27,8 +27,8 @@
     },
     {
       "path": "dist/dev/catalog.json",
-      "sha256": "4560f5e6428307b3b6b36dbad249b3b79c486b4ce5575e1b4bca9e9ca48a037a",
-      "size": 10255,
+      "sha256": "d5e7d685db78ed6018fb4610b36793ff61eac0bd4e4560c11f1920bd7f6e6a37",
+      "size": 10244,
       "mode": "0644"
     },
     {
@@ -429,8 +429,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "719629b1e7fbd73a2cb2b69d75a31168ce1a8daf5b91f99f5c9bebd87520a744",
-      "size": 6349,
+      "sha256": "2d1785c43a87a92a145f695c0965f8aa7ac06ec9f930d2cb0c0464a1aead0cb8",
+      "size": 6333,
       "mode": "0644"
     },
     {
@@ -471,8 +471,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "a8dab0616bc563973f81f44f8959211862098c857f3cbe49096ea1e0723782b7",
-      "size": 6408,
+      "sha256": "51be8bfdffa03168e65bc6e83fb3b174961b3456f84f14d1a633cda72cbd7679",
+      "size": 6392,
       "mode": "0644"
     },
     {
@@ -513,8 +513,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "0989360463dd33d03c9ba72a7dd182c0418a855520e47e2cd1ed3f345b6daa84",
-      "size": 6142,
+      "sha256": "a70819c1e8b57566d6b0b8fdb9637331b3cd37b1cc480deee10c2eaa40cd3382",
+      "size": 6126,
       "mode": "0644"
     },
     {
@@ -1731,8 +1731,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "719629b1e7fbd73a2cb2b69d75a31168ce1a8daf5b91f99f5c9bebd87520a744",
-      "size": 6349,
+      "sha256": "2d1785c43a87a92a145f695c0965f8aa7ac06ec9f930d2cb0c0464a1aead0cb8",
+      "size": 6333,
       "mode": "0644"
     },
     {
@@ -1779,8 +1779,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "a8dab0616bc563973f81f44f8959211862098c857f3cbe49096ea1e0723782b7",
-      "size": 6408,
+      "sha256": "51be8bfdffa03168e65bc6e83fb3b174961b3456f84f14d1a633cda72cbd7679",
+      "size": 6392,
       "mode": "0644"
     },
     {
@@ -1827,8 +1827,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "0989360463dd33d03c9ba72a7dd182c0418a855520e47e2cd1ed3f345b6daa84",
-      "size": 6142,
+      "sha256": "a70819c1e8b57566d6b0b8fdb9637331b3cd37b1cc480deee10c2eaa40cd3382",
+      "size": 6126,
       "mode": "0644"
     },
     {
@@ -2787,8 +2787,8 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-error-handling/SKILL.md",
-      "sha256": "719629b1e7fbd73a2cb2b69d75a31168ce1a8daf5b91f99f5c9bebd87520a744",
-      "size": 6349,
+      "sha256": "2d1785c43a87a92a145f695c0965f8aa7ac06ec9f930d2cb0c0464a1aead0cb8",
+      "size": 6333,
       "mode": "0644"
     },
     {
@@ -2829,8 +2829,8 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-project-layout/SKILL.md",
-      "sha256": "a8dab0616bc563973f81f44f8959211862098c857f3cbe49096ea1e0723782b7",
-      "size": 6408,
+      "sha256": "51be8bfdffa03168e65bc6e83fb3b174961b3456f84f14d1a633cda72cbd7679",
+      "size": 6392,
       "mode": "0644"
     },
     {
@@ -2871,8 +2871,8 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/SKILL.md",
-      "sha256": "0989360463dd33d03c9ba72a7dd182c0418a855520e47e2cd1ed3f345b6daa84",
-      "size": 6142,
+      "sha256": "a70819c1e8b57566d6b0b8fdb9637331b3cd37b1cc480deee10c2eaa40cd3382",
+      "size": 6126,
       "mode": "0644"
     },
     {
@@ -4029,8 +4029,8 @@
     },
     {
       "path": "dist/preview/catalog.json",
-      "sha256": "4a024596d02640faa30eeee02321875fab1e74d29de814a3d4f92b26c44d9f07",
-      "size": 8542,
+      "sha256": "76747a486aa1e5ac80c33b1f73a2655f2baa2737c856546479ee77764c6df338",
+      "size": 8531,
       "mode": "0644"
     },
     {
@@ -4305,8 +4305,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "719629b1e7fbd73a2cb2b69d75a31168ce1a8daf5b91f99f5c9bebd87520a744",
-      "size": 6349,
+      "sha256": "2d1785c43a87a92a145f695c0965f8aa7ac06ec9f930d2cb0c0464a1aead0cb8",
+      "size": 6333,
       "mode": "0644"
     },
     {
@@ -4347,8 +4347,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "a8dab0616bc563973f81f44f8959211862098c857f3cbe49096ea1e0723782b7",
-      "size": 6408,
+      "sha256": "51be8bfdffa03168e65bc6e83fb3b174961b3456f84f14d1a633cda72cbd7679",
+      "size": 6392,
       "mode": "0644"
     },
     {
@@ -4389,8 +4389,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "0989360463dd33d03c9ba72a7dd182c0418a855520e47e2cd1ed3f345b6daa84",
-      "size": 6142,
+      "sha256": "a70819c1e8b57566d6b0b8fdb9637331b3cd37b1cc480deee10c2eaa40cd3382",
+      "size": 6126,
       "mode": "0644"
     },
     {
@@ -5469,8 +5469,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "719629b1e7fbd73a2cb2b69d75a31168ce1a8daf5b91f99f5c9bebd87520a744",
-      "size": 6349,
+      "sha256": "2d1785c43a87a92a145f695c0965f8aa7ac06ec9f930d2cb0c0464a1aead0cb8",
+      "size": 6333,
       "mode": "0644"
     },
     {
@@ -5517,8 +5517,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "a8dab0616bc563973f81f44f8959211862098c857f3cbe49096ea1e0723782b7",
-      "size": 6408,
+      "sha256": "51be8bfdffa03168e65bc6e83fb3b174961b3456f84f14d1a633cda72cbd7679",
+      "size": 6392,
       "mode": "0644"
     },
     {
@@ -5565,8 +5565,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "0989360463dd33d03c9ba72a7dd182c0418a855520e47e2cd1ed3f345b6daa84",
-      "size": 6142,
+      "sha256": "a70819c1e8b57566d6b0b8fdb9637331b3cd37b1cc480deee10c2eaa40cd3382",
+      "size": 6126,
       "mode": "0644"
     },
     {
@@ -6513,8 +6513,8 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-error-handling/SKILL.md",
-      "sha256": "719629b1e7fbd73a2cb2b69d75a31168ce1a8daf5b91f99f5c9bebd87520a744",
-      "size": 6349,
+      "sha256": "2d1785c43a87a92a145f695c0965f8aa7ac06ec9f930d2cb0c0464a1aead0cb8",
+      "size": 6333,
       "mode": "0644"
     },
     {
@@ -6555,8 +6555,8 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-project-layout/SKILL.md",
-      "sha256": "a8dab0616bc563973f81f44f8959211862098c857f3cbe49096ea1e0723782b7",
-      "size": 6408,
+      "sha256": "51be8bfdffa03168e65bc6e83fb3b174961b3456f84f14d1a633cda72cbd7679",
+      "size": 6392,
       "mode": "0644"
     },
     {
@@ -6597,8 +6597,8 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/SKILL.md",
-      "sha256": "0989360463dd33d03c9ba72a7dd182c0418a855520e47e2cd1ed3f345b6daa84",
-      "size": 6142,
+      "sha256": "a70819c1e8b57566d6b0b8fdb9637331b3cd37b1cc480deee10c2eaa40cd3382",
+      "size": 6126,
       "mode": "0644"
     },
     {
@@ -7653,8 +7653,8 @@
     },
     {
       "path": "packs/python/best-practices/README.md",
-      "sha256": "9cee457413586cca7d20ec8353985714a2beaae65d452d8e8a9cfd053b1bab29",
-      "size": 4511,
+      "sha256": "28492eca81147a0d35a702542dec48078e5ee80b3a05cbea5977f9074256b51e",
+      "size": 4581,
       "mode": "0644"
     },
     {

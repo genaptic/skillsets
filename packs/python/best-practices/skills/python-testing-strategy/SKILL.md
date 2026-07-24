@@ -1,14 +1,14 @@
 ---
 name: python-testing-strategy
-description: >
-  Design or review a risk-based Python test suite, including unit, contract, integration, and end-to-end boundaries; fixtures; parametrization; determinism; markers; CI selection; coverage; and flake control. Use when creating or restructuring test architecture. Do not use for package layout changes or a CLI-only test matrix.
+description: 'Design or review a risk-based Python test suite, including unit, contract, integration, and end-to-end boundaries; fixtures; parametrization; determinism; markers; CI selection; coverage; and flake control. Use when creating or restructuring test architecture. Do not use for package layout changes or a CLI-only test matrix.
+
+  '
 license: Apache-2.0
 metadata:
-  skillpack: "python-best-practices"
-  version: "1.0.0"
-  maturity: "release-candidate"
+  skillpack: python-best-practices
+  version: 1.0.0
+  maturity: stable
 ---
-
 # Outcome
 
 Produce a concrete, reviewable result for the workflow below without overstating what was

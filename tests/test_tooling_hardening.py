@@ -318,7 +318,7 @@ def test_legacy_source_sha_has_no_publication_authority(repo_copy: Path) -> None
     assert pack["publication"] == {
         "state": "unpublished",
         "visibility": "public",
-        "maturity": "release-candidate",
+        "maturity": get_pack(repo_copy, "python-best-practices").maturity,
         "sourceType": "repo-local",
     }
 
@@ -824,8 +824,15 @@ def test_formal_release_rejects_release_candidate_placeholders(repo_copy: Path) 
             ),
             encoding="utf-8",
         )
+    (pack.path / "CHANGELOG.md").write_text(
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "## [1.0.0] - 2026-07-19\n\n"
+        "- Prepared the release-candidate contents.\n",
+        encoding="utf-8",
+    )
     apply_generated_files(repo_copy)
-    with pytest.raises(SkillpackError, match="finalize the changelog"):
+    with pytest.raises(SkillpackError, match="finalize release-candidate wording"):
         build_release(
             repo_copy,
             "python-best-practices",

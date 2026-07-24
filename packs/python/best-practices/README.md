@@ -97,11 +97,11 @@ The dry run does not install skills or make a compatibility claim.
 <!-- BEGIN GENERATED LIFECYCLE -->
 Current source version: `1.0.0`.
 
-Maturity: `release-candidate`. Distribution visibility: `public`. Publication state: `unpublished`.
+Maturity: `stable`. Distribution visibility: `public`. Publication state: `unpublished`.
 
 Current derived tag: `python-best-practices-v1.0.0`.
 
-No public installation or native-client/model compatibility is claimed yet.
+This stable source is ready for exact-SHA native evidence; no public installation or compatibility claim exists before immutable release and reconciliation.
 <!-- END GENERATED LIFECYCLE -->
 Core guidance is framework-neutral. Packaging and test commands must be adapted to the repository's selected build backend and test runner.
 

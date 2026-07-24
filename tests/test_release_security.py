@@ -251,9 +251,50 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
         for skill in pack.skills:
             skill_file = pack.path / "skills" / skill / "SKILL.md"
             text = skill_file.read_text(encoding="utf-8")
-            text = re.sub(r'(?m)^  version: "[^"]+"$', f'  version: "{version}"', text)
-            text = re.sub(r'(?m)^  maturity: "[^"]+"$', f'  maturity: "{maturity}"', text)
+            text, version_changes = re.subn(
+                r"(?m)^  version: .+$",
+                f'  version: "{version}"',
+                text,
+                count=1,
+            )
+            text, maturity_changes = re.subn(
+                r"(?m)^  maturity: .+$",
+                f'  maturity: "{maturity}"',
+                text,
+                count=1,
+            )
+            assert version_changes == maturity_changes == 1
             skill_file.write_bytes(text.encode("utf-8"))
+
+    # Establish an explicit candidate baseline before freezing the released source.
+    # The repository itself may already contain either side of this transition.
+    set_lifecycle("1.0.0", "release-candidate")
+    apply_generated_files(repository)
+    subprocess.run(
+        ["git", "-c", "core.longpaths=true", "-C", str(repository), "add", "-A"],
+        check=True,
+    )
+    candidate_change = subprocess.run(
+        ["git", "-C", str(repository), "diff", "--cached", "--quiet"],
+        check=False,
+    )
+    assert candidate_change.returncode in {0, 1}
+    if candidate_change.returncode == 1:
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(repository),
+                "commit",
+                "-q",
+                "--no-gpg-sign",
+                "-m",
+                "candidate baseline",
+            ],
+            check=True,
+        )
 
     set_lifecycle("1.0.0", "stable")
     apply_generated_files(repository)
@@ -261,6 +302,11 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
         ["git", "-c", "core.longpaths=true", "-C", str(repository), "add", "-A"],
         check=True,
     )
+    released_change = subprocess.run(
+        ["git", "-C", str(repository), "diff", "--cached", "--quiet"],
+        check=False,
+    )
+    assert released_change.returncode == 1, "stable transition must change the released source"
     subprocess.run(
         [
             "git",
