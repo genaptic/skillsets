@@ -153,9 +153,12 @@ def test_publication_record_and_plan_are_exactly_bound(monkeypatch: pytest.Monke
     monkeypatch.setattr(
         "skillpack_tools.publication.apply_generated_files", lambda *_args, **_kwargs: []
     )
-    monkeypatch.setattr(
-        "skillpack_tools.publication._preview_publication_changes",
-        lambda *_args, **_kwargs: {
+    preview_calls = 0
+
+    def preview(*_args: object, **_kwargs: object) -> dict[str, object]:
+        nonlocal preview_calls
+        preview_calls += 1
+        return {
             "unifiedPatch": "diff --git a/skillpack.yaml b/skillpack.yaml\n",
             "changedFiles": [
                 {
@@ -168,8 +171,9 @@ def test_publication_record_and_plan_are_exactly_bound(monkeypatch: pytest.Monke
             ],
             "generatedOutputs": [{"path": "catalog.json", "sha256": "3" * 64, "mode": "0644"}],
             "generatedOutputSetSha256": "4" * 64,
-        },
-    )
+        }
+
+    monkeypatch.setattr("skillpack_tools.publication._preview_publication_changes", preview)
     plan = prepare_publication_update(ROOT, record)
     assert plan["baseCommit"] == record["baseCommit"]
     assert plan["unifiedPatch"].startswith("diff --git")
@@ -181,6 +185,7 @@ def test_publication_record_and_plan_are_exactly_bound(monkeypatch: pytest.Monke
     assert "source-sha: " + "a" * 40 in proposed
     with pytest.raises(SkillpackError, match="plan-digest"):
         prepare_publication_update(ROOT, record, apply=True, plan_digest="0" * 64)
+    assert preview_calls == 2
     with pytest.raises(SkillpackError, match="baseCommit"):
         prepare_publication_update(ROOT, {**record, "baseCommit": "b" * 40})
 
@@ -317,12 +322,16 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
     assert proposed["version"] == "1.1.0"
     assert proposed["maturity"] == "release-candidate"
     assert proposed["publication"]["latest-release"]["version"] == "1.0.0"
-    applied = prepare_publication_update(
-        repository,
-        record,
-        apply=True,
-        plan_digest=plan["planDigest"],
-    )
+    # The preview above owns exact-base plan construction. Reuse it to isolate transactional
+    # apply; the bound-plan contract separately proves apply reconstructs before comparison.
+    with pytest.MonkeyPatch.context() as context:
+        context.setattr(publication, "_plan_payload", lambda *_args, **_kwargs: plan)
+        applied = prepare_publication_update(
+            repository,
+            record,
+            apply=True,
+            plan_digest=plan["planDigest"],
+        )
     assert applied == plan
     updated = get_pack(repository, "python-best-practices")
     assert updated.version == "1.1.0"

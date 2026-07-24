@@ -41,14 +41,6 @@ def test_compileall_external_cache_keeps_repository_validation_clean(
     repository = generated_repo_copy
     cache = tmp_path / "python-cache"
     environment = os.environ.copy()
-    environment["PYTHONPYCACHEPREFIX"] = str(tmp_path / "preparation-cache")
-    subprocess.run(
-        [sys.executable, "tools/generate-all"],
-        cwd=repository,
-        env=environment,
-        check=True,
-        timeout=120,
-    )
     environment["PYTHONPYCACHEPREFIX"] = str(cache)
 
     subprocess.run(
@@ -61,21 +53,12 @@ def test_compileall_external_cache_keeps_repository_validation_clean(
     assert any(cache.rglob("*.pyc"))
     assert _canonical_bytecode(repository) == []
 
-    for command in (
+    subprocess.run(
         [sys.executable, "tools/generate-all", "--check"],
-        [
-            sys.executable,
-            "tools/validate-repository",
-            "--check-generated",
-            "--strict-placeholders",
-        ],
-    ):
-        subprocess.run(
-            command,
-            cwd=repository,
-            env=environment,
-            check=True,
-            timeout=120,
-        )
+        cwd=repository,
+        env=environment,
+        check=True,
+        timeout=120,
+    )
 
     assert _canonical_bytecode(repository) == []

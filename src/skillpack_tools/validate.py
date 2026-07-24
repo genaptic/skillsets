@@ -21,7 +21,7 @@ from .evidence import (
     reviewer_authorization_errors,
     strict_load_json,
 )
-from .generate import apply_generated_files
+from .generate import GeneratedFiles, _reconcile_generated_files, apply_generated_files
 from .lifecycle import SEMVER_PATTERN, select_packs, validate_pack_lifecycle
 from .models import (
     CompatibilityEvidencePolicy,
@@ -1142,6 +1142,7 @@ def validate_repository(
     check_generated: bool = False,
     strict_placeholders: bool = False,
     pack_filter: str | None = None,
+    _generated_files: GeneratedFiles | None = None,
 ) -> ValidationResult:
     root = Path(os.path.abspath(os.fspath(root)))
     errors: list[str] = []
@@ -1353,7 +1354,10 @@ def validate_repository(
 
     if check_generated:
         try:
-            apply_generated_files(root, check=True)
+            if _generated_files is None:
+                apply_generated_files(root, check=True)
+            else:
+                _reconcile_generated_files(root, check=True, expected=_generated_files)
         except SkillpackError as exc:
             errors.append(str(exc))
 

@@ -75,10 +75,15 @@ def test_required_check_contexts_are_stable() -> None:
 
 
 def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
-    workflow = yaml.safe_load(_workflow("compatibility.yml"))
+    workflow_text = _workflow("compatibility.yml")
+    workflow = yaml.safe_load(workflow_text)
     job = workflow["jobs"]["adapters-and-installers"]
     assert job["timeout-minutes"] == 20
     assert job["strategy"]["fail-fast"] is False
+    push_trigger = _event_block(workflow_text, "push")
+    assert '      - "tests/**"\n' in push_trigger
+    assert "tests/test_path_safety.py" not in push_trigger
+    assert "tests/test_tooling_hardening.py" not in push_trigger
     bytecode_cache = "${{ runner.temp }}/genaptic-structural-pycache"
 
     windows_bootstrap = next(
@@ -86,6 +91,8 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
         for step in job["steps"]
         if step["name"] == "Exercise the documented Windows bootstrap path"
     )
+    assert windows_bootstrap["if"] == "runner.os == 'Windows'"
+    assert windows_bootstrap["run"] == "./scripts/bootstrap.ps1"
     assert windows_bootstrap["env"] == {"PYTHONPYCACHEPREFIX": bytecode_cache}
 
     windows_check = next(
@@ -98,9 +105,20 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     assert windows_check["env"] == {
         "PYTHONPYCACHEPREFIX": bytecode_cache,
         "PYTEST_ADDOPTS": (
-            "--no-cov -n 3 --dist=loadscope --max-worker-restart=0 --durations=25 --durations-min=1"
+            "--no-cov -n 3 --dist=load --maxschedchunk=1 --max-worker-restart=0 "
+            "--durations=25 --durations-min=1"
         ),
     }
+    loadscope_isolation = next(
+        step
+        for step in job["steps"]
+        if step["name"] == "Exercise reusable repository isolation under loadscope"
+    )
+    assert loadscope_isolation["if"] == "runner.os == 'Linux'"
+    assert loadscope_isolation["run"] == (
+        "python -m pytest tests/test_repository_fixture.py --no-cov -n 3 "
+        "--dist=loadscope --max-worker-restart=0"
+    )
     development_inputs = (ROOT / "requirements-dev.in").read_text(encoding="utf-8")
     dependency_lock = (ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
     assert development_inputs.splitlines().count("pytest-xdist==3.8.0") == 1

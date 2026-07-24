@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from .generate import apply_generated_files, build_generated_files
+from .generate import GeneratedFiles, apply_generated_files, build_generated_files
 from .lifecycle import semantic_version_key, validate_pack_lifecycle
 from .models import Pack, get_pack
 from .path_safety import (
@@ -367,7 +367,8 @@ def build_lifecycle_plan(
 ) -> dict[str, Any]:
     root = Path(os.path.abspath(os.fspath(root)))
     head = _require_clean_worktree(root)
-    apply_generated_files(root, check=True)
+    root_result = apply_generated_files(root, check=True)
+    root_generated = getattr(root_result, "generated_files", None)
     candidate, changes = _prepare_canonical_changes(
         root,
         pack_id,
@@ -380,7 +381,8 @@ def build_lifecycle_plan(
     }
     preview_root = _copy_for_preview(root, changes, head=head)
     try:
-        apply_generated_files(preview_root)
+        preview_result = apply_generated_files(preview_root)
+        preview_generated = getattr(preview_result, "generated_files", None)
         from .publication import (
             _generated_output_records,
             _git_patch_and_paths,
@@ -392,13 +394,15 @@ def build_lifecycle_plan(
             preview_root,
             check_generated=True,
             strict_placeholders=True,
+            _generated_files=preview_generated,
         )
         if not result.ok:
             raise SkillpackError(
                 "Lifecycle preview failed repository validation:\n" + "\n".join(result.errors)
             )
         candidates = sorted(
-            _controlled_paths(root, list(changes)) | _controlled_paths(preview_root, list(changes))
+            _controlled_paths(root, list(changes), generated=root_generated)
+            | _controlled_paths(preview_root, list(changes), generated=preview_generated)
         )
         patch, changed_paths = _git_patch_and_paths(preview_root, candidates)
         changed_files: list[dict[str, str | None]] = []
@@ -414,7 +418,7 @@ def build_lifecycle_plan(
                     "afterMode": after_mode,
                 }
             )
-        generated_outputs = _generated_output_records(preview_root)
+        generated_outputs = _generated_output_records(preview_root, preview_generated)
         generated_changes = [item for item in changed_files if item["path"] not in changes]
     except BaseException as exc:
         rollback_after_failure(
@@ -447,9 +451,17 @@ def build_lifecycle_plan(
     return {**base, "planDigest": _plan_digest(base)}
 
 
-def _controlled_paths(root: Path, canonical: list[str]) -> set[str]:
+def _controlled_paths(
+    root: Path,
+    canonical: list[str],
+    *,
+    generated: GeneratedFiles | set[str] | None = None,
+) -> set[str]:
     paths = set(canonical)
-    paths.update(build_generated_files(root))
+    if generated is None:
+        paths.update(build_generated_files(root))
+    else:
+        paths.update(generated)
     for generated_root in (
         root / ".claude-plugin",
         root / ".agents" / "plugins",
@@ -509,10 +521,18 @@ def _restore(root: Path, snapshots: dict[str, _Snapshot]) -> None:
             current = current.parent
 
 
-def _verify_applied_plan(root: Path, plan: dict[str, Any]) -> None:
+def _verify_applied_plan(
+    root: Path,
+    plan: dict[str, Any],
+    generated_files: GeneratedFiles | None = None,
+) -> None:
     from .publication import _generated_output_records, _git_patch_and_paths, _path_record
 
-    generated = _generated_output_records(root)
+    generated = (
+        _generated_output_records(root, generated_files)
+        if generated_files is not None
+        else _generated_output_records(root)
+    )
     if generated != plan["generatedOutputs"]:
         raise SkillpackError("Generated outputs differ from the reviewed lifecycle plan.")
     digest = sha256_bytes(
@@ -561,9 +581,11 @@ def apply_lifecycle_plan(
         release_date=release_date,
         version=version,
     )
-    controlled = _controlled_paths(root, list(changes)) | {
-        str(item["path"]) for item in plan["changedFiles"]
-    }
+    controlled = _controlled_paths(
+        root,
+        list(changes),
+        generated={str(item["path"]) for item in plan["generatedOutputs"]},
+    ) | {str(item["path"]) for item in plan["changedFiles"]}
     snapshots = _snapshots(root, controlled)
     try:
         for relative, content in changes.items():
@@ -580,15 +602,21 @@ def apply_lifecycle_plan(
                 mode=preimage.st_mode & 0o777,
                 expected=preimage,
             )
-        apply_generated_files(root)
+        generated_result = apply_generated_files(root)
+        generated = getattr(generated_result, "generated_files", None)
         from .validate import validate_repository
 
-        result = validate_repository(root, check_generated=True, strict_placeholders=True)
+        result = validate_repository(
+            root,
+            check_generated=True,
+            strict_placeholders=True,
+            _generated_files=generated,
+        )
         if not result.ok:
             raise SkillpackError(
                 "Lifecycle result failed repository validation:\n" + "\n".join(result.errors)
             )
-        _verify_applied_plan(root, plan)
+        _verify_applied_plan(root, plan, generated)
     except BaseException as exc:
         rollback_after_failure(
             exc,

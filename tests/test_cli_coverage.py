@@ -39,6 +39,30 @@ def _pack(**updates: Any) -> Pack:
     return Pack(root=base.root, path=base.path, raw=raw)
 
 
+def test_cli_generate_dispatch_and_output(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(cli, "_root", lambda _value: ROOT)
+    calls: list[tuple[Path, bool]] = []
+    results = iter([[], [Path("catalog.json")], []])
+
+    def generate(root: Path, *, check: bool) -> list[Path]:
+        calls.append((root, check))
+        return next(results)
+
+    monkeypatch.setattr(cli, "apply_generated_files", generate)
+
+    assert cli.main(["generate", "--check"]) == 0
+    assert "Generated artifacts are current" in capsys.readouterr().out
+
+    assert cli.main(["generate"]) == 0
+    assert "catalog.json" in capsys.readouterr().out
+
+    assert cli.main(["generate"]) == 0
+    assert "already current" in capsys.readouterr().out
+    assert calls == [(ROOT, True), (ROOT, False), (ROOT, False)]
+
+
 def test_cli_lifecycle_preview_apply_and_digest_guard(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -223,11 +247,14 @@ def test_cli_release_forwards_the_explicit_resolved_policy_root(
             "policy_root": policy_root.resolve(),
         }
     ]
-    expected_archive = Path("dist") / "releases" / "pack.zip"
-    assert f"Archive: {expected_archive}" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    release_dir = Path("dist") / "releases"
+    assert f"Archive: {release_dir / 'pack.zip'}" in output
+    assert f"Checksum: {release_dir / 'pack.zip.sha256'}" in output
+    assert f"Release notes: {release_dir / 'notes.md'}" in output
 
 
-def test_cli_compatibility_eval_warning_and_noop_configuration(
+def test_cli_compatibility_eval_and_validation_warning(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setattr(cli, "_root", lambda _value: ROOT)
@@ -286,8 +313,74 @@ def test_cli_compatibility_eval_warning_and_noop_configuration(
     assert writes and writes[0][0] == ROOT / "eval.json"
     capsys.readouterr()
 
-    monkeypatch.setattr(cli, "configure_repository", lambda *_args, **_kwargs: [])
-    assert cli.main(["configure"]) == 0
+
+def test_cli_validate_and_configuration_dispatch(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(cli, "_root", lambda _value: ROOT)
+    validation_calls: list[dict[str, bool]] = []
+    result = SimpleNamespace(ok=True, errors=[], warnings=[])
+
+    def validate(_root: Path, **kwargs: bool) -> SimpleNamespace:
+        assert _root == ROOT
+        validation_calls.append(kwargs)
+        return result
+
+    writes: list[tuple[Path, str]] = []
+    monkeypatch.setattr(cli, "validate_repository", validate)
+    monkeypatch.setattr(cli, "raise_for_result", lambda actual: actual)
+    monkeypatch.setattr(cli, "atomic_write", lambda path, text: writes.append((path, text)))
+
+    assert (
+        cli.main(
+            [
+                "validate",
+                "--check-generated",
+                "--strict-placeholders",
+                "--json",
+                "validation.json",
+            ]
+        )
+        == 0
+    )
+    assert validation_calls == [{"check_generated": True, "strict_placeholders": True}]
+    assert writes[0][0] == ROOT / "validation.json"
+    assert json.loads(writes[0][1]) == {"ok": True, "errors": [], "warnings": []}
+    assert "validation passed" in capsys.readouterr().out.lower()
+
+    configuration_calls: list[dict[str, Any]] = []
+
+    def configure(_root: Path, **kwargs: Any) -> list[Path]:
+        assert _root == ROOT
+        configuration_calls.append(kwargs)
+        return [Path("repository.yaml")] if len(configuration_calls) == 1 else []
+
+    monkeypatch.setattr(cli, "configure_repository", configure)
+    arguments = [
+        "configure",
+        "--owner",
+        "example-org",
+        "--repository",
+        "skills-repo",
+        "--maintainer-name",
+        "Example Maintainer",
+        "--maintainer-github",
+        "example-maintainer",
+        "--maintainer-github-id",
+        "123456",
+        "--trusted-ssh-fingerprint",
+        "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "--security-email",
+        "security@example.org",
+    ]
+    assert cli.main(arguments) == 0
+    changed = capsys.readouterr().out
+    assert "Repository identity updated" in changed
+    assert "repository.yaml" in changed
+    assert configuration_calls[0]["owner"] == "example-org"
+    assert configuration_calls[0]["maintainer_github_id"] == 123456
+
+    assert cli.main(arguments) == 0
     assert "already current" in capsys.readouterr().out
 
 
