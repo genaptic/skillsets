@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import re
 import subprocess
 import sys
@@ -27,12 +28,76 @@ ROOT = Path(__file__).resolve().parents[1]
 GIT = ("git", "-c", "core.longpaths=true")
 
 
-@pytest.fixture(scope="module")
-def lifecycle_repository_template(generated_repository_template: Path) -> Path:
-    return generated_repository_template
+def _make_release_candidate(root: Path) -> Path:
+    pack = get_pack(root, "python-best-practices")
+    if pack.maturity == "release-candidate":
+        return root
+    assert pack.maturity == "stable"
+    assert pack.publication_state == "unpublished"
+
+    manifest_path = pack.path / "skillpack.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["maturity"] = "release-candidate"
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False, width=1000),
+        encoding="utf-8",
+    )
+    for relative, content in lifecycle_commands._skill_updates(
+        pack,
+        version=pack.version,
+        maturity="release-candidate",
+    ).items():
+        (root / relative).write_text(content, encoding="utf-8")
+    (pack.path / "CHANGELOG.md").write_text(
+        (
+            "# Changelog\n\n"
+            "## [Unreleased]\n\n"
+            "### Added\n\n"
+            f"- Prepared the `{pack.version}` release-candidate contents with "
+            "`python-project-layout`,\n"
+            "  `python-testing-strategy`, and `python-error-handling`.\n\n"
+            "<!-- BEGIN RELEASE PREPARATION NOTE -->\n"
+            f"`{pack.version}` has not been published. Before requesting exact-SHA "
+            "native/model evidence, freeze\n"
+            "the candidate by moving these notes under "
+            f"`## [{pack.version}]` and removing release-candidate\n"
+            "wording. The protected release gate runs only after that frozen commit "
+            "passes evidence.\n"
+            "<!-- END RELEASE PREPARATION NOTE -->\n"
+        ),
+        encoding="utf-8",
+    )
+    apply_generated_files(root)
+    subprocess.run([*GIT, "-C", str(root), "add", "-A"], check=True)
+    subprocess.run(
+        [
+            *GIT,
+            "-C",
+            str(root),
+            "commit",
+            "-q",
+            "--no-gpg-sign",
+            "-m",
+            "release-candidate fixture",
+        ],
+        check=True,
+    )
+    assert get_pack(root, "python-best-practices").maturity == "release-candidate"
+    assert _status(root) == ""
+    return root
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
+def candidate_repo_copy(generated_repo_copy: Path) -> Path:
+    return _make_release_candidate(generated_repo_copy)
+
+
+@pytest.fixture
+def lifecycle_repository_template(candidate_repo_copy: Path) -> Path:
+    return candidate_repo_copy
+
+
+@pytest.fixture
 def prepared_release_plan(lifecycle_repository_template: Path) -> dict[str, Any]:
     return build_lifecycle_plan(
         lifecycle_repository_template,
@@ -271,6 +336,8 @@ def test_prepare_release_preview_digest_and_atomic_apply(
     assert f"## [1.0.0] - {release_date}" in changelog
     assert "release-candidate" not in changelog
     assert "RELEASE PREPARATION NOTE" not in changelog
+    assert changelog.endswith("\n")
+    assert not changelog.endswith("\n\n")
     _require_release_readiness(pack)
     for skill in pack.skills:
         frontmatter, _body = parse_skill_markdown_text(
@@ -279,6 +346,15 @@ def test_prepare_release_preview_digest_and_atomic_apply(
         )
         assert frontmatter["metadata"]["version"] == "1.0.0"
         assert frontmatter["metadata"]["maturity"] == "stable"
+
+
+def test_plan_text_preserves_apply_status() -> None:
+    rendered = json.loads(
+        lifecycle_commands.plan_text({"planDigest": "a" * 64, "mode": "apply", "applied": True})
+    )
+
+    assert rendered["mode"] == "apply"
+    assert rendered["applied"] is True
 
 
 def test_apply_rebuilds_lifecycle_plan_before_digest_comparison(
@@ -310,9 +386,9 @@ def test_apply_rebuilds_lifecycle_plan_before_digest_comparison(
 
 
 def test_prepare_release_can_raise_version_without_stale_candidate_wording(
-    generated_repo_copy: Path,
+    candidate_repo_copy: Path,
 ) -> None:
-    root = generated_repo_copy
+    root = candidate_repo_copy
     release_date = dt.date.today().isoformat()
     candidate, changes = _prepare_canonical_changes(
         root,
@@ -358,9 +434,9 @@ def test_skill_local_lifecycle_drift_fails_validation_and_release_readiness(
     drifted: str,
     validation_message: str,
     release_message: str,
-    generated_repo_copy: Path,
+    candidate_repo_copy: Path,
 ) -> None:
-    root = generated_repo_copy
+    root = candidate_repo_copy
     release_date = dt.date.today().isoformat()
     _candidate, changes = _prepare_canonical_changes(
         root,
@@ -398,13 +474,19 @@ def test_skill_local_lifecycle_drift_fails_validation_and_release_readiness(
 )
 def test_every_public_pack_changelog_can_be_finalized(pack_id: str) -> None:
     root = ROOT
+    pack = get_pack(root, pack_id)
+    if pack.maturity == "stable":
+        changelog = (pack.path / "CHANGELOG.md").read_text(encoding="utf-8")
+        assert f"## [{pack.version}]" in changelog
+        assert "release-candidate" not in changelog
+        assert "RELEASE PREPARATION NOTE" not in changelog
+        return
     _candidate, changes = _prepare_canonical_changes(
         root,
         pack_id,
         operation="prepare-release",
         release_date=dt.date.today().isoformat(),
     )
-    pack = get_pack(root, pack_id)
     changelog = changes[(pack.path / "CHANGELOG.md").relative_to(root).as_posix()]
     assert "has not been published" not in changelog
     assert "release-candidate" not in changelog
@@ -413,9 +495,9 @@ def test_every_public_pack_changelog_can_be_finalized(pack_id: str) -> None:
 
 def test_prepare_release_rolls_back_canonical_and_generated_files(
     monkeypatch: pytest.MonkeyPatch,
-    generated_repo_copy: Path,
+    candidate_repo_copy: Path,
 ) -> None:
-    root = generated_repo_copy
+    root = candidate_repo_copy
     release_date = dt.date.today().isoformat()
     generated_path = "dist/preview/rollback-fixture/nested/generated.txt"
     plan = _transaction_failure_plan(root, generated_paths=(generated_path,))
@@ -450,9 +532,9 @@ def test_prepare_release_rolls_back_canonical_and_generated_files(
 )
 def test_lifecycle_preview_plain_list_generation_fallback_is_not_forwarded_as_snapshot(
     monkeypatch: pytest.MonkeyPatch,
-    generated_repo_copy: Path,
+    candidate_repo_copy: Path,
 ) -> None:
-    root = generated_repo_copy
+    root = candidate_repo_copy
     original = lifecycle_commands.apply_generated_files
 
     def plain_list_result(candidate_root: Path, *, check: bool = False) -> list[str]:
@@ -473,9 +555,9 @@ def test_lifecycle_preview_plain_list_generation_fallback_is_not_forwarded_as_sn
 def test_prepare_release_rolls_back_process_interrupts(
     monkeypatch: pytest.MonkeyPatch,
     failure: BaseException,
-    generated_repo_copy: Path,
+    candidate_repo_copy: Path,
 ) -> None:
-    root = generated_repo_copy
+    root = candidate_repo_copy
     release_date = dt.date.today().isoformat()
     plan = _transaction_failure_plan(root)
     original = lifecycle_commands.apply_generated_files

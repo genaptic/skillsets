@@ -190,8 +190,11 @@ def _finalize_changelog(
     )
     if any(marker in body.casefold() for marker in unresolved):
         raise SkillpackError("CHANGELOG.md contains unresolved release-candidate wording.")
-    replacement = f"## [Unreleased]\n\n## [{version}] - {release_date}\n\n{body}\n\n"
-    return text[: match.start()] + replacement + text[match.end() :].lstrip("\n")
+    suffix = text[match.end() :].lstrip("\n")
+    replacement = f"## [Unreleased]\n\n## [{version}] - {release_date}\n\n{body}\n"
+    if suffix:
+        replacement += "\n"
+    return text[: match.start()] + replacement + suffix
 
 
 def _candidate_pack(pack: Pack, raw: dict[str, Any]) -> Pack:
@@ -628,4 +631,7 @@ def apply_lifecycle_plan(
 
 
 def plan_text(plan: dict[str, Any]) -> str:
-    return json_text({**plan, "mode": "preview", "applied": False})
+    document = dict(plan)
+    document.setdefault("mode", "preview")
+    document.setdefault("applied", False)
+    return json_text(document)
