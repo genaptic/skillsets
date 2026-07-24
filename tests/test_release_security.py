@@ -4,6 +4,7 @@ import json
 import re
 import stat
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -228,6 +229,13 @@ def test_full_index_patch_includes_untracked_binary_without_mutating_index(
     assert index_path.read_bytes() == index_before
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason=(
+        "exact-base publication preview/apply is platform-neutral and exhaustive on POSIX; "
+        "Windows retains publication rollback, interrupt, reconciliation, and schema contracts"
+    ),
+)
 def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
     generated_repo_copy: Path,
 ) -> None:
