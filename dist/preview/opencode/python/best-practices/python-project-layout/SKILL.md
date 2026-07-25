@@ -123,5 +123,6 @@ Distinguish **observed**, **inferred**, **proposed**, **executed**, and **verifi
 - [Primary sources](references/sources.md)
 - [pyproject-src-layout.example.toml](assets/pyproject-src-layout.example.toml)
 - [layout-review-template.md](assets/layout-review-template.md)
-- [inspect_layout.py](scripts/inspect_layout.py)
+- [inspect_layout.py](scripts/inspect_layout.py) — run with
+  `python scripts/inspect_layout.py --help`.
 - [Routing and behavior evals](evals/evals.json)

@@ -10,3 +10,5 @@
   `python-testing-strategy`, and `python-error-handling`.
 - Clarified coordinated routing with Python CLI layout, testing, and error-output workflows
   while preserving exclusive and neither boundaries.
+- Standardized optional Python helpers as interpreter-invoked resources so installed file modes
+  remain identical across Claude, Codex, and OpenCode's HTTP skill transport.

@@ -1,11 +1,11 @@
 ---
 name: python-cli-testing
 description: >
-  Design or implement Python CLI tests: invocation, installed entry points, parsing and help, exit
-  status, streams, stdin, configuration, isolation, TTY, signals, pipes, quoting, and cross-platform
-  CI. Use when changing command-interface tests. For a focused CLI matrix in repository test
-  architecture or CI, use python-testing-strategy too; both skills are required. Do not use for
-  broad strategy without a CLI deliverable, choosing the failure contract, or merely running an
+  Design Python CLI tests: invocation, entry points, parsing/help, status, streams, stdin,
+  isolation, TTY, signals, pipes, quoting, and platform CI. Use when changing command-interface
+  tests. A comprehensive CLI-only matrix uses this skill alone. Add python-testing-strategy only
+  when explicitly combining it with repository-wide test architecture or CI policy. Do not use
+  for broad strategy without a CLI deliverable, choosing the failure contract, or running an
   existing smoke command.
 license: Apache-2.0
 metadata:

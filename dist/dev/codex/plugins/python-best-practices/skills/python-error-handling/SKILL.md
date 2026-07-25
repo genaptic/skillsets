@@ -1,11 +1,12 @@
 ---
 name: python-error-handling
 description: >-
-  Design or review internal Python exception policy: taxonomy, translation, causal chaining,
-  cleanup, logging, warnings, and bounded retries. Use when callers need a stable internal failure
-  contract. If taxonomy or translation maps to CLI diagnostics, streams, tracebacks, or exit
-  status, use python-cli-error-output too; both skills are required. Do not use for CLI process
-  behavior alone or HTTP, RPC, or message error schemas.
+  Design internal Python exception policy: taxonomy, translation, causal chaining, cleanup,
+  logging, warnings, and retries. Use when callers need a stable internal failure contract. For
+  CLI messages, debug display, streams, or exit status—even when exceptions occur—use
+  python-cli-error-output alone. Use both only when explicitly designing internal taxonomy or
+  translation and its CLI mapping. Do not use for CLI-only process behavior or HTTP, RPC, or
+  message error schemas.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -120,5 +121,6 @@ Distinguish **observed**, **inferred**, **proposed**, **executed**, and **verifi
 - [Primary sources](references/sources.md)
 - [exception-policy-template.md](assets/exception-policy-template.md)
 - [exception-hierarchy.example.py](assets/exception-hierarchy.example.py)
-- [audit_exception_handlers.py](scripts/audit_exception_handlers.py)
+- [audit_exception_handlers.py](scripts/audit_exception_handlers.py) — run with
+  `python scripts/audit_exception_handlers.py --help`.
 - [Routing and behavior evals](evals/evals.json)
