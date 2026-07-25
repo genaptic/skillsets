@@ -60,6 +60,105 @@ def test_reviewed_boundary_graph_is_complete_and_four_way() -> None:
     assert len(set(current) - set(legacy)) == 46
 
 
+def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts() -> None:
+    document = json.loads((ROOT / "evals/routing-boundaries.json").read_text(encoding="utf-8"))
+    selected = {
+        boundary["id"]: [
+            (case["outcome"], case["prompt"], case["expectedSkills"]) for case in boundary["cases"]
+        ]
+        for boundary in document["boundaries"]
+        if boundary["id"]
+        in {
+            "python-cli-error-output-vs-python-error-handling",
+            "python-cli-testing-vs-python-testing-strategy",
+            "python-project-layout-vs-python-testing-strategy",
+        }
+    }
+    assert selected == {
+        "python-cli-error-output-vs-python-error-handling": [
+            (
+                "a-only",
+                "Review a Python command's messages, debug mode, stderr routing, and process "
+                "exit status when exceptions occur.",
+                ["python-cli-error-output"],
+            ),
+            (
+                "b-only",
+                "Refactor internal exceptions, context-manager cleanup, retries, and logging "
+                "before any CLI mapping is considered.",
+                ["python-error-handling"],
+            ),
+            (
+                "both",
+                "Define this Python library's exception taxonomy and translation boundaries, "
+                "then map them to safe CLI diagnostics, traceback policy, streams, and exit "
+                "statuses.",
+                ["python-cli-error-output", "python-error-handling"],
+            ),
+            (
+                "neither",
+                "Review a static HTML color palette for accessibility without changing Python "
+                "code or a command-line interface.",
+                [],
+            ),
+        ],
+        "python-cli-testing-vs-python-testing-strategy": [
+            (
+                "a-only",
+                "Create a comprehensive test matrix for command help, stdout, stderr, exit "
+                "codes, stdin, and shell invocation.",
+                ["python-cli-testing"],
+            ),
+            (
+                "b-only",
+                "Redesign fixture scopes, coverage goals, markers, and the full Python project's "
+                "pull-request test selection.",
+                ["python-testing-strategy"],
+            ),
+            (
+                "both",
+                "Create the repository-wide Python test pyramid and CI selection policy, then "
+                "add a focused matrix for CLI help, streams, exit codes, stdin, and shell "
+                "invocation.",
+                ["python-cli-testing", "python-testing-strategy"],
+            ),
+            (
+                "neither",
+                "Run an already documented production smoke command and report its output "
+                "without changing test design or test code.",
+                [],
+            ),
+        ],
+        "python-project-layout-vs-python-testing-strategy": [
+            (
+                "a-only",
+                "Review this Python repository's src layout, package discovery, editable-install "
+                "isolation, namespace boundaries, and import behavior without redesigning its "
+                "tests.",
+                ["python-project-layout"],
+            ),
+            (
+                "b-only",
+                "Create a risk-based unit, integration, and end-to-end test plan for this "
+                "existing Python package.",
+                ["python-testing-strategy"],
+            ),
+            (
+                "both",
+                "Move this Python project to an import-safe src layout and redesign unit, "
+                "integration, and package-install tests around the new boundaries.",
+                ["python-project-layout", "python-testing-strategy"],
+            ),
+            (
+                "neither",
+                "Tune a PostgreSQL query plan from supplied execution evidence without touching "
+                "the Python repository.",
+                [],
+            ),
+        ],
+    }
+
+
 def test_boundary_validation_rejects_unknown_and_contradictory_selections(
     tmp_path: Path,
 ) -> None:

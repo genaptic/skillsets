@@ -6,6 +6,8 @@
 
 - Prepared the `1.0.0` release-candidate contents with `python-cli-command-design`,
   `python-cli-error-output`, and `python-cli-testing`.
+- Clarified coordinated routing with library error handling and repository-wide testing while
+  excluding already-defined smoke-command execution.
 
 <!-- BEGIN RELEASE PREPARATION NOTE -->
 `1.0.0` has not been published. Before requesting exact-SHA native/model evidence, freeze

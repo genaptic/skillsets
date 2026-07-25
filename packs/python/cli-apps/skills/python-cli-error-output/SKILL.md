@@ -1,7 +1,7 @@
 ---
 name: python-cli-error-output
 description: >
-  Design or review failure behavior for Python command-line applications, including public failure classes, stderr/stdout policy, stable exit statuses, machine-readable errors, debug tracebacks, redaction, interrupts, broken pipes, and exception-to-process mapping. Use when implementing or auditing CLI failures. Do not use for internal library exception architecture or command-tree design.
+  Design or review failure behavior for Python command-line applications, including public failure classes, stderr/stdout policy, stable exit statuses, machine-readable errors, debug tracebacks, redaction, interrupts, broken pipes, and exception-to-process mapping. Use when implementing or auditing a CLI failure contract. Use alongside python-error-handling when the request also requires internal exception taxonomy or translation boundaries. Do not use for exclusively internal exception work without a CLI process mapping, or for command-tree design.
 license: Apache-2.0
 metadata:
   skillpack: "python-cli-apps"
@@ -23,13 +23,16 @@ arrays locally without a shell and never uses the network itself.
 ## Use this skill when
 
 - A CLI needs a stable mapping from domain failures to process behavior.
+- Internal exception taxonomy or translation boundaries and their CLI process mapping must be
+  designed together; also use `python-error-handling`.
 - Diagnostics, results, progress, or tracebacks are written to the wrong stream.
 - Exit statuses are inconsistent or too coarse for automation.
 - Human and machine-readable error modes, debug output, interrupts, or broken pipes need a contract.
 
 ## Do not use this skill when
 
-- The task is internal exception taxonomy, cleanup, retries, and logging without a CLI boundary; use `python-error-handling`.
+- The task is exclusively internal exception taxonomy, cleanup, retries, and logging without a
+  CLI process mapping; use `python-error-handling`.
 - The task is command names, options, configuration precedence, or help structure; use `python-cli-command-design`.
 - The task is only to implement tests for an already agreed contract; use `python-cli-testing`.
 

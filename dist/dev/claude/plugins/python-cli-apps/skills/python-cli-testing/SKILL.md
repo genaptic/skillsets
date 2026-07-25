@@ -1,7 +1,7 @@
 ---
 name: python-cli-testing
 description: >
-  Design or implement Python CLI tests across in-process runners and real subprocesses, covering installed entry points, parsing, exit status, stdout/stderr, stdin, configuration, filesystem isolation, TTY behavior, machine output, signals, pipes, shell quoting, mutation, and cross-platform CI. Use when verifying a command interface. Do not use for repository-wide test strategy or for choosing the failure contract itself.
+  Design or implement Python CLI tests across in-process runners and real subprocesses, covering installed entry points, parsing, exit status, stdout/stderr, stdin, configuration, filesystem isolation, TTY behavior, machine output, signals, pipes, shell quoting, mutation, and cross-platform CI. Use when designing or changing tests for a command interface. Use alongside python-testing-strategy when the request also requires repository-wide test layers or CI selection. Do not use merely to execute or report an already-defined smoke or health command without changing test design or test code, for repository-wide test strategy without a CLI-specific test deliverable, or for choosing the failure contract itself.
 license: Apache-2.0
 metadata:
   skillpack: "python-cli-apps"
@@ -23,13 +23,18 @@ process and signal tests to the supported operating systems and CLI framework.
 ## Use this skill when
 
 - An existing or new Python CLI needs a focused test architecture.
+- A repository-wide test strategy also needs a CLI-specific matrix for help, streams, exit
+  statuses, stdin, and shell invocation; also use `python-testing-strategy`.
 - Framework-runner tests miss installed entry-point, process, stream, signal, or platform behavior.
 - Tests need safe isolation for home/config, environment, stdin, filesystem, TTY, or external boundaries.
 - A risk-based CLI CI matrix and stable output assertions are required.
 
 ## Do not use this skill when
 
-- The task is the full Python project's unit/integration strategy; use `python-testing-strategy`.
+- The task is the full Python project's unit/integration strategy without a CLI-specific test
+  deliverable; use `python-testing-strategy`.
+- The task is merely to execute or report an already-defined smoke or health command without
+  changing test design or test code.
 - The task is to define exit statuses, stream policy, or error schema; use `python-cli-error-output` first.
 - The task is to redesign commands/options/help rather than verify them; use `python-cli-command-design`.
 
