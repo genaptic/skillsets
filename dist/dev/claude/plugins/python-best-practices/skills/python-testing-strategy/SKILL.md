@@ -1,11 +1,12 @@
 ---
 name: python-testing-strategy
 description: >-
-  Design repository-wide Python test architecture: risk, levels, fixtures, determinism, CI,
-  coverage, and flakes. Use when creating or restructuring broad strategy. A CLI-only matrix—even
-  comprehensive—uses python-cli-testing alone. A layout/import migration that redesigns tests also
-  uses python-project-layout. Use both only when the broader architecture explicitly includes the
-  neighboring work. Do not use for one CLI command or package/import layout alone.
+  Design Python repository test architecture: risk, levels, fixtures, determinism, CI, coverage,
+  and flakes. Use when restructuring broad strategy. A CLI-only matrix—even comprehensive—uses
+  python-cli-testing alone. A layout/import migration that redesigns tests also uses
+  python-project-layout. Use both only when the broader architecture explicitly includes both
+  outcomes. Do not use for package/import layout alone. Never use for one CLI command or a
+  subprocess stream or exit-code contract.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -64,6 +65,10 @@ risk.
 - Do not add automatic retries as a substitute for diagnosing nondeterminism.
 - Do not install test tools or start external services without approval.
 - The optional inventory helper performs static analysis only and cannot judge correctness.
+- Never invent helper or tool flags. Inspect the exact `--help` output, declared plugins, and
+  checked-in configuration first; otherwise label the command as pseudocode.
+- Do not present unsupported helper flags or an unverified plugin invocation as an executable
+  repository command.
 
 Use the sequence **inspect → explain → propose → approve when required → apply → verify**.
 Never describe a proposed or unexecuted check as successful.

@@ -1,12 +1,12 @@
 ---
 name: python-project-layout
 description: >-
-  Design or review Python repository/package layout: pyproject.toml, src versus flat layout,
-  discovery, import isolation, data/typing files, and entry points. Use when changing layout or
-  import boundaries. If a layout/import migration also redesigns test layers, fixtures, or CI, use
+  Design or review Python package layout: pyproject.toml, src versus flat layout, discovery,
+  import isolation, data/typing files, and entry points. Use when changing layout or import
+  boundaries. If a layout/import migration also redesigns test layers, fixtures, or CI, use
   python-testing-strategy too; both skills are required. Do not use for test architecture alone (a
-  test path causing import contamination remains layout-only) or CLI commands, flags, help, or
-  configuration precedence.
+  test path causing import contamination remains layout-only). Never use for CLI commands, flags,
+  help, or configuration-only work.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -60,6 +60,11 @@ risk.
 - Do not install build tools, change an environment, or contact a package index without approval.
 - Use a disposable virtual environment for build/install verification and avoid shared interpreter state.
 - Treat the helper's findings as heuristics; it does not execute the backend or resolve namespace packages.
+- For Setuptools, the backend identifier is exactly `setuptools.build_meta`.
+- A `src/` discovery configuration and editable install cannot be verified before the package
+  sources actually move under `src/` and the approved build/install checks run.
+- Never invent helper or tool flags. Inspect the exact `--help` output and checked-in configuration
+  first; when either is unavailable, label the command or configuration as pseudocode.
 
 Use the sequence **inspect → explain → propose → approve when required → apply → verify**.
 Never describe a proposed or unexecuted check as successful.

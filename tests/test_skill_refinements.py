@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -132,7 +133,10 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     for skill, partners in required_prefix_terms.items():
         description = descriptions[skill]
         assert description.index("Use when") < 250, skill
-        assert description.index("Do not use") < 400, skill
+        exclusion_markers = (
+            marker for marker in ("Do not use", "Never use") if marker in description
+        )
+        assert min(description.index(marker) for marker in exclusion_markers) < 400, skill
         for partner in partners:
             assert description.index(partner) < 350, (skill, partner)
 
@@ -151,8 +155,8 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     error_handling = descriptions["python-error-handling"]
     assert "even when exceptions occur—use python-cli-error-output alone" in error_handling
     assert "Use both only when explicitly designing internal taxonomy" in error_handling
-    assert "Do not use for CLI-only process behavior" in error_handling
-    assert "or HTTP, RPC, or message error schemas." in error_handling
+    assert "Do not use for CLI stream/status-only work" in error_handling
+    assert "HTTP, RPC, or message error schemas; never load" in error_handling
 
     error_handling_body = next(
         path for path in SKILL_FILES if path.parent.name == "python-error-handling"
@@ -163,7 +167,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     project_layout = descriptions["python-project-layout"]
     assert "Do not use for test architecture alone" in project_layout
     assert "test path causing import contamination remains layout-only" in project_layout
-    assert "or CLI commands, flags" in project_layout
+    assert "Never use for CLI commands, flags, help, or configuration-only work." in project_layout
     assert "If a layout/import migration also redesigns" in project_layout
     assert "use python-testing-strategy too; both skills are required" in project_layout
 
@@ -173,7 +177,10 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
         testing_strategy
     )
     assert "Use both only when the broader architecture explicitly includes" in testing_strategy
-    assert "Do not use for one CLI command or package/import layout alone." in testing_strategy
+    assert "Do not use for package/import layout alone." in testing_strategy
+    assert "Never use for one CLI command or a subprocess stream or exit-code contract." in (
+        testing_strategy
+    )
 
     generated_roots = {
         "python-cli-error-output": "python-cli-apps",
@@ -210,6 +217,75 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "capture the first-failure artifacts" in testing_strategy_body
     assert "repetition count" in testing_strategy_body
     assert "explicit measured pass threshold" in testing_strategy_body
+
+
+def test_python_release_routing_guards_match_existing_negative_evals() -> None:
+    expectations = {
+        "python-project-layout": (
+            "negative-cli-command-tree",
+            "Design subcommands, global options, help text, and configuration precedence for our "
+            "Python executable.",
+            "Never use for CLI commands, flags, help, or configuration-only work.",
+        ),
+        "python-testing-strategy": (
+            "negative-single-cli-contract",
+            "Write subprocess assertions for one CLI command's stderr and exit code contract.",
+            "Never use for one CLI command or a subprocess stream or exit-code contract.",
+        ),
+        "python-error-handling": (
+            "negative-cli-stderr",
+            "Map command failures to stable exit codes and ensure human diagnostics go to stderr "
+            "while JSON remains on stdout.",
+            "Do not use for CLI stream/status-only work",
+        ),
+    }
+
+    for skill, (case_id, prompt, exclusion) in expectations.items():
+        skill_path = next(path for path in SKILL_FILES if path.parent.name == skill)
+        frontmatter, _body = parse_skill(skill_path)
+        assert exclusion in str(frontmatter["description"])
+
+        evals = json.loads((skill_path.parent / "evals/evals.json").read_text(encoding="utf-8"))
+        case = next(item for item in evals["routing"] if item["id"] == case_id)
+        assert case["prompt"] == prompt
+        assert case["shouldTrigger"] is False
+
+    error_path = next(path for path in SKILL_FILES if path.parent.name == "python-error-handling")
+    error_evals = json.loads((error_path.parent / "evals/evals.json").read_text(encoding="utf-8"))
+    http_case = next(
+        item for item in error_evals["routing"] if item["id"] == "negative-http-errors"
+    )
+    assert http_case["shouldTrigger"] is False
+    assert http_case["prompt"] == (
+        "Design RFC-style HTTP error response bodies and status-code mapping for our FastAPI "
+        "service."
+    )
+    error_description = str(parse_skill(error_path)[0]["description"])
+    assert "HTTP, RPC, or message error schemas; never load" in error_description
+
+
+def test_python_release_guidance_rejects_unverified_commands() -> None:
+    bodies = {
+        skill: parse_skill(next(path for path in SKILL_FILES if path.parent.name == skill))[1]
+        for skill in (
+            "python-error-handling",
+            "python-project-layout",
+            "python-testing-strategy",
+        )
+    }
+    assert all("Never invent helper or tool flags." in body for body in bodies.values())
+    assert (
+        "the backend identifier is exactly `setuptools.build_meta`"
+        in bodies["python-project-layout"]
+    )
+    assert (
+        "cannot be verified before the package\n  sources actually move under `src/`"
+        in bodies["python-project-layout"]
+    )
+    assert (
+        "unsupported helper flags or an unverified plugin invocation"
+        in bodies["python-testing-strategy"]
+    )
 
 
 @pytest.mark.parametrize("flag", ["--statement-timeout", "--lock-timeout"])
