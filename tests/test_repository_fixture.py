@@ -2,69 +2,18 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from conftest import (
     _clone_clean_generated_source,
     _configure_fixture_repository,
     _isolated_git_environment,
-    _prioritize_windows_slow_tests,
     _require_ready_generated_template,
     _restore_reusable_repository,
     _ReusableRepository,
 )
 
 GIT = ("git", "-c", "core.longpaths=true")
-
-
-class _CollectionItem:
-    def __init__(self, name: str, seconds: int | None = None) -> None:
-        self.name = name
-        self._marker = None if seconds is None else SimpleNamespace(kwargs={"seconds": seconds})
-
-    def get_closest_marker(self, name: str) -> SimpleNamespace | None:
-        assert name == "windows_slow_first"
-        return self._marker
-
-
-def test_windows_slow_first_order_is_stable_and_platform_scoped() -> None:
-    items = [
-        _CollectionItem("ordinary-a"),
-        _CollectionItem("slow-70", 70),
-        _CollectionItem("ordinary-b"),
-        _CollectionItem("slow-246", 246),
-        _CollectionItem("slow-79-a", 79),
-        _CollectionItem("ordinary-c"),
-        _CollectionItem("slow-118", 118),
-        _CollectionItem("ordinary-d"),
-        _CollectionItem("slow-79-b", 79),
-        _CollectionItem("ordinary-e"),
-    ]
-    original = [item.name for item in items]
-
-    _prioritize_windows_slow_tests(items, platform="linux")
-    assert [item.name for item in items] == original
-
-    _prioritize_windows_slow_tests(items, platform="win32")
-    assert [item.name for item in items] == [
-        "slow-246",
-        "ordinary-a",
-        "slow-118",
-        "ordinary-b",
-        "slow-79-a",
-        "ordinary-c",
-        "slow-79-b",
-        "ordinary-d",
-        "slow-70",
-        "ordinary-e",
-    ]
-    assert [(items[index].name, items[index + 1].name) for index in range(0, 8, 2)] == [
-        ("slow-246", "ordinary-a"),
-        ("slow-118", "ordinary-b"),
-        ("slow-79-a", "ordinary-c"),
-        ("slow-79-b", "ordinary-d"),
-    ]
 
 
 def _git(repository: _ReusableRepository, *arguments: str) -> str:

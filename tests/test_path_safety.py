@@ -449,7 +449,7 @@ def test_validator_reports_canonical_symlink_without_disclosing_external_target(
     assert str(external) not in combined
 
 
-@pytest.mark.windows_slow_first(seconds=71)
+@pytest.mark.windows_release_integration
 def test_draft_release_output_symlink_cannot_redirect_archive_writes(
     repo_copy: Path,
     tmp_path: Path,
@@ -472,6 +472,7 @@ def test_draft_release_output_symlink_cannot_redirect_archive_writes(
     assert sorted(path.name for path in external.iterdir()) == ["sentinel.txt"]
 
 
+@pytest.mark.windows_release_integration
 def test_draft_release_refuses_source_changed_after_allowlist_preflight(
     repo_copy: Path,
     monkeypatch: pytest.MonkeyPatch,

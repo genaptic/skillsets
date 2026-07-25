@@ -240,6 +240,7 @@ def test_full_index_patch_includes_untracked_binary_without_mutating_index(
     assert index_path.read_bytes() == index_before
 
 
+@pytest.mark.windows_release_integration
 @pytest.mark.skipif(
     sys.platform == "win32",
     reason=(
@@ -633,6 +634,7 @@ def test_publication_apply_rolls_back_process_interrupts(
     assert not created.parent.exists()
 
 
+@pytest.mark.windows_release_integration
 def test_publication_reconciliation_reports_both_drift_directions() -> None:
     pack = get_pack(ROOT, "python-best-practices")
     release = {
@@ -717,6 +719,7 @@ def test_publication_reconciliation_accepts_exact_published_history(
     assert report == {"schemaVersion": 1, "ok": True, "drift": []}
 
 
+@pytest.mark.windows_release_integration
 def test_reconciliation_preserves_published_history_while_candidate_advances(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

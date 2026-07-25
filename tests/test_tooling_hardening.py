@@ -238,7 +238,7 @@ def _write_evidence_bundle(
     )
 
 
-@pytest.mark.windows_slow_first(seconds=73)
+@pytest.mark.windows_release_integration
 def test_generation_is_byte_safe_filtered_mode_aware_and_target_aware(
     repo_copy: Path,
 ) -> None:
@@ -754,6 +754,7 @@ def test_strict_placeholder_scan_covers_distribution_surfaces(repo_copy: Path) -
     assert any("YOUR_" in hit for hit in hits)
 
 
+@pytest.mark.windows_release_integration
 def test_draft_release_is_marked_deterministic_and_allowlisted(repo_copy: Path) -> None:
     rogue = get_pack(repo_copy, "python-best-practices").path / "rogue-secret.txt"
     rogue.write_text("must not be packaged\n", encoding="utf-8")
@@ -784,6 +785,7 @@ def test_draft_release_is_marked_deterministic_and_allowlisted(repo_copy: Path) 
     assert "Source SHA: `not available (draft rehearsal)`" in notes.read_text(encoding="utf-8")
 
 
+@pytest.mark.windows_release_integration
 def test_clean_git_draft_release_still_has_no_source_commit(repo_copy: Path) -> None:
     assert (
         subprocess.check_output(["git", "-C", str(repo_copy), "status", "--porcelain"], text=True)
@@ -810,7 +812,7 @@ def test_clean_git_draft_release_still_has_no_source_commit(repo_copy: Path) -> 
     assert "not available (draft rehearsal)" in notes.read_text(encoding="utf-8")
 
 
-@pytest.mark.windows_slow_first(seconds=109)
+@pytest.mark.windows_release_integration
 def test_formal_release_rejects_release_candidate_placeholders(repo_copy: Path) -> None:
     _write_manifest(
         repo_copy,
@@ -961,7 +963,7 @@ def test_release_evidence_uses_current_schema_over_tag_schema(
         )
 
 
-@pytest.mark.windows_slow_first(seconds=118)
+@pytest.mark.windows_release_integration
 def test_formal_release_accepts_external_complete_evidence_without_path_leak(
     repo_copy: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1053,6 +1055,7 @@ def test_formal_release_accepts_external_complete_evidence_without_path_leak(
         assert all("routing-boundaries" not in name for name in release_zip.namelist())
 
 
+@pytest.mark.windows_release_integration
 def test_publishable_git_gate_verifies_signed_annotated_tag(
     repo_copy: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

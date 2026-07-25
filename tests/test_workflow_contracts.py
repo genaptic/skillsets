@@ -51,7 +51,10 @@ def test_required_check_contexts_are_stable() -> None:
             "required-validation",
         ),
         "eval.yml": ("complete structural eval export",),
-        "compatibility.yml": ("adapters and installers (${{ matrix.os }})",),
+        "compatibility.yml": (
+            "adapters and installers (${{ matrix.os }})",
+            "adapters and installers (windows-2025)",
+        ),
         "codeql.yml": ("codeql-python",),
         "dco.yml": ("DCO",),
         "dependency-review.yml": ("dependency-review",),
@@ -70,48 +73,42 @@ def test_required_check_contexts_are_stable() -> None:
     assert compatibility["jobs"]["adapters-and-installers"]["strategy"]["matrix"]["os"] == [
         "ubuntu-24.04",
         "macos-15",
-        "windows-2025",
     ]
 
 
-def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
+def test_structural_compatibility_retains_bounded_nonredundant_checks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     workflow_text = _workflow("compatibility.yml")
     workflow = yaml.safe_load(workflow_text)
-    job = workflow["jobs"]["adapters-and-installers"]
-    assert job["timeout-minutes"] == 20
-    assert job["strategy"]["fail-fast"] is False
+    jobs = workflow["jobs"]
+    non_windows = jobs["adapters-and-installers"]
+    assert non_windows["name"] == "adapters and installers (${{ matrix.os }})"
+    assert non_windows["runs-on"] == "${{ matrix.os }}"
+    assert non_windows["timeout-minutes"] == 20
+    assert non_windows["strategy"] == {
+        "fail-fast": False,
+        "matrix": {"os": ["ubuntu-24.04", "macos-15"]},
+    }
+    assert [step["name"] for step in non_windows["steps"]] == [
+        "Check out source",
+        "Set up Python",
+        "Install hash-locked validators and local CLI",
+        "Validate current generated state and vendor structures",
+        "Exercise reusable repository isolation under loadscope",
+        "Run cross-platform filesystem safety fixtures",
+        "Run canonical pack discovery fixtures",
+        "Dry-run Linux Bash installers",
+        "Dry-run installers under macOS Bash 3.2",
+        "Record the structural-only evidence boundary",
+    ]
     push_trigger = _event_block(workflow_text, "push")
     assert '      - "tests/**"\n' in push_trigger
     assert "tests/test_path_safety.py" not in push_trigger
     assert "tests/test_tooling_hardening.py" not in push_trigger
-    bytecode_cache = "${{ runner.temp }}/genaptic-structural-pycache"
-
-    windows_bootstrap = next(
-        step
-        for step in job["steps"]
-        if step["name"] == "Exercise the documented Windows bootstrap path"
-    )
-    assert windows_bootstrap["if"] == "runner.os == 'Windows'"
-    assert windows_bootstrap["run"] == "./scripts/bootstrap.ps1"
-    assert windows_bootstrap["env"] == {"PYTHONPYCACHEPREFIX": bytecode_cache}
-
-    windows_check = next(
-        step
-        for step in job["steps"]
-        if step["name"] == "Exercise the documented Windows full-check path"
-    )
-    assert windows_check["if"] == "runner.os == 'Windows'"
-    assert windows_check["run"] == "./scripts/check.ps1"
-    assert windows_check["env"] == {
-        "PYTHONPYCACHEPREFIX": bytecode_cache,
-        "PYTEST_ADDOPTS": (
-            "--no-cov -n 4 --dist=load --maxschedchunk=1 --max-worker-restart=0 "
-            "--durations=25 --durations-min=1"
-        ),
-    }
     loadscope_isolation = next(
         step
-        for step in job["steps"]
+        for step in non_windows["steps"]
         if step["name"] == "Exercise reusable repository isolation under loadscope"
     )
     assert loadscope_isolation["if"] == "runner.os == 'Linux'"
@@ -125,17 +122,137 @@ def test_structural_compatibility_retains_bounded_nonredundant_checks() -> None:
     assert dependency_lock.splitlines().count("pytest-xdist==3.8.0 \\") == 1
     assert not any(
         step["name"] == "Exercise PowerShell GitHub CLI capability preflights"
-        for step in job["steps"]
+        for step in non_windows["steps"]
     )
 
     path_safety = next(
         step
-        for step in job["steps"]
+        for step in non_windows["steps"]
         if step["name"] == "Run cross-platform filesystem safety fixtures"
     )
     assert path_safety["if"] == "runner.os != 'Windows'"
     assert "tests/test_path_safety.py" in path_safety["run"]
     assert "--no-cov" in path_safety["run"]
+
+    windows_core = jobs["windows-core"]
+    assert windows_core["name"] == "Windows structural contracts"
+    assert windows_core["runs-on"] == "windows-2025"
+    assert windows_core["timeout-minutes"] == 20
+    assert [step["name"] for step in windows_core["steps"]] == [
+        "Check out source",
+        "Set up Python",
+        "Exercise the documented Windows bootstrap path",
+        "Exercise the documented Windows core-check path",
+        "Run canonical pack discovery fixtures",
+        "Dry-run Windows PowerShell installers",
+        "Record the structural-only evidence boundary",
+    ]
+    windows_bootstrap = next(
+        step
+        for step in windows_core["steps"]
+        if step["name"] == "Exercise the documented Windows bootstrap path"
+    )
+    bytecode_cache = "${{ runner.temp }}/genaptic-structural-pycache"
+    assert windows_bootstrap["run"] == "./scripts/bootstrap.ps1"
+    assert windows_bootstrap["env"] == {"PYTHONPYCACHEPREFIX": bytecode_cache}
+    windows_check = next(
+        step
+        for step in windows_core["steps"]
+        if step["name"] == "Exercise the documented Windows core-check path"
+    )
+    assert windows_check["run"] == "./scripts/check.ps1"
+    assert windows_check["env"] == {
+        "PYTHONPYCACHEPREFIX": bytecode_cache,
+        "PYTEST_ADDOPTS": (
+            "--no-cov -n 4 --dist=load --maxschedchunk=1 --max-worker-restart=0 "
+            "--durations=50 --durations-min=1 "
+            '-m "not windows_release_integration"'
+        ),
+    }
+    non_windows_smoke = next(
+        step
+        for step in non_windows["steps"]
+        if step["name"] == "Run canonical pack discovery fixtures"
+    )
+    windows_smoke = next(
+        step
+        for step in windows_core["steps"]
+        if step["name"] == "Run canonical pack discovery fixtures"
+    )
+    assert windows_smoke["run"] == non_windows_smoke["run"]
+
+    windows_release = jobs["windows-release-integration"]
+    assert windows_release["name"] == "Windows release integration contracts"
+    assert windows_release["runs-on"] == "windows-2025"
+    assert windows_release["timeout-minutes"] == 20
+    assert [step["name"] for step in windows_release["steps"]] == [
+        "Check out source",
+        "Set up Python",
+        "Exercise the documented Windows bootstrap path",
+        "Run Windows release integration contracts",
+    ]
+    release_bootstrap = windows_release["steps"][2]
+    assert release_bootstrap["run"] == "./scripts/bootstrap.ps1"
+    release_test = windows_release["steps"][3]
+    release_command = " ".join(release_test["run"].split())
+    assert release_command == (
+        "./.venv/Scripts/python.exe -m pytest --no-cov -n 4 "
+        "--dist=loadgroup --max-worker-restart=0 "
+        "--durations=50 --durations-min=1 "
+        '-m "windows_release_integration"'
+    )
+
+    aggregate = jobs["windows"]
+    assert aggregate["name"] == "adapters and installers (windows-2025)"
+    assert aggregate["runs-on"] == "ubuntu-24.04"
+    assert aggregate["timeout-minutes"] == 5
+    assert aggregate["permissions"] == {}
+    assert aggregate["if"] == "${{ always() }}"
+    assert aggregate["needs"] == [
+        "windows-core",
+        "windows-release-integration",
+    ]
+    assert aggregate["env"] == {
+        "WINDOWS_CORE_RESULT": "${{ needs.windows-core.result }}",
+        "WINDOWS_RELEASE_INTEGRATION_RESULT": ("${{ needs.windows-release-integration.result }}"),
+    }
+    assert len(aggregate["steps"]) == 1
+    aggregate_step = aggregate["steps"][0]
+    assert aggregate_step["shell"] == "python"
+    assert "uses" not in aggregate_step
+    assert not aggregate_step.get("continue-on-error", False)
+    assert not re.search(
+        r"\b(?:git|gh|curl|wget|skillpacks|pytest)\b",
+        aggregate_step["run"],
+    )
+
+    result_variables = (
+        "WINDOWS_CORE_RESULT",
+        "WINDOWS_RELEASE_INTEGRATION_RESULT",
+    )
+    for variable in result_variables:
+        monkeypatch.setenv(variable, "success")
+    exec(compile(aggregate_step["run"], "compatibility.yml:windows", "exec"), {})
+    for failed_variable in result_variables:
+        for rejected in ("failure", "cancelled", "skipped", "", "unknown"):
+            for variable in result_variables:
+                monkeypatch.setenv(variable, "success")
+            monkeypatch.setenv(failed_variable, rejected)
+            with pytest.raises(SystemExit, match="Windows validation did not succeed"):
+                exec(
+                    compile(
+                        aggregate_step["run"],
+                        "compatibility.yml:windows",
+                        "exec",
+                    ),
+                    {},
+                )
+
+    assert all(
+        not step.get("continue-on-error", False)
+        for job in jobs.values()
+        for step in job.get("steps", [])
+    )
 
 
 def test_python_current_probe_and_required_validation_are_fail_closed(
