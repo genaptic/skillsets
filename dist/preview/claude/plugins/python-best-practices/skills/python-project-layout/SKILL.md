@@ -1,8 +1,12 @@
 ---
 name: python-project-layout
-description: 'Design or review Python repository and packaging layout, including pyproject.toml, src versus flat layout, package discovery, tests, data files, typing markers, and entry points. Use when imports, builds, editable installs, or publication structure are in question. Use alongside python-testing-strategy when a layout or import-boundary change also requires redesigning unit, integration, or package-install tests. Both skills are required for that combined layout-and-test-architecture work. Do not use for test-case architecture that leaves package layout unchanged or for CLI user-interface design.
-
-  '
+description: >-
+  Design or review Python repository/package layout: pyproject.toml, src versus flat layout,
+  discovery, import isolation, data/typing files, and entry points. Use when changing layout or
+  import boundaries. If a layout/import migration also redesigns test layers, fixtures, or CI, use
+  python-testing-strategy too; both skills are required. Do not use for test architecture alone (a
+  test path causing import contamination remains layout-only) or CLI commands, flags, help, or
+  configuration precedence.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -101,6 +105,8 @@ Before claiming completion:
 Return:
 
 - Context, names, constraints, and labeled assumptions.
+- An identity table that records repository, distribution, and import names separately; mark each
+  unavailable identity explicitly instead of merging names or silently inferring one from another.
 - Observed tree/configuration findings ordered by consequence.
 - Target layout and packaging configuration with rationale.
 - A numbered implementation sequence with an explicit rollback point; include it for both new

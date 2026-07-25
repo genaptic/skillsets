@@ -121,27 +121,37 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
             "python-testing-strategy",
         )
     }
+    assert all(len(description) <= 500 for description in descriptions.values())
+    required_prefix_terms = {
+        "python-cli-error-output": ("python-error-handling",),
+        "python-cli-testing": ("python-testing-strategy",),
+        "python-error-handling": ("python-cli-error-output",),
+        "python-project-layout": ("python-testing-strategy",),
+        "python-testing-strategy": ("python-cli-testing", "python-project-layout"),
+    }
+    for skill, partners in required_prefix_terms.items():
+        description = descriptions[skill]
+        assert description.index("Use when") < 250, skill
+        assert description.index("Do not use") < 400, skill
+        for partner in partners:
+            assert description.index(partner) < 350, (skill, partner)
 
     error_output = descriptions["python-cli-error-output"]
-    assert "alongside python-error-handling" in error_output
-    assert "also requires internal exception taxonomy or translation boundaries" in error_output
-    assert "Both skills are required" in error_output
-    assert "CLI diagnostics, streams, traceback policy, or exit statuses" in error_output
-    assert "exclusively internal exception work without a CLI process mapping" in error_output
+    assert "When it also defines internal exception taxonomy or translation" in error_output
+    assert "use python-error-handling too; both skills are required" in error_output
+    assert "Do not use for internal exception work without" in error_output
 
     cli_testing = descriptions["python-cli-testing"]
-    assert "alongside python-testing-strategy" in cli_testing
-    assert "also requires repository-wide test layers or CI selection" in cli_testing
-    assert "Both skills are required" in cli_testing
-    assert "focused CLI behavior matrix" in cli_testing
-    assert "merely to execute or report an already-defined smoke or health command" in cli_testing
-    assert "without a CLI-specific test deliverable" in cli_testing
+    assert "For a focused CLI matrix in repository test" in cli_testing
+    assert "use python-testing-strategy too; both skills are required" in cli_testing
+    assert "Do not use for broad strategy without a CLI deliverable" in cli_testing
+    assert "merely running an existing smoke command" in cli_testing
 
     error_handling = descriptions["python-error-handling"]
-    assert "alongside python-cli-error-output" in error_handling
-    assert "Both skills are required" in error_handling
-    assert "CLI diagnostics, streams, traceback policy, or exit statuses" in error_handling
-    assert "exclusively CLI-facing stderr and exit-code design" in error_handling
+    assert "Do not use for CLI process behavior alone" in error_handling
+    assert "or HTTP, RPC, or message error schemas." in error_handling
+    assert "If taxonomy or translation maps to CLI diagnostics" in error_handling
+    assert "use python-cli-error-output too; both skills are required" in error_handling
 
     error_handling_body = next(
         path for path in SKILL_FILES if path.parent.name == "python-error-handling"
@@ -150,18 +160,19 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "without internal exception-taxonomy or translation work" in error_handling_body
 
     project_layout = descriptions["python-project-layout"]
-    assert "alongside python-testing-strategy" in project_layout
-    assert "Both skills are required" in project_layout
-    assert "combined layout-and-test-architecture work" in project_layout
-    assert "test-case architecture that leaves package layout unchanged" in project_layout
+    assert "Do not use for test architecture alone" in project_layout
+    assert "test path causing import contamination remains layout-only" in project_layout
+    assert "or CLI commands, flags" in project_layout
+    assert "If a layout/import migration also redesigns" in project_layout
+    assert "use python-testing-strategy too; both skills are required" in project_layout
 
     testing_strategy = descriptions["python-testing-strategy"]
-    assert "alongside python-cli-testing" in testing_strategy
-    assert "repository-wide strategy also needs a CLI-specific matrix" in testing_strategy
-    assert "alongside python-project-layout" in testing_strategy
-    assert "migration also requires redesigning" in testing_strategy
-    assert "Both skills in the applicable pair are required" in testing_strategy
-    assert "layout changes that leave test architecture unchanged" in testing_strategy
+    assert "For a focused CLI matrix within it" in testing_strategy
+    assert "use python-cli-testing too" in testing_strategy
+    assert "use python-project-layout too" in testing_strategy
+    assert "Both skills in the applicable pair are required." in testing_strategy
+    assert "Do not use for one CLI command, a CLI-only matrix" in testing_strategy
+    assert "or package/import layout alone." in testing_strategy
 
     generated_roots = {
         "python-cli-error-output": "python-cli-apps",
@@ -183,6 +194,21 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "last known-good rollback point" in project_layout_body
     assert "For a new project, order metadata" in project_layout_body
     assert "numbered implementation sequence with an explicit rollback point" in project_layout_body
+    assert "records repository, distribution, and import names separately" in project_layout_body
+    assert "mark each" in project_layout_body
+    assert "unavailable identity explicitly" in project_layout_body
+
+    testing_strategy_body = next(
+        path for path in SKILL_FILES if path.parent.name == "python-testing-strategy"
+    ).read_text(encoding="utf-8")
+    assert "Always name a bounded fast pull-request subset." in testing_strategy_body
+    assert "risk-critical unit, contract, and integration checks" in testing_strategy_body
+    assert "Put repeated or randomized runs, parallel stress" in testing_strategy_body
+    assert "Do not defer a risk-critical check merely because it is" in testing_strategy_body
+    assert "exact bounded fast" in testing_strategy_body
+    assert "capture the first-failure artifacts" in testing_strategy_body
+    assert "repetition count" in testing_strategy_body
+    assert "explicit measured pass threshold" in testing_strategy_body
 
 
 @pytest.mark.parametrize("flag", ["--statement-timeout", "--lock-timeout"])
