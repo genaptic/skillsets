@@ -1,8 +1,11 @@
 ---
 name: python-error-handling
-description: 'Design or review Python exception taxonomy, catch and translation boundaries, causal chaining, cleanup, logging ownership, warnings, and bounded retries for libraries and application internals. Use when callers need a stable failure contract or broad catches hide causes. Use alongside python-cli-error-output when internal exception policy must also map to a CLI process contract. Both skills are required when internal exception taxonomy or translation boundaries must map to CLI diagnostics, streams, traceback policy, or exit statuses. Do not use for exclusively CLI-facing stderr and exit-code design or HTTP error response schemas.
-
-  '
+description: >-
+  Design or review internal Python exception policy: taxonomy, translation, causal chaining,
+  cleanup, logging, warnings, and bounded retries. Use when callers need a stable internal failure
+  contract. If taxonomy or translation maps to CLI diagnostics, streams, tracebacks, or exit
+  status, use python-cli-error-output too; both skills are required. Do not use for CLI process
+  behavior alone or HTTP, RPC, or message error schemas.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

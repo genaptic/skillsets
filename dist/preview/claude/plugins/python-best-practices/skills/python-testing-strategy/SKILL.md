@@ -1,8 +1,11 @@
 ---
 name: python-testing-strategy
-description: 'Design or review a risk-based Python test suite, including unit, contract, integration, and end-to-end boundaries; fixtures; parametrization; determinism; markers; CI selection; coverage; and flake control. Use when creating or restructuring test architecture, including alongside python-cli-testing when a repository-wide strategy also needs a CLI-specific matrix or alongside python-project-layout when a package-layout or import-boundary migration also requires redesigning unit, integration, or package-install tests. Both skills in the applicable pair are required for either combined scope. Do not use for package layout changes that leave test architecture unchanged or for a CLI-only test matrix.
-
-  '
+description: >-
+  Design or review repository-wide Python test architecture: risk, levels, fixtures, determinism,
+  CI, coverage, and flakes. Use when creating or restructuring broad test strategy. For a focused
+  CLI matrix within it, use python-cli-testing too; for a layout/import migration that redesigns
+  test layers, fixtures, or CI, use python-project-layout too. Both skills in the applicable pair
+  are required. Do not use for one CLI command, a CLI-only matrix, or package/import layout alone.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -77,9 +80,17 @@ Never describe a proposed or unexecuted check as successful.
 
 5. **Represent boundaries systematically.** Use parameterization for coherent equivalence classes, edge values, invalid transitions, and compatibility examples, with meaningful case IDs.
 
-6. **Control nondeterminism.** Isolate time, randomness, filesystem, environment, locale, time zone, network, process, and parallel state. Preserve seeds and artifacts needed to reproduce failures.
+6. **Control nondeterminism.** Isolate time, randomness, filesystem, environment, locale, time
+   zone, network, process, and parallel state. For flake remediation, always define reproducible
+   evidence: preserve seed and execution order, capture the first-failure artifacts, state the
+   repetition count, and require an explicit zero-flake or other measured pass threshold before
+   removing quarantine or retries.
 
-7. **Define selection and CI.** Establish a fast default suite, declared slow/integration markers, supported version/platform coverage, and scheduled extended checks without an uncontrolled matrix.
+7. **Define selection and CI.** Always name a bounded fast pull-request subset. Keep
+   risk-critical unit, contract, and integration checks there when they fit the measured budget.
+   Put repeated or randomized runs, parallel stress, and genuinely slow checks in explicitly
+   selected extended or scheduled tiers. Do not defer a risk-critical check merely because it is
+   labeled integration. Cover supported versions and platforms without an uncontrolled matrix.
 
 8. **Use quality signals carefully.** Interpret coverage as execution evidence, consider targeted mutation or fault injection for critical logic, and track flake and runtime budgets.
 
@@ -106,7 +117,10 @@ Return:
 - System/risk context and assumptions.
 - Behavior-to-test-level map with rationale.
 - Fixture, test-data, and determinism design.
-- Selection, markers, CI matrix, and runtime budget.
+- For flake work, a reproduction and elimination evidence plan with preserved seed/order,
+  first-failure artifacts, repetition count, and an explicit measured pass threshold.
+- Selection, markers, CI matrix, and runtime budget, including the exact bounded fast
+  pull-request tier and the extended or scheduled home for stress checks.
 - Prioritized remediation or implementation sequence.
 - Verification performed, evidence captured, and remaining coverage gaps.
 
