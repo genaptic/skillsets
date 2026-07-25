@@ -1,12 +1,10 @@
 ---
 name: python-project-layout
 description: >-
-  Design or review Python package layout: pyproject.toml, src versus flat layout, discovery,
-  import isolation, data/typing files, and entry points. Use when changing layout or import
-  boundaries. If a layout/import migration also redesigns test layers, fixtures, or CI, use
-  python-testing-strategy too; both skills are required. Do not use for test architecture alone (a
-  test path causing import contamination remains layout-only). Never use for CLI commands, flags,
-  help, or configuration-only work.
+  Use when—and only when—the request explicitly asks for package layout, import isolation, package
+  discovery, namespace-package boundaries, distribution build metadata, packaged resources/typing
+  metadata, or wheel/sdist contents. Do not use unless at least one listed packaging, import, or
+  artifact outcome is an explicit deliverable.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -31,11 +29,11 @@ and are never installed or run implicitly.
 - Legacy packaging files need consolidation into an authoritative `pyproject.toml`.
 - Package discovery, data files, type markers, namespace packages, or entry points may be wrong.
 - A layout or import-boundary change also requires unit, integration, or package-install tests
-  to be redesigned; also use `python-testing-strategy`.
+  to be redesigned; also use `python-test-architecture`.
 
 ## Do not use this skill when
 
-- The repository layout is settled and the task is to design unit, integration, or end-to-end tests; use `python-testing-strategy`.
+- The repository layout is settled and the task is to design unit, integration, or end-to-end tests; use `python-test-architecture`.
 - The task is command names, flags, help, or CLI configuration precedence; use `python-cli-command-design`.
 - The task is runtime service architecture, deployment topology, or framework selection.
 

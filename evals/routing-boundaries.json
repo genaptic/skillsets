@@ -336,8 +336,8 @@
       ]
     },
     {
-      "id": "python-cli-testing-vs-python-testing-strategy",
-      "skills": ["python-cli-testing", "python-testing-strategy"],
+      "id": "python-cli-testing-vs-python-test-architecture",
+      "skills": ["python-cli-testing", "python-test-architecture"],
       "sharedVocabulary": ["fixtures", "integration tests", "test matrix"],
       "outcomeExplanations": {
         "a-only": "Tests specifically exercise command invocation, streams, exit codes, help, and shell behavior.",
@@ -347,28 +347,28 @@
       },
       "cases": [
         {
-          "id": "python-cli-testing-vs-python-testing-strategy-a-only",
+          "id": "python-cli-testing-vs-python-test-architecture-a-only",
           "outcome": "a-only",
           "prompt": "Create a comprehensive test matrix for command help, stdout, stderr, exit codes, stdin, and shell invocation.",
           "expectedSkills": ["python-cli-testing"],
           "reason": "The request is specifically CLI testing rather than repository-wide test strategy."
         },
         {
-          "id": "python-cli-testing-vs-python-testing-strategy-b-only",
+          "id": "python-cli-testing-vs-python-test-architecture-b-only",
           "outcome": "b-only",
           "prompt": "Redesign fixture scopes, coverage goals, markers, and the full Python project's pull-request test selection.",
-          "expectedSkills": ["python-testing-strategy"],
+          "expectedSkills": ["python-test-architecture"],
           "reason": "The request is broader than the CLI and belongs to general testing strategy."
         },
         {
-          "id": "python-cli-testing-vs-python-testing-strategy-both",
+          "id": "python-cli-testing-vs-python-test-architecture-both",
           "outcome": "both",
           "prompt": "Create the repository-wide Python test pyramid and CI selection policy, then add a focused matrix for CLI help, streams, exit codes, stdin, and shell invocation.",
-          "expectedSkills": ["python-cli-testing", "python-testing-strategy"],
+          "expectedSkills": ["python-cli-testing", "python-test-architecture"],
           "reason": "The broad suite architecture and CLI-specific behavior both require coverage."
         },
         {
-          "id": "python-cli-testing-vs-python-testing-strategy-neither",
+          "id": "python-cli-testing-vs-python-test-architecture-neither",
           "outcome": "neither",
           "prompt": "Run an already documented production smoke command and report its output without changing test design or test code.",
           "expectedSkills": [],
@@ -377,8 +377,8 @@
       ]
     },
     {
-      "id": "python-project-layout-vs-python-testing-strategy",
-      "skills": ["python-project-layout", "python-testing-strategy"],
+      "id": "python-project-layout-vs-python-test-architecture",
+      "skills": ["python-project-layout", "python-test-architecture"],
       "sharedVocabulary": ["package boundaries", "repository layout", "test placement"],
       "outcomeExplanations": {
         "a-only": "Package discovery, source layout, import isolation, or project boundaries need review.",
@@ -388,28 +388,28 @@
       },
       "cases": [
         {
-          "id": "python-project-layout-vs-python-testing-strategy-a-only",
+          "id": "python-project-layout-vs-python-test-architecture-a-only",
           "outcome": "a-only",
           "prompt": "Review this Python repository's src layout, package discovery, editable-install isolation, namespace boundaries, and import behavior without redesigning its tests.",
           "expectedSkills": ["python-project-layout"],
           "reason": "The requested outcome is package and repository structure."
         },
         {
-          "id": "python-project-layout-vs-python-testing-strategy-b-only",
+          "id": "python-project-layout-vs-python-test-architecture-b-only",
           "outcome": "b-only",
           "prompt": "Create a risk-based unit, integration, and end-to-end test plan for this existing Python package.",
-          "expectedSkills": ["python-testing-strategy"],
+          "expectedSkills": ["python-test-architecture"],
           "reason": "The testing skill has the narrower contract; no layout problem is present."
         },
         {
-          "id": "python-project-layout-vs-python-testing-strategy-both",
+          "id": "python-project-layout-vs-python-test-architecture-both",
           "outcome": "both",
           "prompt": "Move this Python project to an import-safe src layout and redesign unit, integration, and package-install tests around the new boundaries.",
-          "expectedSkills": ["python-project-layout", "python-testing-strategy"],
+          "expectedSkills": ["python-project-layout", "python-test-architecture"],
           "reason": "The structural migration and its test architecture are both explicit outcomes."
         },
         {
-          "id": "python-project-layout-vs-python-testing-strategy-neither",
+          "id": "python-project-layout-vs-python-test-architecture-neither",
           "outcome": "neither",
           "prompt": "Tune a PostgreSQL query plan from supplied execution evidence without touching the Python repository.",
           "expectedSkills": [],

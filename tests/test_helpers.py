@@ -59,7 +59,7 @@ def test_python_helper_happy_paths(tmp_path: Path) -> None:
 
     inventory = (
         ROOT
-        / "packs/python/best-practices/skills/python-testing-strategy/scripts/inventory_tests.py"
+        / "packs/python/best-practices/skills/python-test-architecture/scripts/inventory_tests.py"
     )
     report = run_helper(inventory, ROOT / "tests", "--json")
     assert json.loads(report.stdout)["totals"]["files"] >= 3

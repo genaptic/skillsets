@@ -33,7 +33,7 @@
     {
       "id": "negative-edit-existing-skill",
       "kind": "negative",
-      "prompt": "Tighten the description and add two negative evals to the existing python-testing-strategy skill; do not add a new skill.",
+      "prompt": "Tighten the description and add two negative evals to the existing python-test-architecture skill; do not add a new skill.",
       "shouldTrigger": false,
       "reason": "This is maintenance of an existing skill rather than creation of a new public skill."
     },

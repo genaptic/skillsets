@@ -54,7 +54,7 @@ if (-not $DryRun) {
 
 $skills = @(
     "python-project-layout",
-    "python-testing-strategy",
+    "python-test-architecture",
     "python-error-handling"
 )
 

@@ -27,8 +27,8 @@
     },
     {
       "path": "dist/dev/catalog.json",
-      "sha256": "d5e7d685db78ed6018fb4610b36793ff61eac0bd4e4560c11f1920bd7f6e6a37",
-      "size": 10244,
+      "sha256": "2f56c321e89e38e606e50d8d1fe4f68f6272d94dfbcc013f1e6f8f1c536d1b2a",
+      "size": 10245,
       "mode": "0644"
     },
     {
@@ -429,8 +429,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "bc0f9d6bc89d7a0bf139e5ec11b823ce80f8dd776ae4815b35005e6c2d6157d2",
-      "size": 6933,
+      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
+      "size": 6741,
       "mode": "0644"
     },
     {
@@ -471,8 +471,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "80764fbc66dea353bfd6c7746490bbf5d13595832b2527aabc12973df82a96b5",
-      "size": 7759,
+      "sha256": "ac58752368faba01d5eda6eb44123fcbd3bb37acde4d57f002faa4de42a6454c",
+      "size": 7596,
       "mode": "0644"
     },
     {
@@ -512,43 +512,43 @@
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "87d971bedba4324716c46fbd36c2fb8a9261f89564065b2a81c28200ad5e977f",
-      "size": 7714,
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
+      "sha256": "917db17dc3de91d0794c1f8e5d4d80a52b090dc0167c1b4b2d09de9672813628",
+      "size": 7560,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/assets/pytest-config.example.toml",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/assets/pytest-config.example.toml",
       "sha256": "3bcc6ff13eea0e7031372dc985560dd37d2aff021c9abb22ef8190b6a958abd3",
       "size": 380,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/assets/test-strategy-template.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/assets/test-strategy-template.md",
       "sha256": "ccb0a134abca7ca62495762ce5f9a4b7789912fcbf479d3a9890077c9378d17f",
       "size": 1289,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/references/checklist.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/references/checklist.md",
       "sha256": "26a615753fdfe866f337494f2b816c308100523a5b431ea62aca2ad9b87b6961",
       "size": 2113,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/references/guide.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/references/guide.md",
       "sha256": "298a74a8ac561f31e7d4c9ec136ad7e55562f7a8e6bd1509abb640dfb83af3ad",
       "size": 4731,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/references/sources.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/references/sources.md",
       "sha256": "27079829faac7502837ddd16153061b45222c7d3de877bf34b5e9e68b087d458",
       "size": 600,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-testing-strategy/scripts/inventory_tests.py",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/scripts/inventory_tests.py",
       "sha256": "ece5ba4762aab6c5cea504052364ec849e73f9bad11c366f04cfabd557998d30",
       "size": 5573,
       "mode": "0644"
@@ -645,8 +645,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "0110ea008387af290ed90219785385d7132a24d88fefe6459403a61c6763d590",
-      "size": 6782,
+      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
+      "size": 6785,
       "mode": "0644"
     },
     {
@@ -1725,14 +1725,14 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/.codex-plugin/plugin.json",
-      "sha256": "62612552b9cc8a72a8c9830d5ed387d27f41b94a8e3b94933d773fee7fe98002",
-      "size": 1428,
+      "sha256": "c9d62012aa8033f2076165fa1864b05ece0140a0a6001a466b500dd1b6b287b8",
+      "size": 1429,
       "mode": "0644"
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "bc0f9d6bc89d7a0bf139e5ec11b823ce80f8dd776ae4815b35005e6c2d6157d2",
-      "size": 6933,
+      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
+      "size": 6741,
       "mode": "0644"
     },
     {
@@ -1779,8 +1779,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "80764fbc66dea353bfd6c7746490bbf5d13595832b2527aabc12973df82a96b5",
-      "size": 7759,
+      "sha256": "ac58752368faba01d5eda6eb44123fcbd3bb37acde4d57f002faa4de42a6454c",
+      "size": 7596,
       "mode": "0644"
     },
     {
@@ -1826,49 +1826,49 @@
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "87d971bedba4324716c46fbd36c2fb8a9261f89564065b2a81c28200ad5e977f",
-      "size": 7714,
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
+      "sha256": "917db17dc3de91d0794c1f8e5d4d80a52b090dc0167c1b4b2d09de9672813628",
+      "size": 7560,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/agents/openai.yaml",
-      "sha256": "87c16946750e52a6efb91d6e97d54eed211f63375c0944450c57bdbcb7a24389",
-      "size": 230,
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/agents/openai.yaml",
+      "sha256": "15e4ab28566e35b6d354a88985b99b134f7423d91ad576ef4a5a259bfc4c7e34",
+      "size": 232,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/assets/pytest-config.example.toml",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/assets/pytest-config.example.toml",
       "sha256": "3bcc6ff13eea0e7031372dc985560dd37d2aff021c9abb22ef8190b6a958abd3",
       "size": 380,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/assets/test-strategy-template.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/assets/test-strategy-template.md",
       "sha256": "ccb0a134abca7ca62495762ce5f9a4b7789912fcbf479d3a9890077c9378d17f",
       "size": 1289,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/references/checklist.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/references/checklist.md",
       "sha256": "26a615753fdfe866f337494f2b816c308100523a5b431ea62aca2ad9b87b6961",
       "size": 2113,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/references/guide.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/references/guide.md",
       "sha256": "298a74a8ac561f31e7d4c9ec136ad7e55562f7a8e6bd1509abb640dfb83af3ad",
       "size": 4731,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/references/sources.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/references/sources.md",
       "sha256": "27079829faac7502837ddd16153061b45222c7d3de877bf34b5e9e68b087d458",
       "size": 600,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-testing-strategy/scripts/inventory_tests.py",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/scripts/inventory_tests.py",
       "sha256": "ece5ba4762aab6c5cea504052364ec849e73f9bad11c366f04cfabd557998d30",
       "size": 5573,
       "mode": "0644"
@@ -1977,8 +1977,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "0110ea008387af290ed90219785385d7132a24d88fefe6459403a61c6763d590",
-      "size": 6782,
+      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
+      "size": 6785,
       "mode": "0644"
     },
     {
@@ -2727,14 +2727,14 @@
     },
     {
       "path": "dist/dev/install/python-best-practices.ps1",
-      "sha256": "e6e1ea1d50533b9080d3d83441b4ee4d7dbbe90e6b12119fcd8f5554ff7228b1",
-      "size": 3989,
+      "sha256": "9e0a0f9bdb482aba89cad5840875393e80cfa556e7508940b9af2cce327226b9",
+      "size": 3990,
       "mode": "0644"
     },
     {
       "path": "dist/dev/install/python-best-practices.sh",
-      "sha256": "a7dd4bce9d74ea1b61a6d2ac20470280cadfda92f9e16f9306e029ce22882303",
-      "size": 3718,
+      "sha256": "2534ae2dde3dae64489e473a1aa7258dbc1a1051578dc5db1bc1f17e3e7e0ab6",
+      "size": 3719,
       "mode": "0755"
     },
     {
@@ -2781,14 +2781,14 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/index.json",
-      "sha256": "2b0ef3b1cb6bf1325803d5d7fb4910950a140a0b97d6e41032f7b3933c8cf825",
-      "size": 1089,
+      "sha256": "90748d38fcfd50da9d203fda75ba78e6103545830f8791c312cf931879275d77",
+      "size": 1090,
       "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-error-handling/SKILL.md",
-      "sha256": "bc0f9d6bc89d7a0bf139e5ec11b823ce80f8dd776ae4815b35005e6c2d6157d2",
-      "size": 6933,
+      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
+      "size": 6741,
       "mode": "0644"
     },
     {
@@ -2829,8 +2829,8 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-project-layout/SKILL.md",
-      "sha256": "80764fbc66dea353bfd6c7746490bbf5d13595832b2527aabc12973df82a96b5",
-      "size": 7759,
+      "sha256": "ac58752368faba01d5eda6eb44123fcbd3bb37acde4d57f002faa4de42a6454c",
+      "size": 7596,
       "mode": "0644"
     },
     {
@@ -2870,43 +2870,43 @@
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/SKILL.md",
-      "sha256": "87d971bedba4324716c46fbd36c2fb8a9261f89564065b2a81c28200ad5e977f",
-      "size": 7714,
+      "path": "dist/dev/opencode/python/best-practices/python-test-architecture/SKILL.md",
+      "sha256": "917db17dc3de91d0794c1f8e5d4d80a52b090dc0167c1b4b2d09de9672813628",
+      "size": 7560,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/assets/pytest-config.example.toml",
+      "path": "dist/dev/opencode/python/best-practices/python-test-architecture/assets/pytest-config.example.toml",
       "sha256": "3bcc6ff13eea0e7031372dc985560dd37d2aff021c9abb22ef8190b6a958abd3",
       "size": 380,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/assets/test-strategy-template.md",
+      "path": "dist/dev/opencode/python/best-practices/python-test-architecture/assets/test-strategy-template.md",
       "sha256": "ccb0a134abca7ca62495762ce5f9a4b7789912fcbf479d3a9890077c9378d17f",
       "size": 1289,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/references/checklist.md",
+      "path": "dist/dev/opencode/python/best-practices/python-test-architecture/references/checklist.md",
       "sha256": "26a615753fdfe866f337494f2b816c308100523a5b431ea62aca2ad9b87b6961",
       "size": 2113,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/references/guide.md",
+      "path": "dist/dev/opencode/python/best-practices/python-test-architecture/references/guide.md",
       "sha256": "298a74a8ac561f31e7d4c9ec136ad7e55562f7a8e6bd1509abb640dfb83af3ad",
       "size": 4731,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/references/sources.md",
+      "path": "dist/dev/opencode/python/best-practices/python-test-architecture/references/sources.md",
       "sha256": "27079829faac7502837ddd16153061b45222c7d3de877bf34b5e9e68b087d458",
       "size": 600,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-testing-strategy/scripts/inventory_tests.py",
+      "path": "dist/dev/opencode/python/best-practices/python-test-architecture/scripts/inventory_tests.py",
       "sha256": "ece5ba4762aab6c5cea504052364ec849e73f9bad11c366f04cfabd557998d30",
       "size": 5573,
       "mode": "0644"
@@ -3003,8 +3003,8 @@
     },
     {
       "path": "dist/dev/opencode/python/cli-apps/python-cli-testing/SKILL.md",
-      "sha256": "0110ea008387af290ed90219785385d7132a24d88fefe6459403a61c6763d590",
-      "size": 6782,
+      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
+      "size": 6785,
       "mode": "0644"
     },
     {
@@ -4029,8 +4029,8 @@
     },
     {
       "path": "dist/preview/catalog.json",
-      "sha256": "76747a486aa1e5ac80c33b1f73a2655f2baa2737c856546479ee77764c6df338",
-      "size": 8531,
+      "sha256": "fd0483e11d6d3cbe47a03bd8dc19b153b1ab6e1b60b833c3390ed3e015468472",
+      "size": 8532,
       "mode": "0644"
     },
     {
@@ -4305,8 +4305,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "bc0f9d6bc89d7a0bf139e5ec11b823ce80f8dd776ae4815b35005e6c2d6157d2",
-      "size": 6933,
+      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
+      "size": 6741,
       "mode": "0644"
     },
     {
@@ -4347,8 +4347,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "80764fbc66dea353bfd6c7746490bbf5d13595832b2527aabc12973df82a96b5",
-      "size": 7759,
+      "sha256": "ac58752368faba01d5eda6eb44123fcbd3bb37acde4d57f002faa4de42a6454c",
+      "size": 7596,
       "mode": "0644"
     },
     {
@@ -4388,43 +4388,43 @@
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "87d971bedba4324716c46fbd36c2fb8a9261f89564065b2a81c28200ad5e977f",
-      "size": 7714,
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
+      "sha256": "917db17dc3de91d0794c1f8e5d4d80a52b090dc0167c1b4b2d09de9672813628",
+      "size": 7560,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/assets/pytest-config.example.toml",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/assets/pytest-config.example.toml",
       "sha256": "3bcc6ff13eea0e7031372dc985560dd37d2aff021c9abb22ef8190b6a958abd3",
       "size": 380,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/assets/test-strategy-template.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/assets/test-strategy-template.md",
       "sha256": "ccb0a134abca7ca62495762ce5f9a4b7789912fcbf479d3a9890077c9378d17f",
       "size": 1289,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/references/checklist.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/references/checklist.md",
       "sha256": "26a615753fdfe866f337494f2b816c308100523a5b431ea62aca2ad9b87b6961",
       "size": 2113,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/references/guide.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/references/guide.md",
       "sha256": "298a74a8ac561f31e7d4c9ec136ad7e55562f7a8e6bd1509abb640dfb83af3ad",
       "size": 4731,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/references/sources.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/references/sources.md",
       "sha256": "27079829faac7502837ddd16153061b45222c7d3de877bf34b5e9e68b087d458",
       "size": 600,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-testing-strategy/scripts/inventory_tests.py",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/scripts/inventory_tests.py",
       "sha256": "ece5ba4762aab6c5cea504052364ec849e73f9bad11c366f04cfabd557998d30",
       "size": 5573,
       "mode": "0644"
@@ -4521,8 +4521,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "0110ea008387af290ed90219785385d7132a24d88fefe6459403a61c6763d590",
-      "size": 6782,
+      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
+      "size": 6785,
       "mode": "0644"
     },
     {
@@ -5463,14 +5463,14 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/.codex-plugin/plugin.json",
-      "sha256": "62612552b9cc8a72a8c9830d5ed387d27f41b94a8e3b94933d773fee7fe98002",
-      "size": 1428,
+      "sha256": "c9d62012aa8033f2076165fa1864b05ece0140a0a6001a466b500dd1b6b287b8",
+      "size": 1429,
       "mode": "0644"
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "bc0f9d6bc89d7a0bf139e5ec11b823ce80f8dd776ae4815b35005e6c2d6157d2",
-      "size": 6933,
+      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
+      "size": 6741,
       "mode": "0644"
     },
     {
@@ -5517,8 +5517,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "80764fbc66dea353bfd6c7746490bbf5d13595832b2527aabc12973df82a96b5",
-      "size": 7759,
+      "sha256": "ac58752368faba01d5eda6eb44123fcbd3bb37acde4d57f002faa4de42a6454c",
+      "size": 7596,
       "mode": "0644"
     },
     {
@@ -5564,49 +5564,49 @@
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/SKILL.md",
-      "sha256": "87d971bedba4324716c46fbd36c2fb8a9261f89564065b2a81c28200ad5e977f",
-      "size": 7714,
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
+      "sha256": "917db17dc3de91d0794c1f8e5d4d80a52b090dc0167c1b4b2d09de9672813628",
+      "size": 7560,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/agents/openai.yaml",
-      "sha256": "87c16946750e52a6efb91d6e97d54eed211f63375c0944450c57bdbcb7a24389",
-      "size": 230,
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/agents/openai.yaml",
+      "sha256": "15e4ab28566e35b6d354a88985b99b134f7423d91ad576ef4a5a259bfc4c7e34",
+      "size": 232,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/assets/pytest-config.example.toml",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/assets/pytest-config.example.toml",
       "sha256": "3bcc6ff13eea0e7031372dc985560dd37d2aff021c9abb22ef8190b6a958abd3",
       "size": 380,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/assets/test-strategy-template.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/assets/test-strategy-template.md",
       "sha256": "ccb0a134abca7ca62495762ce5f9a4b7789912fcbf479d3a9890077c9378d17f",
       "size": 1289,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/references/checklist.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/references/checklist.md",
       "sha256": "26a615753fdfe866f337494f2b816c308100523a5b431ea62aca2ad9b87b6961",
       "size": 2113,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/references/guide.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/references/guide.md",
       "sha256": "298a74a8ac561f31e7d4c9ec136ad7e55562f7a8e6bd1509abb640dfb83af3ad",
       "size": 4731,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/references/sources.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/references/sources.md",
       "sha256": "27079829faac7502837ddd16153061b45222c7d3de877bf34b5e9e68b087d458",
       "size": 600,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-testing-strategy/scripts/inventory_tests.py",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/scripts/inventory_tests.py",
       "sha256": "ece5ba4762aab6c5cea504052364ec849e73f9bad11c366f04cfabd557998d30",
       "size": 5573,
       "mode": "0644"
@@ -5715,8 +5715,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "0110ea008387af290ed90219785385d7132a24d88fefe6459403a61c6763d590",
-      "size": 6782,
+      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
+      "size": 6785,
       "mode": "0644"
     },
     {
@@ -6453,14 +6453,14 @@
     },
     {
       "path": "dist/preview/install/python-best-practices.ps1",
-      "sha256": "e6e1ea1d50533b9080d3d83441b4ee4d7dbbe90e6b12119fcd8f5554ff7228b1",
-      "size": 3989,
+      "sha256": "9e0a0f9bdb482aba89cad5840875393e80cfa556e7508940b9af2cce327226b9",
+      "size": 3990,
       "mode": "0644"
     },
     {
       "path": "dist/preview/install/python-best-practices.sh",
-      "sha256": "a7dd4bce9d74ea1b61a6d2ac20470280cadfda92f9e16f9306e029ce22882303",
-      "size": 3718,
+      "sha256": "2534ae2dde3dae64489e473a1aa7258dbc1a1051578dc5db1bc1f17e3e7e0ab6",
+      "size": 3719,
       "mode": "0755"
     },
     {
@@ -6507,14 +6507,14 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/index.json",
-      "sha256": "2b0ef3b1cb6bf1325803d5d7fb4910950a140a0b97d6e41032f7b3933c8cf825",
-      "size": 1089,
+      "sha256": "90748d38fcfd50da9d203fda75ba78e6103545830f8791c312cf931879275d77",
+      "size": 1090,
       "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-error-handling/SKILL.md",
-      "sha256": "bc0f9d6bc89d7a0bf139e5ec11b823ce80f8dd776ae4815b35005e6c2d6157d2",
-      "size": 6933,
+      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
+      "size": 6741,
       "mode": "0644"
     },
     {
@@ -6555,8 +6555,8 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-project-layout/SKILL.md",
-      "sha256": "80764fbc66dea353bfd6c7746490bbf5d13595832b2527aabc12973df82a96b5",
-      "size": 7759,
+      "sha256": "ac58752368faba01d5eda6eb44123fcbd3bb37acde4d57f002faa4de42a6454c",
+      "size": 7596,
       "mode": "0644"
     },
     {
@@ -6596,43 +6596,43 @@
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/SKILL.md",
-      "sha256": "87d971bedba4324716c46fbd36c2fb8a9261f89564065b2a81c28200ad5e977f",
-      "size": 7714,
+      "path": "dist/preview/opencode/python/best-practices/python-test-architecture/SKILL.md",
+      "sha256": "917db17dc3de91d0794c1f8e5d4d80a52b090dc0167c1b4b2d09de9672813628",
+      "size": 7560,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/assets/pytest-config.example.toml",
+      "path": "dist/preview/opencode/python/best-practices/python-test-architecture/assets/pytest-config.example.toml",
       "sha256": "3bcc6ff13eea0e7031372dc985560dd37d2aff021c9abb22ef8190b6a958abd3",
       "size": 380,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/assets/test-strategy-template.md",
+      "path": "dist/preview/opencode/python/best-practices/python-test-architecture/assets/test-strategy-template.md",
       "sha256": "ccb0a134abca7ca62495762ce5f9a4b7789912fcbf479d3a9890077c9378d17f",
       "size": 1289,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/references/checklist.md",
+      "path": "dist/preview/opencode/python/best-practices/python-test-architecture/references/checklist.md",
       "sha256": "26a615753fdfe866f337494f2b816c308100523a5b431ea62aca2ad9b87b6961",
       "size": 2113,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/references/guide.md",
+      "path": "dist/preview/opencode/python/best-practices/python-test-architecture/references/guide.md",
       "sha256": "298a74a8ac561f31e7d4c9ec136ad7e55562f7a8e6bd1509abb640dfb83af3ad",
       "size": 4731,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/references/sources.md",
+      "path": "dist/preview/opencode/python/best-practices/python-test-architecture/references/sources.md",
       "sha256": "27079829faac7502837ddd16153061b45222c7d3de877bf34b5e9e68b087d458",
       "size": 600,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-testing-strategy/scripts/inventory_tests.py",
+      "path": "dist/preview/opencode/python/best-practices/python-test-architecture/scripts/inventory_tests.py",
       "sha256": "ece5ba4762aab6c5cea504052364ec849e73f9bad11c366f04cfabd557998d30",
       "size": 5573,
       "mode": "0644"
@@ -6729,8 +6729,8 @@
     },
     {
       "path": "dist/preview/opencode/python/cli-apps/python-cli-testing/SKILL.md",
-      "sha256": "0110ea008387af290ed90219785385d7132a24d88fefe6459403a61c6763d590",
-      "size": 6782,
+      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
+      "size": 6785,
       "mode": "0644"
     },
     {
@@ -7635,8 +7635,8 @@
     },
     {
       "path": "docs/evals.md",
-      "sha256": "a9356d12975752eb4dbea45a60672e46ce06cbea164638fdd26f6710bfe88da0",
-      "size": 10825,
+      "sha256": "dcc9ee2f162c0da20a9f32fecaed74cba4d4a5b0701e9774db244ea2d6bfef24",
+      "size": 10831,
       "mode": "0644"
     },
     {
@@ -7647,14 +7647,14 @@
     },
     {
       "path": "packs/python/best-practices/.codex-plugin/plugin.json",
-      "sha256": "62612552b9cc8a72a8c9830d5ed387d27f41b94a8e3b94933d773fee7fe98002",
-      "size": 1428,
+      "sha256": "c9d62012aa8033f2076165fa1864b05ece0140a0a6001a466b500dd1b6b287b8",
+      "size": 1429,
       "mode": "0644"
     },
     {
       "path": "packs/python/best-practices/README.md",
-      "sha256": "28492eca81147a0d35a702542dec48078e5ee80b3a05cbea5977f9074256b51e",
-      "size": 4581,
+      "sha256": "c71e515d1c70c217a178617a5fd3914590b5a1aab492a6c0a6e01f16e8e750e3",
+      "size": 4583,
       "mode": "0644"
     },
     {

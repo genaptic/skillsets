@@ -13,7 +13,7 @@ deployment topology. Use `python-cli-apps` for command-line interface behavior.
 | Skill | Focus |
 |---|---|
 | [`python-project-layout`](skills/python-project-layout/SKILL.md) | Packaging layout, import boundaries, project metadata, data files, typing markers, and entry points. |
-| [`python-testing-strategy`](skills/python-testing-strategy/SKILL.md) | Risk-based test architecture, determinism, fixtures, CI selection, coverage, and flake control. |
+| [`python-test-architecture`](skills/python-test-architecture/SKILL.md) | Risk-based test architecture, determinism, fixtures, CI selection, coverage, and flake control. |
 | [`python-error-handling`](skills/python-error-handling/SKILL.md) | Exception contracts, translation boundaries, chaining, cleanup, logging ownership, and bounded retries. |
 
 ## Prerequisites

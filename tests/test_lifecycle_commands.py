@@ -102,7 +102,7 @@ def _make_release_candidate(root: Path, environment: dict[str, str]) -> Path:
             "### Added\n\n"
             f"- Prepared the `{pack.version}` release-candidate contents with "
             "`python-project-layout`,\n"
-            "  `python-testing-strategy`, and `python-error-handling`.\n\n"
+            "  `python-test-architecture`, and `python-error-handling`.\n\n"
             "<!-- BEGIN RELEASE PREPARATION NOTE -->\n"
             f"`{pack.version}` has not been published. Before requesting exact-SHA "
             "native/model evidence, freeze\n"

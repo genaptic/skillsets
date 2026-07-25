@@ -16,7 +16,7 @@ SCRIPTS = {
     / "packs/python/best-practices/skills/python-project-layout/scripts"
     / "inspect_layout.py",
     "inventory-tests": ROOT
-    / "packs/python/best-practices/skills/python-testing-strategy/scripts"
+    / "packs/python/best-practices/skills/python-test-architecture/scripts"
     / "inventory_tests.py",
     "validate-command-spec": ROOT
     / "packs/python/cli-apps/skills/python-cli-command-design/scripts"

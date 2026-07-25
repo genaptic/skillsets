@@ -3,7 +3,7 @@ name: python-cli-testing
 description: >
   Design Python CLI tests: invocation, entry points, parsing/help, status, streams, stdin,
   isolation, TTY, signals, pipes, quoting, and platform CI. Use when changing command-interface
-  tests. A comprehensive CLI-only matrix uses this skill alone. Add python-testing-strategy only
+  tests. A comprehensive CLI-only matrix uses this skill alone. Add python-test-architecture only
   when explicitly combining it with repository-wide test architecture or CI policy. Do not use
   for broad strategy without a CLI deliverable, choosing the failure contract, or running an
   existing smoke command.
@@ -29,7 +29,7 @@ process and signal tests to the supported operating systems and CLI framework.
 
 - An existing or new Python CLI needs a focused test architecture.
 - A repository-wide test strategy also needs a CLI-specific matrix for help, streams, exit
-  statuses, stdin, and shell invocation; also use `python-testing-strategy`.
+  statuses, stdin, and shell invocation; also use `python-test-architecture`.
 - Framework-runner tests miss installed entry-point, process, stream, signal, or platform behavior.
 - Tests need safe isolation for home/config, environment, stdin, filesystem, TTY, or external boundaries.
 - A risk-based CLI CI matrix and stable output assertions are required.
@@ -37,7 +37,7 @@ process and signal tests to the supported operating systems and CLI framework.
 ## Do not use this skill when
 
 - The task is the full Python project's unit/integration strategy without a CLI-specific test
-  deliverable; use `python-testing-strategy`.
+  deliverable; use `python-test-architecture`.
 - The task is merely to execute or report an already-defined smoke or health command without
   changing test design or test code.
 - The task is to define exit statuses, stream policy, or error schema; use `python-cli-error-output` first.

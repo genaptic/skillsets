@@ -70,8 +70,8 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
         if boundary["id"]
         in {
             "python-cli-error-output-vs-python-error-handling",
-            "python-cli-testing-vs-python-testing-strategy",
-            "python-project-layout-vs-python-testing-strategy",
+            "python-cli-testing-vs-python-test-architecture",
+            "python-project-layout-vs-python-test-architecture",
         }
     }
     assert selected == {
@@ -102,7 +102,7 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
                 [],
             ),
         ],
-        "python-cli-testing-vs-python-testing-strategy": [
+        "python-cli-testing-vs-python-test-architecture": [
             (
                 "a-only",
                 "Create a comprehensive test matrix for command help, stdout, stderr, exit "
@@ -113,14 +113,14 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
                 "b-only",
                 "Redesign fixture scopes, coverage goals, markers, and the full Python project's "
                 "pull-request test selection.",
-                ["python-testing-strategy"],
+                ["python-test-architecture"],
             ),
             (
                 "both",
                 "Create the repository-wide Python test pyramid and CI selection policy, then "
                 "add a focused matrix for CLI help, streams, exit codes, stdin, and shell "
                 "invocation.",
-                ["python-cli-testing", "python-testing-strategy"],
+                ["python-cli-testing", "python-test-architecture"],
             ),
             (
                 "neither",
@@ -129,7 +129,7 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
                 [],
             ),
         ],
-        "python-project-layout-vs-python-testing-strategy": [
+        "python-project-layout-vs-python-test-architecture": [
             (
                 "a-only",
                 "Review this Python repository's src layout, package discovery, editable-install "
@@ -141,13 +141,13 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
                 "b-only",
                 "Create a risk-based unit, integration, and end-to-end test plan for this "
                 "existing Python package.",
-                ["python-testing-strategy"],
+                ["python-test-architecture"],
             ),
             (
                 "both",
                 "Move this Python project to an import-safe src layout and redesign unit, "
                 "integration, and package-install tests around the new boundaries.",
-                ["python-project-layout", "python-testing-strategy"],
+                ["python-project-layout", "python-test-architecture"],
             ),
             (
                 "neither",
@@ -215,7 +215,7 @@ def test_per_skill_eval_schema_rejects_legacy_overlap_relationship(tmp_path: Pat
         {
             "id": "legacy-overlap",
             "kind": "overlap",
-            "preferredSkill": "python-testing-strategy",
+            "preferredSkill": "python-test-architecture",
         }
     )
     data["routing"].append(legacy)
