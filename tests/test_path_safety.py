@@ -449,6 +449,7 @@ def test_validator_reports_canonical_symlink_without_disclosing_external_target(
     assert str(external) not in combined
 
 
+@pytest.mark.windows_slow_first(seconds=71)
 def test_draft_release_output_symlink_cannot_redirect_archive_writes(
     repo_copy: Path,
     tmp_path: Path,

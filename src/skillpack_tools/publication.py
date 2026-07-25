@@ -208,8 +208,14 @@ def _git_patch_and_paths(root: Path, candidates: list[str]) -> tuple[str, list[s
             git_index_path = root / git_index_path
         shutil.copyfile(git_index_path, index)
         environment = {**os.environ, "GIT_INDEX_FILE": str(index)}
-        if candidates:
-            pathspec = b"\0".join(path.encode("utf-8") for path in candidates) + b"\0"
+        tracked_bytes = subprocess.check_output(
+            _git_command("-C", str(root), "ls-files", "--cached", "-z"),
+            env=environment,
+        )
+        tracked = {item for item in tracked_bytes.split(b"\0") if item}
+        untracked_candidates = [path for path in candidates if path.encode("utf-8") not in tracked]
+        if untracked_candidates:
+            pathspec = b"\0".join(path.encode("utf-8") for path in untracked_candidates) + b"\0"
             subprocess.run(
                 _git_command(
                     "-C",

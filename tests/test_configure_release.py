@@ -85,6 +85,7 @@ def test_configure_replaces_every_identity_surface(configured_repo: Path) -> Non
     assert result.warnings == []
 
 
+@pytest.mark.windows_slow_first(seconds=79)
 def test_configured_pack_release_is_bounded_and_portable(configured_repo: Path) -> None:
     first, checksum, notes = build_release(configured_repo, "python-best-practices", draft=True)
     first_bytes = first.read_bytes()

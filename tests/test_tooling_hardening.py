@@ -238,6 +238,7 @@ def _write_evidence_bundle(
     )
 
 
+@pytest.mark.windows_slow_first(seconds=73)
 def test_generation_is_byte_safe_filtered_mode_aware_and_target_aware(
     repo_copy: Path,
 ) -> None:
@@ -809,6 +810,7 @@ def test_clean_git_draft_release_still_has_no_source_commit(repo_copy: Path) -> 
     assert "not available (draft rehearsal)" in notes.read_text(encoding="utf-8")
 
 
+@pytest.mark.windows_slow_first(seconds=109)
 def test_formal_release_rejects_release_candidate_placeholders(repo_copy: Path) -> None:
     _write_manifest(
         repo_copy,
@@ -959,6 +961,7 @@ def test_release_evidence_uses_current_schema_over_tag_schema(
         )
 
 
+@pytest.mark.windows_slow_first(seconds=118)
 def test_formal_release_accepts_external_complete_evidence_without_path_leak(
     repo_copy: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -34,6 +34,49 @@ _COPY_IGNORED_NAMES = {
 }
 
 
+def _windows_slow_first_seconds(item: pytest.Item) -> float | None:
+    marker = item.get_closest_marker("windows_slow_first")
+    if marker is None:
+        return None
+    seconds = marker.kwargs.get("seconds")
+    if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or seconds <= 0:
+        raise pytest.UsageError("windows_slow_first requires a positive numeric seconds estimate")
+    return float(seconds)
+
+
+def _prioritize_windows_slow_tests(items: list[pytest.Item], *, platform: str) -> None:
+    """Start measured Windows critical-path cases early without changing selection."""
+
+    if platform != "win32":
+        return
+
+    marked: list[tuple[float, pytest.Item]] = []
+    ordinary: list[pytest.Item] = []
+    for item in items:
+        seconds = _windows_slow_first_seconds(item)
+        if seconds is None:
+            ordinary.append(item)
+        else:
+            marked.append((seconds, item))
+    marked.sort(key=lambda entry: -entry[0])
+
+    # Xdist's load scheduler initially sends two consecutive items per worker,
+    # even with maxschedchunk=1. Pair each measured case with one ordinary case
+    # so every worker starts at most one expensive test. Both input groups remain
+    # stable, including marked cases with equal estimates.
+    prioritized: list[pytest.Item] = []
+    for index in range(max(len(marked), len(ordinary))):
+        if index < len(marked):
+            prioritized.append(marked[index][1])
+        if index < len(ordinary):
+            prioritized.append(ordinary[index])
+    items[:] = prioritized
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    _prioritize_windows_slow_tests(items, platform=sys.platform)
+
+
 @dataclass(frozen=True)
 class _ReusableRepository:
     root: Path

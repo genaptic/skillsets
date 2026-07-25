@@ -310,6 +310,7 @@ def test_temporary_tree_cleanup_removes_readonly_files(tmp_path: Path) -> None:
     assert not temporary.exists()
 
 
+@pytest.mark.windows_slow_first(seconds=246)
 def test_prepare_release_preview_digest_and_atomic_apply(
     monkeypatch: pytest.MonkeyPatch,
     candidate_repo_copy: Path,
