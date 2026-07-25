@@ -1,6 +1,6 @@
 ---
 name: python-project-layout
-description: 'Design or review Python repository and packaging layout, including pyproject.toml, src versus flat layout, package discovery, tests, data files, typing markers, and entry points. Use when imports, builds, editable installs, or publication structure are in question. Do not use for test-case architecture or CLI user-interface design.
+description: 'Design or review Python repository and packaging layout, including pyproject.toml, src versus flat layout, package discovery, tests, data files, typing markers, and entry points. Use when imports, builds, editable installs, or publication structure are in question. Use alongside python-testing-strategy when a layout or import-boundary change also requires redesigning unit, integration, or package-install tests. Both skills are required for that combined layout-and-test-architecture work. Do not use for test-case architecture that leaves package layout unchanged or for CLI user-interface design.
 
   '
 license: Apache-2.0
@@ -26,6 +26,8 @@ and are never installed or run implicitly.
 - Imports behave differently in the checkout, editable install, wheel, or test environment.
 - Legacy packaging files need consolidation into an authoritative `pyproject.toml`.
 - Package discovery, data files, type markers, namespace packages, or entry points may be wrong.
+- A layout or import-boundary change also requires unit, integration, or package-install tests
+  to be redesigned; also use `python-testing-strategy`.
 
 ## Do not use this skill when
 
@@ -72,7 +74,12 @@ Never describe a proposed or unexecuted check as successful.
 
 6. **Place tests and resources intentionally.** Keep undistributed tests outside the package, avoid unexplained path injection, declare package data, use package-resource APIs, and include typing markers only when valid.
 
-7. **Plan a small migration.** Separate moves from behavior changes, update discovery and imports in stages, preserve a version-control rollback, and remove obsolete packaging files only after equivalent artifacts pass.
+7. **Plan an ordered, rollback-friendly implementation.** Always number the implementation
+   stages. For a migration, separate moves from behavior changes, update discovery and imports
+   incrementally, name the last known-good rollback point, and remove obsolete packaging files
+   only after equivalent artifacts pass. For a new project, order metadata, package tree, tests,
+   resources, typing marker, and clean-build verification so each stage can be reviewed and
+   reverted independently.
 
 8. **Verify the artifact rather than the checkout alone.** Build source and wheel artifacts with the repository's approved toolchain, inspect contents, install in a clean environment, import from outside the checkout, and exercise tests and entry points.
 
@@ -96,7 +103,8 @@ Return:
 - Context, names, constraints, and labeled assumptions.
 - Observed tree/configuration findings ordered by consequence.
 - Target layout and packaging configuration with rationale.
-- Staged migration sequence and rollback point.
+- A numbered implementation sequence with an explicit rollback point; include it for both new
+  projects and migrations.
 - Commands proposed or executed, with environment boundaries.
 - Verification evidence, skipped checks, and remaining risks.
 

@@ -1,6 +1,6 @@
 ---
 name: python-error-handling
-description: 'Design or review Python exception taxonomy, catch and translation boundaries, causal chaining, cleanup, logging ownership, warnings, and bounded retries for libraries and application internals. Use when callers need a stable failure contract or broad catches hide causes. Do not use for CLI stderr and exit-code design or HTTP error response schemas.
+description: 'Design or review Python exception taxonomy, catch and translation boundaries, causal chaining, cleanup, logging ownership, warnings, and bounded retries for libraries and application internals. Use when callers need a stable failure contract or broad catches hide causes. Use alongside python-cli-error-output when internal exception policy must also map to a CLI process contract. Both skills are required when internal exception taxonomy or translation boundaries must map to CLI diagnostics, streams, traceback policy, or exit statuses. Do not use for exclusively CLI-facing stderr and exit-code design or HTTP error response schemas.
 
   '
 license: Apache-2.0
@@ -26,10 +26,13 @@ cancellation and exception-group semantics for the target runtime.
 - Broad catches, silent failures, duplicate logging, or lost tracebacks need review.
 - Lower-level dependency errors need translation into domain contracts.
 - Cleanup, warnings, deprecations, cancellation, or retry behavior is unclear.
+- Internal exception taxonomy or translation boundaries must also map to CLI messages, streams,
+  and exit statuses; also use `python-cli-error-output`.
 
 ## Do not use this skill when
 
-- The outcome is user-facing CLI messages, stdout/stderr, debug mode, and exit status; use `python-cli-error-output`.
+- The outcome is exclusively user-facing CLI messages, stdout/stderr, debug mode, and exit status
+  without internal exception-taxonomy or translation work; use `python-cli-error-output`.
 - The outcome is an HTTP, RPC, or message-protocol error schema.
 - The task is merely to add one test without changing the error contract.
 

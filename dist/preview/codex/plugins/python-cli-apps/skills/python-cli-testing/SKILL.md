@@ -1,7 +1,7 @@
 ---
 name: python-cli-testing
 description: >
-  Design or implement Python CLI tests across in-process runners and real subprocesses, covering installed entry points, parsing, exit status, stdout/stderr, stdin, configuration, filesystem isolation, TTY behavior, machine output, signals, pipes, shell quoting, mutation, and cross-platform CI. Use when designing or changing tests for a command interface. Use alongside python-testing-strategy when the request also requires repository-wide test layers or CI selection. Do not use merely to execute or report an already-defined smoke or health command without changing test design or test code, for repository-wide test strategy without a CLI-specific test deliverable, or for choosing the failure contract itself.
+  Design or implement Python CLI tests across in-process runners and real subprocesses, covering installed entry points, parsing, exit status, stdout/stderr, stdin, configuration, filesystem isolation, TTY behavior, machine output, signals, pipes, shell quoting, mutation, and cross-platform CI. Use when designing or changing tests for a command interface. Use alongside python-testing-strategy when the request also requires repository-wide test layers or CI selection. Both skills are required when that repository-wide strategy also needs a focused CLI behavior matrix. Do not use merely to execute or report an already-defined smoke or health command without changing test design or test code, for repository-wide test strategy without a CLI-specific test deliverable, or for choosing the failure contract itself.
 license: Apache-2.0
 metadata:
   skillpack: "python-cli-apps"

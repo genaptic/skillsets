@@ -116,6 +116,8 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
         for skill in (
             "python-cli-error-output",
             "python-cli-testing",
+            "python-error-handling",
+            "python-project-layout",
             "python-testing-strategy",
         )
     }
@@ -123,30 +125,64 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     error_output = descriptions["python-cli-error-output"]
     assert "alongside python-error-handling" in error_output
     assert "also requires internal exception taxonomy or translation boundaries" in error_output
+    assert "Both skills are required" in error_output
+    assert "CLI diagnostics, streams, traceback policy, or exit statuses" in error_output
     assert "exclusively internal exception work without a CLI process mapping" in error_output
 
     cli_testing = descriptions["python-cli-testing"]
     assert "alongside python-testing-strategy" in cli_testing
     assert "also requires repository-wide test layers or CI selection" in cli_testing
+    assert "Both skills are required" in cli_testing
+    assert "focused CLI behavior matrix" in cli_testing
     assert "merely to execute or report an already-defined smoke or health command" in cli_testing
     assert "without a CLI-specific test deliverable" in cli_testing
+
+    error_handling = descriptions["python-error-handling"]
+    assert "alongside python-cli-error-output" in error_handling
+    assert "Both skills are required" in error_handling
+    assert "CLI diagnostics, streams, traceback policy, or exit statuses" in error_handling
+    assert "exclusively CLI-facing stderr and exit-code design" in error_handling
+
+    error_handling_body = next(
+        path for path in SKILL_FILES if path.parent.name == "python-error-handling"
+    ).read_text(encoding="utf-8")
+    assert "exclusively user-facing CLI messages" in error_handling_body
+    assert "without internal exception-taxonomy or translation work" in error_handling_body
+
+    project_layout = descriptions["python-project-layout"]
+    assert "alongside python-testing-strategy" in project_layout
+    assert "Both skills are required" in project_layout
+    assert "combined layout-and-test-architecture work" in project_layout
+    assert "test-case architecture that leaves package layout unchanged" in project_layout
 
     testing_strategy = descriptions["python-testing-strategy"]
     assert "alongside python-cli-testing" in testing_strategy
     assert "repository-wide strategy also needs a CLI-specific matrix" in testing_strategy
     assert "alongside python-project-layout" in testing_strategy
     assert "migration also requires redesigning" in testing_strategy
+    assert "Both skills in the applicable pair are required" in testing_strategy
     assert "layout changes that leave test architecture unchanged" in testing_strategy
 
     generated_roots = {
         "python-cli-error-output": "python-cli-apps",
         "python-cli-testing": "python-cli-apps",
+        "python-error-handling": "python-best-practices",
+        "python-project-layout": "python-best-practices",
         "python-testing-strategy": "python-best-practices",
     }
     for skill, pack in generated_roots.items():
         canonical = next(path for path in SKILL_FILES if path.parent.name == skill)
         generated = ROOT / "dist/dev/codex/plugins" / pack / "skills" / skill / "SKILL.md"
         assert generated.read_bytes() == canonical.read_bytes()
+
+    project_layout_body = next(
+        path for path in SKILL_FILES if path.parent.name == "python-project-layout"
+    ).read_text(encoding="utf-8")
+    assert "Plan an ordered, rollback-friendly implementation." in project_layout_body
+    assert "Always number the implementation" in project_layout_body
+    assert "last known-good rollback point" in project_layout_body
+    assert "For a new project, order metadata" in project_layout_body
+    assert "numbered implementation sequence with an explicit rollback point" in project_layout_body
 
 
 @pytest.mark.parametrize("flag", ["--statement-timeout", "--lock-timeout"])

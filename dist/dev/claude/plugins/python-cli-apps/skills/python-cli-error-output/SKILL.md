@@ -1,7 +1,7 @@
 ---
 name: python-cli-error-output
 description: >
-  Design or review failure behavior for Python command-line applications, including public failure classes, stderr/stdout policy, stable exit statuses, machine-readable errors, debug tracebacks, redaction, interrupts, broken pipes, and exception-to-process mapping. Use when implementing or auditing a CLI failure contract. Use alongside python-error-handling when the request also requires internal exception taxonomy or translation boundaries. Do not use for exclusively internal exception work without a CLI process mapping, or for command-tree design.
+  Design or review failure behavior for Python command-line applications, including public failure classes, stderr/stdout policy, stable exit statuses, machine-readable errors, debug tracebacks, redaction, interrupts, broken pipes, and exception-to-process mapping. Use when implementing or auditing a CLI failure contract. Use alongside python-error-handling when the request also requires internal exception taxonomy or translation boundaries. Both skills are required when those internal boundaries must map to CLI diagnostics, streams, traceback policy, or exit statuses. Do not use for exclusively internal exception work without a CLI process mapping, or for command-tree design.
 license: Apache-2.0
 metadata:
   skillpack: "python-cli-apps"
