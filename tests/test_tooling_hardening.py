@@ -271,7 +271,7 @@ def test_generation_is_byte_safe_filtered_mode_aware_and_target_aware(
     helper = (
         "dist/dev/opencode/python/best-practices/python-project-layout/scripts/inspect_layout.py"
     )
-    assert generated.modes[helper] == 0o755
+    assert generated.modes[helper] == 0o644
     assert (
         generated.modes[
             "dist/dev/opencode/python/best-practices/python-project-layout/assets/fixture-tool"
@@ -288,7 +288,7 @@ def test_generation_is_byte_safe_filtered_mode_aware_and_target_aware(
     apply_generated_files(repo_copy)
     assert (repo_copy / output).read_bytes() == binary.read_bytes()
     if os.name != "nt":
-        assert (repo_copy / helper).stat().st_mode & 0o777 == 0o755
+        assert (repo_copy / helper).stat().st_mode & 0o777 == 0o644
 
     stale_claude = pack.path / ".claude-plugin" / "plugin.json"
     stale_installer = repo_copy / "dist" / "dev" / "install" / f"{pack.id}.sh"

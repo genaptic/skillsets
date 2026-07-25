@@ -1,11 +1,11 @@
 ---
 name: python-testing-strategy
 description: >-
-  Design or review repository-wide Python test architecture: risk, levels, fixtures, determinism,
-  CI, coverage, and flakes. Use when creating or restructuring broad test strategy. For a focused
-  CLI matrix within it, use python-cli-testing too; for a layout/import migration that redesigns
-  test layers, fixtures, or CI, use python-project-layout too. Both skills in the applicable pair
-  are required. Do not use for one CLI command, a CLI-only matrix, or package/import layout alone.
+  Design repository-wide Python test architecture: risk, levels, fixtures, determinism, CI,
+  coverage, and flakes. Use when creating or restructuring broad strategy. A CLI-only matrix—even
+  comprehensive—uses python-cli-testing alone. A layout/import migration that redesigns tests also
+  uses python-project-layout. Use both only when the broader architecture explicitly includes the
+  neighboring work. Do not use for one CLI command or package/import layout alone.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -133,5 +133,6 @@ Distinguish **observed**, **inferred**, **proposed**, **executed**, and **verifi
 - [Primary sources](references/sources.md)
 - [test-strategy-template.md](assets/test-strategy-template.md)
 - [pytest-config.example.toml](assets/pytest-config.example.toml)
-- [inventory_tests.py](scripts/inventory_tests.py)
+- [inventory_tests.py](scripts/inventory_tests.py) — run with
+  `python scripts/inventory_tests.py --help`.
 - [Routing and behavior evals](evals/evals.json)

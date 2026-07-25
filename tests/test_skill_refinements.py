@@ -137,21 +137,22 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
             assert description.index(partner) < 350, (skill, partner)
 
     error_output = descriptions["python-cli-error-output"]
-    assert "When it also defines internal exception taxonomy or translation" in error_output
-    assert "use python-error-handling too; both skills are required" in error_output
-    assert "Do not use for internal exception work without" in error_output
+    assert "Do not use when the request excludes Python or CLI changes." in error_output
+    assert "only for explicit internal taxonomy or translation work" in error_output
+    assert "an exception merely causing CLI output keeps this skill alone" in error_output
+    assert "Do not use for internal exception work or command-tree design." in error_output
 
     cli_testing = descriptions["python-cli-testing"]
-    assert "For a focused CLI matrix in repository test" in cli_testing
-    assert "use python-testing-strategy too; both skills are required" in cli_testing
+    assert "A comprehensive CLI-only matrix uses this skill alone." in cli_testing
+    assert "only when explicitly combining it with repository-wide test architecture" in cli_testing
     assert "Do not use for broad strategy without a CLI deliverable" in cli_testing
-    assert "merely running an existing smoke command" in cli_testing
+    assert "or running an existing smoke command." in cli_testing
 
     error_handling = descriptions["python-error-handling"]
-    assert "Do not use for CLI process behavior alone" in error_handling
+    assert "even when exceptions occur—use python-cli-error-output alone" in error_handling
+    assert "Use both only when explicitly designing internal taxonomy" in error_handling
+    assert "Do not use for CLI-only process behavior" in error_handling
     assert "or HTTP, RPC, or message error schemas." in error_handling
-    assert "If taxonomy or translation maps to CLI diagnostics" in error_handling
-    assert "use python-cli-error-output too; both skills are required" in error_handling
 
     error_handling_body = next(
         path for path in SKILL_FILES if path.parent.name == "python-error-handling"
@@ -167,12 +168,12 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "use python-testing-strategy too; both skills are required" in project_layout
 
     testing_strategy = descriptions["python-testing-strategy"]
-    assert "For a focused CLI matrix within it" in testing_strategy
-    assert "use python-cli-testing too" in testing_strategy
-    assert "use python-project-layout too" in testing_strategy
-    assert "Both skills in the applicable pair are required." in testing_strategy
-    assert "Do not use for one CLI command, a CLI-only matrix" in testing_strategy
-    assert "or package/import layout alone." in testing_strategy
+    assert "A CLI-only matrix—even comprehensive—uses python-cli-testing alone." in testing_strategy
+    assert "A layout/import migration that redesigns tests also uses python-project-layout." in (
+        testing_strategy
+    )
+    assert "Use both only when the broader architecture explicitly includes" in testing_strategy
+    assert "Do not use for one CLI command or package/import layout alone." in testing_strategy
 
     generated_roots = {
         "python-cli-error-output": "python-cli-apps",

@@ -115,4 +115,4 @@ def test_configured_pack_release_is_bounded_and_portable(configured_repo: Path) 
             if info.filename.endswith("scripts/inspect_layout.py")
         )
         assert helper.create_system == 3
-        assert (helper.external_attr >> 16) & 0o777 == 0o755
+        assert (helper.external_attr >> 16) & 0o777 == 0o644

@@ -1,11 +1,12 @@
 ---
 name: python-cli-error-output
 description: >
-  Design or review a Python CLI failure process contract: stderr and stdout, exit status,
-  machine-readable errors, tracebacks, redaction, interrupts, broken pipes, and exception mapping.
-  Use when defining or auditing CLI-facing failures. When it also defines internal exception
-  taxonomy or translation, use python-error-handling too; both skills are required. Do not use for
-  internal exception work without a CLI mapping or for command-tree design.
+  Design Python CLI failure behavior: messages, debug display, streams, status codes, machine
+  errors, redaction, interrupts, broken pipes, and exception mapping. Use when defining CLI-facing
+  failures. Do not use when the request excludes Python or CLI changes. Add
+  python-error-handling only for explicit internal taxonomy or translation work; an exception
+  merely causing CLI output keeps this skill alone. Do not use for internal exception work or
+  command-tree design.
 license: Apache-2.0
 metadata:
   skillpack: "python-cli-apps"
