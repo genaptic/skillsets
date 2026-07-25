@@ -1,6 +1,6 @@
 ---
 name: python-testing-strategy
-description: 'Design or review a risk-based Python test suite, including unit, contract, integration, and end-to-end boundaries; fixtures; parametrization; determinism; markers; CI selection; coverage; and flake control. Use when creating or restructuring test architecture, including alongside python-cli-testing when a repository-wide strategy also needs a CLI-specific matrix or alongside python-project-layout when a package-layout or import-boundary migration also requires redesigning unit, integration, or package-install tests. Do not use for package layout changes that leave test architecture unchanged or for a CLI-only test matrix.
+description: 'Design or review a risk-based Python test suite, including unit, contract, integration, and end-to-end boundaries; fixtures; parametrization; determinism; markers; CI selection; coverage; and flake control. Use when creating or restructuring test architecture, including alongside python-cli-testing when a repository-wide strategy also needs a CLI-specific matrix or alongside python-project-layout when a package-layout or import-boundary migration also requires redesigning unit, integration, or package-install tests. Both skills in the applicable pair are required for either combined scope. Do not use for package layout changes that leave test architecture unchanged or for a CLI-only test matrix.
 
   '
 license: Apache-2.0
