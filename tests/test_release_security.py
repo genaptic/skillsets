@@ -4,6 +4,7 @@ import json
 import re
 import stat
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -206,8 +207,13 @@ def test_full_index_patch_includes_untracked_binary_without_mutating_index(
         check=True,
     )
     tracked = tmp_path / "tracked.txt"
+    deleted = tmp_path / "deleted.txt"
     tracked.write_text("before\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(tmp_path), "add", "tracked.txt"], check=True)
+    deleted.write_text("delete me\n", encoding="utf-8")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "tracked.txt", "deleted.txt"],
+        check=True,
+    )
     subprocess.run(["git", "-C", str(tmp_path), "commit", "-q", "-m", "fixture"], check=True)
     index_path = Path(
         subprocess.check_output(
@@ -218,16 +224,30 @@ def test_full_index_patch_includes_untracked_binary_without_mutating_index(
         index_path = tmp_path / index_path
     index_before = index_path.read_bytes()
     tracked.write_text("after\n", encoding="utf-8")
+    deleted.unlink()
     (tmp_path / "new.bin").write_bytes(b"\x00binary\xff")
 
-    patch, changed = publication._git_patch_and_paths(tmp_path, ["tracked.txt", "new.bin"])
-    assert changed == ["new.bin", "tracked.txt"]
+    patch, changed = publication._git_patch_and_paths(
+        tmp_path,
+        ["tracked.txt", "deleted.txt", "new.bin"],
+    )
+    assert changed == ["deleted.txt", "new.bin", "tracked.txt"]
+    assert "diff --git a/deleted.txt b/deleted.txt" in patch
+    assert "deleted file mode 100644" in patch
     assert "diff --git a/new.bin b/new.bin" in patch
     assert "GIT binary patch" in patch
     assert "diff --git a/tracked.txt b/tracked.txt" in patch
     assert index_path.read_bytes() == index_before
 
 
+@pytest.mark.windows_release_integration
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason=(
+        "exact-base publication preview/apply is platform-neutral and exhaustive on POSIX; "
+        "Windows retains publication rollback, interrupt, reconciliation, and schema contracts"
+    ),
+)
 def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
     generated_repo_copy: Path,
 ) -> None:
@@ -243,9 +263,50 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
         for skill in pack.skills:
             skill_file = pack.path / "skills" / skill / "SKILL.md"
             text = skill_file.read_text(encoding="utf-8")
-            text = re.sub(r'(?m)^  version: "[^"]+"$', f'  version: "{version}"', text)
-            text = re.sub(r'(?m)^  maturity: "[^"]+"$', f'  maturity: "{maturity}"', text)
+            text, version_changes = re.subn(
+                r"(?m)^  version: .+$",
+                f'  version: "{version}"',
+                text,
+                count=1,
+            )
+            text, maturity_changes = re.subn(
+                r"(?m)^  maturity: .+$",
+                f'  maturity: "{maturity}"',
+                text,
+                count=1,
+            )
+            assert version_changes == maturity_changes == 1
             skill_file.write_bytes(text.encode("utf-8"))
+
+    # Establish an explicit candidate baseline before freezing the released source.
+    # The repository itself may already contain either side of this transition.
+    set_lifecycle("1.0.0", "release-candidate")
+    apply_generated_files(repository)
+    subprocess.run(
+        ["git", "-c", "core.longpaths=true", "-C", str(repository), "add", "-A"],
+        check=True,
+    )
+    candidate_change = subprocess.run(
+        ["git", "-C", str(repository), "diff", "--cached", "--quiet"],
+        check=False,
+    )
+    assert candidate_change.returncode in {0, 1}
+    if candidate_change.returncode == 1:
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.longpaths=true",
+                "-C",
+                str(repository),
+                "commit",
+                "-q",
+                "--no-gpg-sign",
+                "-m",
+                "candidate baseline",
+            ],
+            check=True,
+        )
 
     set_lifecycle("1.0.0", "stable")
     apply_generated_files(repository)
@@ -253,6 +314,11 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
         ["git", "-c", "core.longpaths=true", "-C", str(repository), "add", "-A"],
         check=True,
     )
+    released_change = subprocess.run(
+        ["git", "-C", str(repository), "diff", "--cached", "--quiet"],
+        check=False,
+    )
+    assert released_change.returncode == 1, "stable transition must change the released source"
     subprocess.run(
         [
             "git",
@@ -271,6 +337,55 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
     source_sha = subprocess.check_output(
         ["git", "-C", str(repository), "rev-parse", "HEAD"], text=True
     ).strip()
+    config = load_repository(repository)
+
+    # The first release publishes the prepared stable source directly, which moves its
+    # generated tree from preview to public. Preserve an explicit snapshot so the historical
+    # newer-candidate scenario below starts from the same released commit.
+    direct_record = {
+        "schemaVersion": 1,
+        "repository": config.slug,
+        "packId": "python-best-practices",
+        "version": "1.0.0",
+        "releaseId": 122,
+        "tag": "python-best-practices-v1.0.0",
+        "url": f"{config.web_url}/releases/tag/python-best-practices-v1.0.0",
+        "sourceSha": source_sha,
+        "baseCommit": source_sha,
+        "publishedAt": "2026-07-19T12:34:55Z",
+        "immutable": True,
+        "draft": False,
+        "prerelease": False,
+    }
+    direct_plan = prepare_publication_update(repository, direct_record)
+    preview_prefix = "dist/preview/claude/plugins/python-best-practices/"
+    assert any(
+        item["path"].startswith(preview_prefix) and item["afterSha256"] is None
+        for item in direct_plan["changedFiles"]
+    )
+    direct_snapshot = publication._snapshot_changed_files(
+        repository,
+        direct_plan["changedFiles"],
+    )
+    with pytest.MonkeyPatch.context() as context:
+        context.setattr(publication, "_plan_payload", lambda *_args, **_kwargs: direct_plan)
+        direct_applied = prepare_publication_update(
+            repository,
+            direct_record,
+            apply=True,
+            plan_digest=direct_plan["planDigest"],
+        )
+    assert direct_applied == direct_plan
+    assert not (repository / preview_prefix).exists()
+    assert (repository / "dist/public/opencode/python/best-practices/index.json").is_file()
+    publication._rollback_changed_files(repository, direct_snapshot)
+    assert (
+        subprocess.check_output(
+            ["git", "-C", str(repository), "status", "--porcelain"],
+            text=True,
+        )
+        == ""
+    )
 
     set_lifecycle("1.1.0", "release-candidate")
     apply_generated_files(repository)
@@ -296,7 +411,6 @@ def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
     base_commit = subprocess.check_output(
         ["git", "-C", str(repository), "rev-parse", "HEAD"], text=True
     ).strip()
-    config = load_repository(repository)
     record = {
         "schemaVersion": 1,
         "repository": config.slug,
@@ -520,6 +634,7 @@ def test_publication_apply_rolls_back_process_interrupts(
     assert not created.parent.exists()
 
 
+@pytest.mark.windows_release_integration
 def test_publication_reconciliation_reports_both_drift_directions() -> None:
     pack = get_pack(ROOT, "python-best-practices")
     release = {
@@ -604,6 +719,7 @@ def test_publication_reconciliation_accepts_exact_published_history(
     assert report == {"schemaVersion": 1, "ok": True, "drift": []}
 
 
+@pytest.mark.windows_release_integration
 def test_reconciliation_preserves_published_history_while_candidate_advances(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

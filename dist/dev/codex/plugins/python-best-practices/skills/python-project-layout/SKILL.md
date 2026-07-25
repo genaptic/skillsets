@@ -1,14 +1,14 @@
 ---
 name: python-project-layout
-description: >
-  Design or review Python repository and packaging layout, including pyproject.toml, src versus flat layout, package discovery, tests, data files, typing markers, and entry points. Use when imports, builds, editable installs, or publication structure are in question. Do not use for test-case architecture or CLI user-interface design.
+description: 'Design or review Python repository and packaging layout, including pyproject.toml, src versus flat layout, package discovery, tests, data files, typing markers, and entry points. Use when imports, builds, editable installs, or publication structure are in question. Do not use for test-case architecture or CLI user-interface design.
+
+  '
 license: Apache-2.0
 metadata:
-  skillpack: "python-best-practices"
-  version: "1.0.0"
-  maturity: "release-candidate"
+  skillpack: python-best-practices
+  version: 1.0.0
+  maturity: stable
 ---
-
 # Outcome
 
 Produce a concrete, reviewable result for the workflow below without overstating what was

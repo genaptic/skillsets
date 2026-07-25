@@ -1,14 +1,14 @@
 ---
 name: python-error-handling
-description: >
-  Design or review Python exception taxonomy, catch and translation boundaries, causal chaining, cleanup, logging ownership, warnings, and bounded retries for libraries and application internals. Use when callers need a stable failure contract or broad catches hide causes. Do not use for CLI stderr and exit-code design or HTTP error response schemas.
+description: 'Design or review Python exception taxonomy, catch and translation boundaries, causal chaining, cleanup, logging ownership, warnings, and bounded retries for libraries and application internals. Use when callers need a stable failure contract or broad catches hide causes. Do not use for CLI stderr and exit-code design or HTTP error response schemas.
+
+  '
 license: Apache-2.0
 metadata:
-  skillpack: "python-best-practices"
-  version: "1.0.0"
-  maturity: "release-candidate"
+  skillpack: python-best-practices
+  version: 1.0.0
+  maturity: stable
 ---
-
 # Outcome
 
 Produce a concrete, reviewable result for the workflow below without overstating what was

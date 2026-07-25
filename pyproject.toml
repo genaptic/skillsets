@@ -42,6 +42,7 @@ filterwarnings = [
 ]
 markers = [
   "rust_repository_contract: canonical Rust pack and native-Cargo contracts owned by the selected Rust release gate",
+  "windows_release_integration: repository-scale lifecycle, release, recovery, publication, archive, or generated-distribution integration exercised in the dedicated Windows release shard",
 ]
 
 [tool.coverage.run]

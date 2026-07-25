@@ -61,6 +61,24 @@ def make_repo(target: Path) -> Path:
     pack_target = target / "packs/python/best-practices"
     pack_target.parent.mkdir(parents=True)
     shutil.copytree(ROOT / "packs/python/best-practices", pack_target)
+    manifest = pack_target / "skillpack.yaml"
+    manifest_text, replacements = re.subn(
+        r"(?m)^maturity: (?:draft|release-candidate|stable|deprecated)$",
+        "maturity: release-candidate",
+        manifest.read_text(encoding="utf-8"),
+        count=1,
+    )
+    assert replacements == 1
+    manifest.write_text(manifest_text, encoding="utf-8")
+    for skill in (pack_target / "skills").glob("*/SKILL.md"):
+        skill_text, replacements = re.subn(
+            r"(?m)^  maturity: (?:draft|release-candidate|stable|deprecated)$",
+            "  maturity: release-candidate",
+            skill.read_text(encoding="utf-8"),
+            count=1,
+        )
+        assert replacements == 1
+        skill.write_text(skill_text, encoding="utf-8")
     return target
 
 

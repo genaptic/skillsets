@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -525,6 +525,17 @@ def reusable_generated_repository(
     """Create one isolated checkout per pytest worker."""
 
     fixture_root = tmp_path_factory.mktemp(f"r-{worker_id}")
+    return _create_reusable_repository(generated_repository_template, fixture_root)
+
+
+def _create_reusable_repository(
+    template: Path,
+    fixture_root: Path,
+    *,
+    prepare: Callable[[Path, dict[str, str]], object] | None = None,
+) -> _ReusableRepository:
+    """Clone, optionally prepare, and seal one reusable worker checkout."""
+
     root = fixture_root / "w"
     empty_hooks = fixture_root / "h"
     empty_hooks.mkdir()
@@ -538,20 +549,18 @@ def reusable_generated_repository(
             "-q",
             "--shared",
             "--",
-            str(generated_repository_template),
+            str(template),
             str(root),
         ],
         check=True,
         env=environment,
     )
     _configure_fixture_repository(root, empty_hooks, environment)
-    base_sha = subprocess.run(
-        ["git", "-c", "core.longpaths=true", "-C", str(root), "rev-parse", "HEAD"],
-        check=True,
-        capture_output=True,
-        text=True,
-        env=environment,
-    ).stdout.strip()
+    if prepare is not None:
+        prepare(root, environment)
+    base_sha, status = _repository_head_and_status(root, environment)
+    if status:
+        raise AssertionError("reusable repository preparation left a dirty checkout:\n" + status)
     subprocess.run(
         [
             "git",

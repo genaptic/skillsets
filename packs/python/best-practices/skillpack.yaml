@@ -5,7 +5,7 @@ description: Reusable workflows for structuring, testing, and handling failures 
 language: python
 subject: best-practices
 version: 1.0.0
-maturity: release-candidate
+maturity: stable
 distribution:
   visibility: public
 publication:

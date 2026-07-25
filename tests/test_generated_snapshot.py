@@ -128,6 +128,7 @@ def test_snapshot_cannot_cross_repository_boundaries(
         )
 
 
+@pytest.mark.windows_release_integration
 def test_reconciliation_and_validation_build_generated_files_once(
     generated_repo_copy: Path,
     bound_snapshot: generate.GeneratedFiles,

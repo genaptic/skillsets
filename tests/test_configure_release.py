@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from skillpack_tools.configure import configure_repository
-from skillpack_tools.models import discover_packs, load_repository
+from skillpack_tools.models import discover_packs, get_pack, load_repository
 from skillpack_tools.release import build_release
 from skillpack_tools.validate import validate_repository
 
@@ -85,6 +85,7 @@ def test_configure_replaces_every_identity_surface(configured_repo: Path) -> Non
     assert result.warnings == []
 
 
+@pytest.mark.windows_release_integration
 def test_configured_pack_release_is_bounded_and_portable(configured_repo: Path) -> None:
     first, checksum, notes = build_release(configured_repo, "python-best-practices", draft=True)
     first_bytes = first.read_bytes()
@@ -93,7 +94,13 @@ def test_configured_pack_release_is_bounded_and_portable(configured_repo: Path) 
     notes_text = notes.read_text(encoding="utf-8")
     assert "python-best-practices-v1.0.0" in notes_text
     assert notes_text.count("# Changelog") == 1
-    assert notes_text.count("Prepared the `1.0.0` release-candidate contents") == 1
+    pack_changelog = (
+        get_pack(configured_repo, "python-best-practices")
+        .path.joinpath("CHANGELOG.md")
+        .read_text(encoding="utf-8")
+        .strip()
+    )
+    assert notes_text.count(pack_changelog) == 1
 
     with zipfile.ZipFile(first) as archive:
         names = archive.namelist()

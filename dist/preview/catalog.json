@@ -48,7 +48,7 @@
       "publication": {
         "state": "unpublished",
         "visibility": "public",
-        "maturity": "release-candidate",
+        "maturity": "stable",
         "sourceType": "repo-local"
       }
     },

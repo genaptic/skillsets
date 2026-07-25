@@ -37,7 +37,6 @@ jobs:
         os:
           - ubuntu-24.04
           - macos-15
-          - windows-2025
     steps:
       - name: Check out source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -65,21 +64,6 @@ jobs:
         run: >-
           python -m pytest tests/test_repository_fixture.py --no-cov -n 3
           --dist=loadscope --max-worker-restart=0
-      - name: Exercise the documented Windows bootstrap path
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-structural-pycache
-        run: ./scripts/bootstrap.ps1
-      - name: Exercise the documented Windows full-check path
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-structural-pycache
-          PYTEST_ADDOPTS: >-
-            --no-cov -n 3 --dist=load --maxschedchunk=1 --max-worker-restart=0
-            --durations=25 --durations-min=1
-        run: ./scripts/check.ps1
       - name: Run cross-platform filesystem safety fixtures
         if: runner.os != 'Windows'
         shell: python
@@ -125,14 +109,6 @@ jobs:
           for script in dist/dev/install/*.sh; do
             /bin/bash "$script" --dry-run
           done
-      - name: Dry-run Windows PowerShell installers
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          $scripts = Get-ChildItem dist/dev/install/*.ps1
-          if (-not $scripts) { throw "No PowerShell installers found" }
-          $scripts | ForEach-Object { & $_.FullName -DryRun }
       - name: Record the structural-only evidence boundary
         shell: python
         run: |
@@ -148,3 +124,130 @@ jobs:
               "native-evidence workflow are required for releases.\n",
               encoding="utf-8",
           )
+
+  windows-core:
+    name: Windows structural contracts
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Exercise the documented Windows bootstrap path
+        shell: pwsh
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-structural-pycache
+        run: ./scripts/bootstrap.ps1
+      - name: Exercise the documented Windows core-check path
+        shell: pwsh
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-structural-pycache
+          PYTEST_ADDOPTS: >-
+            --no-cov -n 4 --dist=load --maxschedchunk=1 --max-worker-restart=0
+            --durations=50 --durations-min=1
+            -m "not windows_release_integration"
+        run: ./scripts/check.ps1
+      - name: Run canonical pack discovery fixtures
+        shell: python
+        run: |
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          smoke_tests = sorted(Path("packs").glob("*/*/tests/compatibility/smoke.py"))
+          if not smoke_tests:
+              raise SystemExit("no compatibility smoke tests found")
+          for test in smoke_tests:
+              print(f"==> {test}")
+              subprocess.run([sys.executable, str(test)], check=True)
+      - name: Dry-run Windows PowerShell installers
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $scripts = Get-ChildItem dist/dev/install/*.ps1
+          if (-not $scripts) { throw "No PowerShell installers found" }
+          $scripts | ForEach-Object { & $_.FullName -DryRun }
+      - name: Record the structural-only evidence boundary
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+
+          summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          summary.write_text(
+              "# Structural compatibility only\n\n"
+              "Generated adapters and installer dry runs passed on Windows.\n\n"
+              "This job does not install a native client, invoke a model, use credentials, "
+              "or establish a client compatibility claim. Dated reports from the protected "
+              "native-evidence workflow are required for releases.\n",
+              encoding="utf-8",
+          )
+
+  windows-release-integration:
+    name: Windows release integration contracts
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Exercise the documented Windows bootstrap path
+        shell: pwsh
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-release-pycache
+        run: ./scripts/bootstrap.ps1
+      - name: Run Windows release integration contracts
+        shell: pwsh
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/genaptic-release-pycache
+        run: >-
+          ./.venv/Scripts/python.exe -m pytest --no-cov -n 4
+          --dist=loadgroup --max-worker-restart=0
+          --durations=50 --durations-min=1
+          -m "windows_release_integration"
+
+  windows:
+    name: adapters and installers (windows-2025)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    if: ${{ always() }}
+    needs:
+      - windows-core
+      - windows-release-integration
+    env:
+      WINDOWS_CORE_RESULT: ${{ needs.windows-core.result }}
+      WINDOWS_RELEASE_INTEGRATION_RESULT: ${{ needs.windows-release-integration.result }}
+    steps:
+      - name: Require both Windows shards to succeed
+        shell: python
+        run: |
+          import os
+
+          results = {
+              "windows-core": os.environ.get("WINDOWS_CORE_RESULT", ""),
+              "windows-release-integration": os.environ.get(
+                  "WINDOWS_RELEASE_INTEGRATION_RESULT", ""
+              ),
+          }
+          rejected = {
+              job: result for job, result in results.items() if result != "success"
+          }
+          if rejected:
+              raise SystemExit(f"Windows validation did not succeed: {rejected}")
