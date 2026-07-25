@@ -1,12 +1,12 @@
 ---
 name: python-error-handling
 description: >-
-  Design internal Python exception policy: taxonomy, translation, causal chaining, cleanup,
-  logging, warnings, and retries. Use when callers need a stable internal failure contract. For
-  CLI messages, debug display, streams, or exit status—even when exceptions occur—use
-  python-cli-error-output alone. Use both only when explicitly designing internal taxonomy or
-  translation and its CLI mapping. Do not use for CLI-only process behavior or HTTP, RPC, or
-  message error schemas.
+  Design internal Python exception policy: taxonomy, translation, chaining, cleanup, logging,
+  warnings, and retries. Use when callers need a stable internal failure contract. For CLI
+  messages, streams, or exit status—even when exceptions occur—use python-cli-error-output alone.
+  Use both only when explicitly designing internal taxonomy or translation plus its CLI mapping.
+  Do not use for CLI stream/status-only work or HTTP, RPC, or message error schemas; never load
+  this skill for either scope.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
@@ -62,6 +62,8 @@ risk.
 - Do not add broad retries or catch interpreter control flow as ordinary failure handling.
 - Do not suppress a cause or cleanup failure merely to make output shorter.
 - The optional auditor reports heuristics and cannot determine whether a broad catch is justified.
+- Never invent helper or tool flags. Inspect the exact `--help` output and checked-in configuration
+  first; otherwise label the command as pseudocode.
 
 Use the sequence **inspect → explain → propose → approve when required → apply → verify**.
 Never describe a proposed or unexecuted check as successful.
