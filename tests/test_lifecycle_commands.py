@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +15,8 @@ import pytest
 import yaml
 from conftest import (
     _create_reusable_repository,
+    _exclusive_file_lock,
+    _require_ready_generated_template,
     _restore_reusable_repository,
     _ReusableRepository,
 )
@@ -33,16 +37,28 @@ ROOT = Path(__file__).resolve().parents[1]
 GIT = ("git", "-c", "core.longpaths=true")
 
 
-def _make_release_candidate(root: Path) -> Path:
+def _normalize_candidate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Return the lifecycle state required by the synthetic candidate fixture."""
+
+    publication = manifest.get("publication")
+    if not isinstance(publication, dict):
+        raise AssertionError("candidate fixture source has invalid publication metadata")
+    manifest["maturity"] = "release-candidate"
+    publication["state"] = "unpublished"
+    publication.pop("latest-release", None)
+    return manifest
+
+
+def _make_release_candidate(root: Path, environment: dict[str, str]) -> Path:
     pack = get_pack(root, "python-best-practices")
-    if pack.maturity == "release-candidate":
+    if pack.maturity == "release-candidate" and pack.publication_state == "unpublished":
         return root
-    assert pack.maturity == "stable"
-    assert pack.publication_state == "unpublished"
+    assert pack.maturity in {"stable", "release-candidate"}
+    assert pack.visibility == "public"
 
     manifest_path = pack.path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    manifest["maturity"] = "release-candidate"
+    manifest = _normalize_candidate_manifest(manifest)
     manifest_path.write_bytes(yaml.safe_dump(manifest, sort_keys=False, width=1000).encode("utf-8"))
     for relative, content in lifecycle_commands._skill_updates(
         pack,
@@ -69,7 +85,11 @@ def _make_release_candidate(root: Path) -> Path:
         ).encode()
     )
     apply_generated_files(root)
-    subprocess.run([*GIT, "-C", str(root), "add", "-A"], check=True)
+    subprocess.run(
+        [*GIT, "-C", str(root), "add", "-A"],
+        check=True,
+        env=environment,
+    )
     subprocess.run(
         [
             *GIT,
@@ -82,32 +102,98 @@ def _make_release_candidate(root: Path) -> Path:
             "release-candidate fixture",
         ],
         check=True,
+        env=environment,
     )
     assert get_pack(root, "python-best-practices").maturity == "release-candidate"
-    assert _status(root) == ""
+    assert (
+        subprocess.run(
+            [*GIT, "-C", str(root), "status", "--porcelain=v1", "--untracked-files=all"],
+            check=True,
+            capture_output=True,
+            text=True,
+            env=environment,
+        ).stdout
+        == ""
+    )
     return root
 
 
 @pytest.fixture(scope="session")
-def candidate_reusable_repository(
+def candidate_repository_template(
     tmp_path_factory: pytest.TempPathFactory,
     generated_repository_template: Path,
     worker_id: str,
-) -> _ReusableRepository:
-    fixture_root = tmp_path_factory.mktemp(f"candidate-{worker_id}")
-    repository = _create_reusable_repository(
-        generated_repository_template,
-        fixture_root,
-        prepare=_make_release_candidate,
-    )
-    pack = get_pack(repository.root, "python-best-practices")
+) -> Path:
+    """Materialize one immutable release-candidate template across all workers."""
+
+    if worker_id == "master":
+        fixture_root = tmp_path_factory.mktemp("candidate-template")
+        return _materialize_shared_candidate_template(
+            fixture_root,
+            generated_repository_template,
+        )
+
+    shared_root = tmp_path_factory.getbasetemp().parent
+    fixture_root = shared_root / "candidate-shared"
+    with _exclusive_file_lock(shared_root / "candidate-shared.lock"):
+        return _materialize_shared_candidate_template(
+            fixture_root,
+            generated_repository_template,
+        )
+
+
+def _require_ready_candidate_template(fixture_root: Path) -> Path:
+    root = _require_ready_generated_template(fixture_root)
+    pack = get_pack(root, "python-best-practices")
+    if pack.maturity != "release-candidate" or pack.publication_state != "unpublished":
+        raise AssertionError("shared candidate template has the wrong lifecycle state")
     canonical_text = [
         pack.path / "skillpack.yaml",
         pack.path / "CHANGELOG.md",
         *(pack.path / "skills" / skill / "SKILL.md" for skill in pack.skills),
     ]
-    assert all(b"\r\n" not in path.read_bytes() for path in canonical_text)
-    return repository
+    if any(b"\r\n" in path.read_bytes() for path in canonical_text):
+        raise AssertionError("shared candidate template contains non-canonical line endings")
+    return root
+
+
+def _materialize_shared_candidate_template(
+    fixture_root: Path,
+    generated_repository_template: Path,
+) -> Path:
+    """Build the candidate once, publish readiness last, and clean partial state."""
+
+    ready = fixture_root / ".ready"
+    if ready.is_file():
+        return _require_ready_candidate_template(fixture_root)
+    if fixture_root.exists():
+        shutil.rmtree(fixture_root)
+    fixture_root.mkdir(parents=True)
+    try:
+        repository = _create_reusable_repository(
+            generated_repository_template,
+            fixture_root,
+            prepare=_make_release_candidate,
+        )
+        temporary_ready = fixture_root / ".ready.tmp"
+        temporary_ready.write_bytes((repository.base_sha + "\n").encode("ascii"))
+        os.replace(temporary_ready, ready)
+    except BaseException:
+        shutil.rmtree(fixture_root, ignore_errors=True)
+        raise
+    return _require_ready_candidate_template(fixture_root)
+
+
+@pytest.fixture(scope="session")
+def candidate_reusable_repository(
+    tmp_path_factory: pytest.TempPathFactory,
+    candidate_repository_template: Path,
+    worker_id: str,
+) -> _ReusableRepository:
+    """Create one restorable candidate checkout per pytest worker."""
+
+    fixture_root = tmp_path_factory.mktemp(f"candidate-worker-{worker_id}")
+    return _create_reusable_repository(candidate_repository_template, fixture_root)
 
 
 @pytest.fixture
@@ -160,6 +246,105 @@ def _transaction_failure_plan(
         "generatedOutputs": [{"path": relative} for relative in generated_paths],
         "changedFiles": [{"path": relative} for relative in generated_paths],
     }
+
+
+def test_candidate_manifest_normalizes_published_stable_source() -> None:
+    manifest = yaml.safe_load(
+        (ROOT / "packs/python/best-practices/skillpack.yaml").read_text(encoding="utf-8")
+    )
+    manifest["maturity"] = "stable"
+    manifest["publication"] = {
+        "state": "published",
+        "latest-release": {
+            "version": "1.0.0",
+            "source-sha": "a" * 40,
+            "release-id": 123456,
+            "released-at": "2026-07-24T18:30:00Z",
+        },
+    }
+    expected_version = manifest["version"]
+    expected_visibility = manifest["distribution"]
+
+    normalized = _normalize_candidate_manifest(manifest)
+
+    assert normalized["version"] == expected_version
+    assert normalized["distribution"] == expected_visibility
+    assert normalized["maturity"] == "release-candidate"
+    assert normalized["publication"] == {"state": "unpublished"}
+
+
+def test_candidate_template_ready_marker_prevents_rebuild(
+    candidate_repository_template: Path,
+    generated_repository_template: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture_root = candidate_repository_template.parent
+
+    def unexpected_rebuild(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("ready candidate template was rebuilt")
+
+    monkeypatch.setattr(
+        sys.modules[__name__],
+        "_create_reusable_repository",
+        unexpected_rebuild,
+    )
+
+    assert (
+        _materialize_shared_candidate_template(
+            fixture_root,
+            generated_repository_template,
+        )
+        == candidate_repository_template
+    )
+
+
+def test_candidate_worker_checkout_restores_without_mutating_shared_template(
+    candidate_repository_template: Path,
+    candidate_reusable_repository: _ReusableRepository,
+) -> None:
+    template_manifest = candidate_repository_template / "packs/python/best-practices/skillpack.yaml"
+    worker_manifest = (
+        candidate_reusable_repository.root / "packs/python/best-practices/skillpack.yaml"
+    )
+    expected = template_manifest.read_bytes()
+    assert worker_manifest.read_bytes() == expected
+    assert candidate_reusable_repository.root != candidate_repository_template
+
+    worker_manifest.write_bytes(b"contaminated worker checkout\n")
+    _restore_reusable_repository(candidate_reusable_repository)
+
+    assert worker_manifest.read_bytes() == expected
+    assert template_manifest.read_bytes() == expected
+
+
+def test_candidate_template_interrupt_cleans_partial_state(
+    generated_repository_template: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture_root = tmp_path / "candidate-template"
+
+    def interrupt_setup(
+        _template: Path,
+        target: Path,
+        **_kwargs: object,
+    ) -> None:
+        (target / "partial-state").write_bytes(b"incomplete\n")
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(
+        sys.modules[__name__],
+        "_create_reusable_repository",
+        interrupt_setup,
+    )
+
+    with pytest.raises(KeyboardInterrupt):
+        _materialize_shared_candidate_template(
+            fixture_root,
+            generated_repository_template,
+        )
+
+    assert not fixture_root.exists()
 
 
 def test_preview_uses_exact_shared_head_and_preserves_bytes(

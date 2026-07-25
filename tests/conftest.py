@@ -575,7 +575,7 @@ def _create_reusable_repository(
     template: Path,
     fixture_root: Path,
     *,
-    prepare: Callable[[Path], object] | None = None,
+    prepare: Callable[[Path, dict[str, str]], object] | None = None,
 ) -> _ReusableRepository:
     """Clone, optionally prepare, and seal one reusable worker checkout."""
 
@@ -600,7 +600,7 @@ def _create_reusable_repository(
     )
     _configure_fixture_repository(root, empty_hooks, environment)
     if prepare is not None:
-        prepare(root)
+        prepare(root, environment)
     base_sha, status = _repository_head_and_status(root, environment)
     if status:
         raise AssertionError("reusable repository preparation left a dirty checkout:\n" + status)
