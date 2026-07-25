@@ -89,7 +89,7 @@ def _prepare_repository(root: Path, *, stable_packs: tuple[str, ...] = ()) -> Pa
                 skill_text,
             )
             assert replacements == 1
-            skill_path.write_text(skill_text, encoding="utf-8")
+            skill_path.write_bytes(skill_text.encode("utf-8"))
     if stable_packs:
         subprocess.run(
             ["git", "-c", "core.longpaths=true", "-C", str(root), "add", "packs"],
@@ -293,6 +293,7 @@ def test_published_old_release_survives_new_candidate_and_withdrawal(
     root = _prepare_repository(generated_repo_copy, stable_packs=("python-best-practices",))
     skill_path = root / "packs/python/best-practices/skills/python-project-layout/SKILL.md"
     released_skill = skill_path.read_bytes()
+    assert b"\r\n" not in released_skill
     skill_path.write_bytes(released_skill + b"\nCandidate-only guidance.\n")
     _set_lifecycle(
         root,

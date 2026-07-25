@@ -11,6 +11,11 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import (
+    _create_reusable_repository,
+    _restore_reusable_repository,
+    _ReusableRepository,
+)
 
 import skillpack_tools.lifecycle_commands as lifecycle_commands
 from skillpack_tools.generate import apply_generated_files
@@ -38,17 +43,14 @@ def _make_release_candidate(root: Path) -> Path:
     manifest_path = pack.path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     manifest["maturity"] = "release-candidate"
-    manifest_path.write_text(
-        yaml.safe_dump(manifest, sort_keys=False, width=1000),
-        encoding="utf-8",
-    )
+    manifest_path.write_bytes(yaml.safe_dump(manifest, sort_keys=False, width=1000).encode("utf-8"))
     for relative, content in lifecycle_commands._skill_updates(
         pack,
         version=pack.version,
         maturity="release-candidate",
     ).items():
-        (root / relative).write_text(content, encoding="utf-8")
-    (pack.path / "CHANGELOG.md").write_text(
+        (root / relative).write_bytes(content.encode("utf-8"))
+    (pack.path / "CHANGELOG.md").write_bytes(
         (
             "# Changelog\n\n"
             "## [Unreleased]\n\n"
@@ -64,8 +66,7 @@ def _make_release_candidate(root: Path) -> Path:
             "wording. The protected release gate runs only after that frozen commit "
             "passes evidence.\n"
             "<!-- END RELEASE PREPARATION NOTE -->\n"
-        ),
-        encoding="utf-8",
+        ).encode()
     )
     apply_generated_files(root)
     subprocess.run([*GIT, "-C", str(root), "add", "-A"], check=True)
@@ -87,9 +88,34 @@ def _make_release_candidate(root: Path) -> Path:
     return root
 
 
+@pytest.fixture(scope="session")
+def candidate_reusable_repository(
+    tmp_path_factory: pytest.TempPathFactory,
+    generated_repository_template: Path,
+    worker_id: str,
+) -> _ReusableRepository:
+    fixture_root = tmp_path_factory.mktemp(f"candidate-{worker_id}")
+    repository = _create_reusable_repository(
+        generated_repository_template,
+        fixture_root,
+        prepare=_make_release_candidate,
+    )
+    pack = get_pack(repository.root, "python-best-practices")
+    canonical_text = [
+        pack.path / "skillpack.yaml",
+        pack.path / "CHANGELOG.md",
+        *(pack.path / "skills" / skill / "SKILL.md" for skill in pack.skills),
+    ]
+    assert all(b"\r\n" not in path.read_bytes() for path in canonical_text)
+    return repository
+
+
 @pytest.fixture
-def candidate_repo_copy(generated_repo_copy: Path) -> Path:
-    return _make_release_candidate(generated_repo_copy)
+def candidate_repo_copy(
+    candidate_reusable_repository: _ReusableRepository,
+) -> Path:
+    _restore_reusable_repository(candidate_reusable_repository)
+    return candidate_reusable_repository.root
 
 
 @pytest.fixture
@@ -286,10 +312,10 @@ def test_temporary_tree_cleanup_removes_readonly_files(tmp_path: Path) -> None:
 
 def test_prepare_release_preview_digest_and_atomic_apply(
     monkeypatch: pytest.MonkeyPatch,
-    generated_repo_copy: Path,
+    candidate_repo_copy: Path,
     prepared_release_plan: dict[str, Any],
 ) -> None:
-    root = generated_repo_copy
+    root = candidate_repo_copy
     release_date = dt.date.today().isoformat()
 
     plan = prepared_release_plan
