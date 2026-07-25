@@ -4,7 +4,6 @@ import datetime as dt
 import json
 import os
 import re
-import shutil
 import stat
 import subprocess
 import sys
@@ -346,7 +345,7 @@ def _materialize_shared_candidate_template(
                 source_root=source_root,
             )
         except Exception:
-            shutil.rmtree(fixture_root, ignore_errors=True)
+            lifecycle_commands._remove_temporary_tree(fixture_root)
 
     fixture_root.mkdir(parents=True)
     source_head = _template_head(source_root)
@@ -376,7 +375,8 @@ def _materialize_shared_candidate_template(
         )
         _write_candidate_readiness(ready, readiness)
     except BaseException:
-        shutil.rmtree(fixture_root, ignore_errors=True)
+        if fixture_root.exists():
+            lifecycle_commands._remove_temporary_tree(fixture_root)
         raise
     return _require_ready_candidate_template(
         fixture_root,
