@@ -1,12 +1,10 @@
 ---
 name: python-error-handling
 description: >-
-  Design internal Python exception policy: taxonomy, translation, chaining, cleanup, logging,
-  warnings, and retries. Use when callers need a stable internal failure contract. For CLI
-  messages, streams, or exit status—even when exceptions occur—use python-cli-error-output alone.
-  Use both only when explicitly designing internal taxonomy or translation plus its CLI mapping.
-  Do not use for CLI stream/status-only work or HTTP, RPC, or message error schemas; never load
-  this skill for either scope.
+  Use when—and only when—the request explicitly asks for internal exception taxonomy, translation
+  boundaries, chaining, propagation, cleanup ownership, exception logging/warnings, or retry
+  policy. Do not use unless at least one listed internal exception or recovery-policy outcome is an
+  explicit deliverable.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

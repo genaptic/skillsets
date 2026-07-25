@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_PACKS = {
     "python-best-practices": [
         "python-project-layout",
-        "python-testing-strategy",
+        "python-test-architecture",
         "python-error-handling",
     ],
     "python-cli-apps": [

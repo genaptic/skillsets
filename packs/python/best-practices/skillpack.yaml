@@ -18,8 +18,8 @@ interface:
   starter-prompts:
   - skill: python-project-layout
     prompt: Use $python-project-layout to review this repository and recommend a maintainable Python layout.
-  - skill: python-testing-strategy
-    prompt: Use $python-testing-strategy to design a risk-based test strategy for this Python project.
+  - skill: python-test-architecture
+    prompt: Use $python-test-architecture to design a risk-based test strategy for this Python project.
   - skill: python-error-handling
     prompt: Use $python-error-handling to review this exception design and propose a safe failure contract.
 license: Apache-2.0
@@ -27,7 +27,7 @@ maintainers:
 - github: jecsand838
 skills:
 - python-project-layout
-- python-testing-strategy
+- python-test-architecture
 - python-error-handling
 targets:
 - claude-code

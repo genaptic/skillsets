@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "skills": [
     "python-project-layout",
-    "python-testing-strategy",
+    "python-test-architecture",
     "python-error-handling"
   ]
 }

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "skill": "python-testing-strategy",
+  "skill": "python-test-architecture",
   "routing": [
     {
       "id": "explicit-positive",
       "kind": "explicit-positive",
-      "prompt": "Use python-testing-strategy to design the test architecture for this Python library before we rewrite the suite.",
+      "prompt": "Use python-test-architecture to design the test architecture for this Python library before we rewrite the suite.",
       "shouldTrigger": true,
       "reason": "The skill and outcome are explicitly requested."
     },

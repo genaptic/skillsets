@@ -119,16 +119,16 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
             "python-cli-testing",
             "python-error-handling",
             "python-project-layout",
-            "python-testing-strategy",
+            "python-test-architecture",
         )
     }
     assert all(len(description) <= 500 for description in descriptions.values())
     required_prefix_terms = {
         "python-cli-error-output": ("python-error-handling",),
-        "python-cli-testing": ("python-testing-strategy",),
-        "python-error-handling": ("python-cli-error-output",),
-        "python-project-layout": ("python-testing-strategy",),
-        "python-testing-strategy": ("python-cli-testing", "python-project-layout"),
+        "python-cli-testing": ("python-test-architecture",),
+        "python-error-handling": (),
+        "python-project-layout": (),
+        "python-test-architecture": (),
     }
     for skill, partners in required_prefix_terms.items():
         description = descriptions[skill]
@@ -139,6 +139,15 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
         assert min(description.index(marker) for marker in exclusion_markers) < 400, skill
         for partner in partners:
             assert description.index(partner) < 350, (skill, partner)
+
+    for skill in (
+        "python-error-handling",
+        "python-project-layout",
+        "python-test-architecture",
+    ):
+        assert all(
+            neighbor not in descriptions[skill] for neighbor in descriptions if neighbor != skill
+        )
 
     error_output = descriptions["python-cli-error-output"]
     assert "Do not use when the request excludes Python or CLI changes." in error_output
@@ -153,10 +162,25 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "or running an existing smoke command." in cli_testing
 
     error_handling = descriptions["python-error-handling"]
-    assert "even when exceptions occur—use python-cli-error-output alone" in error_handling
-    assert "Use both only when explicitly designing internal taxonomy" in error_handling
-    assert "Do not use for CLI stream/status-only work" in error_handling
-    assert "HTTP, RPC, or message error schemas; never load" in error_handling
+    assert error_handling.startswith(
+        "Use when—and only when—the request explicitly asks for internal exception taxonomy, "
+        "translation boundaries, chaining, propagation, cleanup ownership, exception "
+        "logging/warnings, or retry policy."
+    )
+    assert "Do not use unless at least one listed internal exception or recovery-policy" in (
+        error_handling
+    )
+    assert all(
+        phrase not in error_handling.lower()
+        for phrase in (
+            "cli",
+            "streams",
+            "exit status",
+            "http",
+            "rpc",
+            "message error",
+        )
+    )
 
     error_handling_body = next(
         path for path in SKILL_FILES if path.parent.name == "python-error-handling"
@@ -165,21 +189,46 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "without internal exception-taxonomy or translation work" in error_handling_body
 
     project_layout = descriptions["python-project-layout"]
-    assert "Do not use for test architecture alone" in project_layout
-    assert "test path causing import contamination remains layout-only" in project_layout
-    assert "Never use for CLI commands, flags, help, or configuration-only work." in project_layout
-    assert "If a layout/import migration also redesigns" in project_layout
-    assert "use python-testing-strategy too; both skills are required" in project_layout
-
-    testing_strategy = descriptions["python-testing-strategy"]
-    assert "A CLI-only matrix—even comprehensive—uses python-cli-testing alone." in testing_strategy
-    assert "A layout/import migration that redesigns tests also uses python-project-layout." in (
-        testing_strategy
+    assert project_layout.startswith(
+        "Use when—and only when—the request explicitly asks for package layout, import isolation, "
+        "package discovery, namespace-package boundaries, distribution build metadata, packaged "
+        "resources/typing metadata, or wheel/sdist contents."
     )
-    assert "Use both only when the broader architecture explicitly includes" in testing_strategy
-    assert "Do not use for package/import layout alone." in testing_strategy
-    assert "Never use for one CLI command or a subprocess stream or exit-code contract." in (
-        testing_strategy
+    assert "Do not use unless at least one listed packaging, import, or artifact outcome" in (
+        project_layout
+    )
+    assert all(
+        phrase not in project_layout.lower()
+        for phrase in (
+            "cli interface",
+            "subcommands",
+            "global options",
+            "flags",
+            "help text",
+            "configuration precedence",
+        )
+    )
+
+    testing_strategy = descriptions["python-test-architecture"]
+    assert testing_strategy.startswith(
+        "Use when—and only when—the request explicitly asks for repository-wide test strategy, "
+        "multi-level test architecture, suite-wide fixture ownership, global determinism, "
+        "coverage policy, flake elimination, CI selection, or runtime budgets."
+    )
+    assert (
+        "Do not use unless at least one listed repository-wide or multi-layer outcome"
+        in testing_strategy
+    )
+    assert all(
+        phrase not in testing_strategy.lower()
+        for phrase in (
+            "one cli command",
+            "subprocess",
+            "stdout",
+            "stderr",
+            "stream",
+            "exit-code",
+        )
     )
 
     generated_roots = {
@@ -187,7 +236,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
         "python-cli-testing": "python-cli-apps",
         "python-error-handling": "python-best-practices",
         "python-project-layout": "python-best-practices",
-        "python-testing-strategy": "python-best-practices",
+        "python-test-architecture": "python-best-practices",
     }
     for skill, pack in generated_roots.items():
         canonical = next(path for path in SKILL_FILES if path.parent.name == skill)
@@ -207,7 +256,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "unavailable identity explicitly" in project_layout_body
 
     testing_strategy_body = next(
-        path for path in SKILL_FILES if path.parent.name == "python-testing-strategy"
+        path for path in SKILL_FILES if path.parent.name == "python-test-architecture"
     ).read_text(encoding="utf-8")
     assert "Always name a bounded fast pull-request subset." in testing_strategy_body
     assert "risk-critical unit, contract, and integration checks" in testing_strategy_body
@@ -225,25 +274,27 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             "negative-cli-command-tree",
             "Design subcommands, global options, help text, and configuration precedence for our "
             "Python executable.",
-            "Never use for CLI commands, flags, help, or configuration-only work.",
+            "Use when—and only when—the request explicitly asks for package layout, import "
+            "isolation, package discovery,",
         ),
-        "python-testing-strategy": (
+        "python-test-architecture": (
             "negative-single-cli-contract",
             "Write subprocess assertions for one CLI command's stderr and exit code contract.",
-            "Never use for one CLI command or a subprocess stream or exit-code contract.",
+            "Use when—and only when—the request explicitly asks for repository-wide test strategy,",
         ),
         "python-error-handling": (
             "negative-cli-stderr",
             "Map command failures to stable exit codes and ensure human diagnostics go to stderr "
             "while JSON remains on stdout.",
-            "Do not use for CLI stream/status-only work",
+            "Use when—and only when—the request explicitly asks for internal exception taxonomy,",
         ),
     }
 
-    for skill, (case_id, prompt, exclusion) in expectations.items():
+    for skill, (case_id, prompt, opening) in expectations.items():
         skill_path = next(path for path in SKILL_FILES if path.parent.name == skill)
         frontmatter, _body = parse_skill(skill_path)
-        assert exclusion in str(frontmatter["description"])
+        description = str(frontmatter["description"])
+        assert description.startswith(opening)
 
         evals = json.loads((skill_path.parent / "evals/evals.json").read_text(encoding="utf-8"))
         case = next(item for item in evals["routing"] if item["id"] == case_id)
@@ -261,7 +312,9 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
         "service."
     )
     error_description = str(parse_skill(error_path)[0]["description"])
-    assert "HTTP, RPC, or message error schemas; never load" in error_description
+    assert all(
+        phrase not in error_description.lower() for phrase in ("http", "rpc", "message error")
+    )
 
 
 def test_python_release_guidance_rejects_unverified_commands() -> None:
@@ -270,7 +323,7 @@ def test_python_release_guidance_rejects_unverified_commands() -> None:
         for skill in (
             "python-error-handling",
             "python-project-layout",
-            "python-testing-strategy",
+            "python-test-architecture",
         )
     }
     assert all("Never invent helper or tool flags." in body for body in bodies.values())
@@ -284,7 +337,7 @@ def test_python_release_guidance_rejects_unverified_commands() -> None:
     )
     assert (
         "unsupported helper flags or an unverified plugin invocation"
-        in bodies["python-testing-strategy"]
+        in bodies["python-test-architecture"]
     )
 
 

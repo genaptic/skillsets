@@ -30,7 +30,7 @@
     "websiteURL": "https://github.com/genaptic/skillsets/tree/main/packs/python/best-practices",
     "defaultPrompt": [
       "Use $python-project-layout to review this repository and recommend a maintainable Python layout.",
-      "Use $python-testing-strategy to design a risk-based test strategy for this Python project.",
+      "Use $python-test-architecture to design a risk-based test strategy for this Python project.",
       "Use $python-error-handling to review this exception design and propose a safe failure contract."
     ]
   }

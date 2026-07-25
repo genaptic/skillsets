@@ -35,7 +35,7 @@
       "kind": "negative",
       "prompt": "Create a repository-wide risk map for unit, contract, database integration, and service end-to-end tests.",
       "shouldTrigger": false,
-      "reason": "General test strategy is owned by python-testing-strategy."
+      "reason": "General test strategy is owned by python-test-architecture."
     },
     {
       "id": "negative-error-policy",
