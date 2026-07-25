@@ -1,6 +1,6 @@
 ---
 name: python-testing-strategy
-description: 'Design or review a risk-based Python test suite, including unit, contract, integration, and end-to-end boundaries; fixtures; parametrization; determinism; markers; CI selection; coverage; and flake control. Use when creating or restructuring test architecture. Do not use for package layout changes or a CLI-only test matrix.
+description: 'Design or review a risk-based Python test suite, including unit, contract, integration, and end-to-end boundaries; fixtures; parametrization; determinism; markers; CI selection; coverage; and flake control. Use when creating or restructuring test architecture, including alongside python-cli-testing when a repository-wide strategy also needs a CLI-specific matrix or alongside python-project-layout when a package-layout or import-boundary migration also requires redesigning unit, integration, or package-install tests. Do not use for package layout changes that leave test architecture unchanged or for a CLI-only test matrix.
 
   '
 license: Apache-2.0
@@ -23,14 +23,20 @@ execution remains the repository's responsibility.
 ## Use this skill when
 
 - A Python project needs a new or substantially revised test strategy.
+- A repository-wide strategy also needs a focused CLI test matrix; also use
+  `python-cli-testing`.
+- A package-layout or import-boundary migration also requires unit, integration, or
+  package-install tests to be redesigned; also use `python-project-layout`.
 - Tests are slow, flaky, order-dependent, over-mocked, or poorly mapped to risk.
 - Fixture scope, test data, markers, parameterization, or CI selection needs review.
 - The team needs to choose unit, contract, integration, and end-to-end boundaries.
 
 ## Do not use this skill when
 
-- The task is package discovery, `src/` layout, or build artifacts; use `python-project-layout`.
-- The task is specifically command-line stdout, stderr, exit codes, or shell invocation; use `python-cli-testing`.
+- The task is package discovery, `src/` layout, or build artifacts without test-architecture
+  changes; use `python-project-layout`.
+- The task is only command-line stdout, stderr, exit codes, or shell invocation; use
+  `python-cli-testing`.
 - The request is to diagnose a single application exception rather than the test architecture.
 
 ## Inputs

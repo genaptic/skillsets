@@ -106,6 +106,49 @@ def test_every_skill_has_minimal_openai_interface_metadata() -> None:
         assert f"${skill_name}" in interface["default_prompt"], openai_path
 
 
+def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_work() -> None:
+    descriptions = {
+        skill: str(
+            parse_skill(next(path for path in SKILL_FILES if path.parent.name == skill))[0][
+                "description"
+            ]
+        )
+        for skill in (
+            "python-cli-error-output",
+            "python-cli-testing",
+            "python-testing-strategy",
+        )
+    }
+
+    error_output = descriptions["python-cli-error-output"]
+    assert "alongside python-error-handling" in error_output
+    assert "also requires internal exception taxonomy or translation boundaries" in error_output
+    assert "exclusively internal exception work without a CLI process mapping" in error_output
+
+    cli_testing = descriptions["python-cli-testing"]
+    assert "alongside python-testing-strategy" in cli_testing
+    assert "also requires repository-wide test layers or CI selection" in cli_testing
+    assert "merely to execute or report an already-defined smoke or health command" in cli_testing
+    assert "without a CLI-specific test deliverable" in cli_testing
+
+    testing_strategy = descriptions["python-testing-strategy"]
+    assert "alongside python-cli-testing" in testing_strategy
+    assert "repository-wide strategy also needs a CLI-specific matrix" in testing_strategy
+    assert "alongside python-project-layout" in testing_strategy
+    assert "migration also requires redesigning" in testing_strategy
+    assert "layout changes that leave test architecture unchanged" in testing_strategy
+
+    generated_roots = {
+        "python-cli-error-output": "python-cli-apps",
+        "python-cli-testing": "python-cli-apps",
+        "python-testing-strategy": "python-best-practices",
+    }
+    for skill, pack in generated_roots.items():
+        canonical = next(path for path in SKILL_FILES if path.parent.name == skill)
+        generated = ROOT / "dist/dev/codex/plugins" / pack / "skills" / skill / "SKILL.md"
+        assert generated.read_bytes() == canonical.read_bytes()
+
+
 @pytest.mark.parametrize("flag", ["--statement-timeout", "--lock-timeout"])
 @pytest.mark.parametrize("value", ["500ms", "5s", "2min", "1h"])
 def test_review_query_renderer_accepts_bounded_timeouts(flag: str, value: str) -> None:
