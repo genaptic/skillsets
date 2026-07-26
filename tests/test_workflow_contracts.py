@@ -769,8 +769,17 @@ def test_release_gate_aggregate_is_fail_closed(
     assert aggregate["if"] == "${{ always() }}"
     assert aggregate["needs"] == ["source", "rust-assets"]
     assert build["needs"] == ["source", "release-gates"]
+    assert build["if"] == (
+        "${{ always() && needs.source.result == 'success' "
+        "&& needs.release-gates.result == 'success' }}"
+    )
     assert build["steps"][1]["with"]["ref"] == "${{ needs.source.outputs.source_sha }}"
     assert publication["needs"] == ["source", "release-gates", "release-build"]
+    assert publication["if"] == (
+        "${{ always() && needs.source.result == 'success' "
+        "&& needs.release-gates.result == 'success' "
+        "&& needs.release-build.result == 'success' }}"
+    )
     assert publication["steps"][1]["with"]["ref"] == "${{ github.sha }}"
 
     script = aggregate["steps"][0]["run"]

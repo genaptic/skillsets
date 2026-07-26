@@ -328,6 +328,7 @@ jobs:
     needs:
       - source
       - release-gates
+    if: ${{ always() && needs.source.result == 'success' && needs.release-gates.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     outputs:
@@ -756,6 +757,7 @@ jobs:
       - source
       - release-gates
       - release-build
+    if: ${{ always() && needs.source.result == 'success' && needs.release-gates.result == 'success' && needs.release-build.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     environment: release
