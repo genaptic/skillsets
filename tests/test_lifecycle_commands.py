@@ -1343,9 +1343,9 @@ def test_prepare_release_rolls_back_process_interrupts(
 )
 def test_begin_development_rollback_removes_new_generated_directories(
     monkeypatch: pytest.MonkeyPatch,
-    generated_repo_copy: Path,
+    generated_repo_without_compatibility_reports: Path,
 ) -> None:
-    root = generated_repo_copy
+    root = generated_repo_without_compatibility_reports
     pack = get_pack(root, "python-best-practices")
     manifest_path = pack.path / "skillpack.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))

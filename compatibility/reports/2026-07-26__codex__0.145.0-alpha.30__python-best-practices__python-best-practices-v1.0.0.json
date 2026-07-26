@@ -1,0 +1,448 @@
+{
+  "cases": {
+    "behavior": [
+      {
+        "id": "focused-layout-review",
+        "notes": "Human review passed every behavior assertion: the response separated repository, distribution, and import identities; identified root-module shadowing and checkout-path contamination; supplied rollback-friendly artifact verification; and made no destructive or unverified claim.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "end-to-end-new-library",
+        "notes": "Human review passed every behavior assertion: the response covered source, tests, metadata, entry points, resources, and typing data; labeled backend assumptions; ordered rollback and clean artifact verification; and avoided dependency and path shortcuts.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "focused-flaky-suite",
+        "notes": "Human review passed every behavior assertion: the response separately diagnosed shared database state, uncontrolled time, and retry concealment; narrowed fixtures, injected time, required first-failure evidence, retained bounded CI tiers, and did not delete or retry away tests.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "end-to-end-service-strategy",
+        "notes": "Human review passed every behavior assertion: the response mapped pricing, PostgreSQL, local HTTP, and journey tests to narrow levels with explicit cleanup, determinism, CI budgets, and gaps; it did not mock the behavior under test or treat coverage as proof.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "focused-translation-review",
+        "notes": "Human review passed every behavior assertion: the response supplied a stable actionable not-found type with causal chaining, one application-owned logging boundary, and safe context, without catching BaseException or discarding causes.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      },
+      {
+        "id": "end-to-end-error-policy",
+        "notes": "Human review passed every behavior assertion: the response supplied a complete taxonomy, translation, cleanup, logging, and bounded idempotent retry policy; preserved cancellation and unexpected tracebacks; and avoided arbitrary retries and unsafe logging.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      }
+    ],
+    "boundaries": [
+      {
+        "boundaryId": "python-cli-error-output-vs-python-domain-exception-policy",
+        "boundarySkills": [
+          "python-cli-error-output",
+          "python-domain-exception-policy"
+        ],
+        "caseId": "python-cli-error-output-vs-python-domain-exception-policy-a-only",
+        "expectedSkills": [
+          "python-cli-error-output"
+        ],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-cli-error-output\"], observed=[\"python-cli-error-output\"].",
+        "observedSkills": [
+          "python-cli-error-output"
+        ],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-cli-error-output-vs-python-domain-exception-policy",
+        "boundarySkills": [
+          "python-cli-error-output",
+          "python-domain-exception-policy"
+        ],
+        "caseId": "python-cli-error-output-vs-python-domain-exception-policy-b-only",
+        "expectedSkills": [
+          "python-domain-exception-policy"
+        ],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-domain-exception-policy\"], observed=[\"python-domain-exception-policy\"].",
+        "observedSkills": [
+          "python-domain-exception-policy"
+        ],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-cli-error-output-vs-python-domain-exception-policy",
+        "boundarySkills": [
+          "python-cli-error-output",
+          "python-domain-exception-policy"
+        ],
+        "caseId": "python-cli-error-output-vs-python-domain-exception-policy-both",
+        "expectedSkills": [
+          "python-cli-error-output",
+          "python-domain-exception-policy"
+        ],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-cli-error-output\",\"python-domain-exception-policy\"], observed=[\"python-cli-error-output\",\"python-domain-exception-policy\"].",
+        "observedSkills": [
+          "python-cli-error-output",
+          "python-domain-exception-policy"
+        ],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-cli-error-output-vs-python-domain-exception-policy",
+        "boundarySkills": [
+          "python-cli-error-output",
+          "python-domain-exception-policy"
+        ],
+        "caseId": "python-cli-error-output-vs-python-domain-exception-policy-neither",
+        "expectedSkills": [],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[], observed=[].",
+        "observedSkills": [],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-cli-testing-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-cli-testing",
+          "python-test-architecture"
+        ],
+        "caseId": "python-cli-testing-vs-python-test-architecture-a-only",
+        "expectedSkills": [
+          "python-cli-testing"
+        ],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-cli-testing\"], observed=[\"python-cli-testing\"].",
+        "observedSkills": [
+          "python-cli-testing"
+        ],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-cli-testing-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-cli-testing",
+          "python-test-architecture"
+        ],
+        "caseId": "python-cli-testing-vs-python-test-architecture-b-only",
+        "expectedSkills": [
+          "python-test-architecture"
+        ],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-test-architecture\"], observed=[\"python-test-architecture\"].",
+        "observedSkills": [
+          "python-test-architecture"
+        ],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-cli-testing-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-cli-testing",
+          "python-test-architecture"
+        ],
+        "caseId": "python-cli-testing-vs-python-test-architecture-both",
+        "expectedSkills": [
+          "python-cli-testing",
+          "python-test-architecture"
+        ],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-cli-testing\",\"python-test-architecture\"], observed=[\"python-cli-testing\",\"python-test-architecture\"].",
+        "observedSkills": [
+          "python-cli-testing",
+          "python-test-architecture"
+        ],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-cli-testing-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-cli-testing",
+          "python-test-architecture"
+        ],
+        "caseId": "python-cli-testing-vs-python-test-architecture-neither",
+        "expectedSkills": [],
+        "installedPacks": [
+          "python-best-practices",
+          "python-cli-apps"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[], observed=[].",
+        "observedSkills": [],
+        "passed": true,
+        "scope": "cross-pack"
+      },
+      {
+        "boundaryId": "python-project-layout-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-project-layout",
+          "python-test-architecture"
+        ],
+        "caseId": "python-project-layout-vs-python-test-architecture-a-only",
+        "expectedSkills": [
+          "python-project-layout"
+        ],
+        "installedPacks": [
+          "python-best-practices"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-project-layout\"], observed=[\"python-project-layout\"].",
+        "observedSkills": [
+          "python-project-layout"
+        ],
+        "passed": true,
+        "scope": "internal-pack"
+      },
+      {
+        "boundaryId": "python-project-layout-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-project-layout",
+          "python-test-architecture"
+        ],
+        "caseId": "python-project-layout-vs-python-test-architecture-b-only",
+        "expectedSkills": [
+          "python-test-architecture"
+        ],
+        "installedPacks": [
+          "python-best-practices"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-test-architecture\"], observed=[\"python-test-architecture\"].",
+        "observedSkills": [
+          "python-test-architecture"
+        ],
+        "passed": true,
+        "scope": "internal-pack"
+      },
+      {
+        "boundaryId": "python-project-layout-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-project-layout",
+          "python-test-architecture"
+        ],
+        "caseId": "python-project-layout-vs-python-test-architecture-both",
+        "expectedSkills": [
+          "python-project-layout",
+          "python-test-architecture"
+        ],
+        "installedPacks": [
+          "python-best-practices"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[\"python-project-layout\",\"python-test-architecture\"], observed=[\"python-project-layout\",\"python-test-architecture\"].",
+        "observedSkills": [
+          "python-project-layout",
+          "python-test-architecture"
+        ],
+        "passed": true,
+        "scope": "internal-pack"
+      },
+      {
+        "boundaryId": "python-project-layout-vs-python-test-architecture",
+        "boundarySkills": [
+          "python-project-layout",
+          "python-test-architecture"
+        ],
+        "caseId": "python-project-layout-vs-python-test-architecture-neither",
+        "expectedSkills": [],
+        "installedPacks": [
+          "python-best-practices"
+        ],
+        "notes": "Human review passed: the pair-isolated boundary selected the exact canonical skill set and stayed within scope; expected=[], observed=[].",
+        "observedSkills": [],
+        "passed": true,
+        "scope": "internal-pack"
+      }
+    ],
+    "routing": [
+      {
+        "id": "explicit-positive",
+        "notes": "Human review passed: the explicit project-layout request selected only python-project-layout and stayed layout-scoped.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "implicit-positive-import-shadowing",
+        "notes": "Human review passed: the checkout versus distribution import mismatch selected only python-project-layout and distinguished observed facts from proposed work.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "implicit-positive-modernize-packaging",
+        "notes": "Human review passed: the packaging-modernization request selected only python-project-layout and stayed packaging-scoped.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "contextual-positive-tree",
+        "notes": "Human review passed: python-project-layout requested the missing repository inputs and performed no access outside the fixture.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "negative-test-fixtures",
+        "notes": "Human review passed under the canonical negative-owner contract: python-project-layout stayed absent and the appropriate installed python-test-architecture neighbor was selected.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "negative-cli-command-tree",
+        "notes": "Human review passed: the command-tree request selected only python-cli-command-design in the pair-isolated fixture.",
+        "passed": true,
+        "skill": "python-project-layout"
+      },
+      {
+        "id": "explicit-positive",
+        "notes": "Human review passed: the explicit test-architecture request selected only python-test-architecture.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "implicit-positive-risk-map",
+        "notes": "Human review passed: the risk-to-test-level request selected only python-test-architecture.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "implicit-positive-fixtures",
+        "notes": "Human review passed: the fixture-architecture request selected only python-test-architecture.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "contextual-positive-ci",
+        "notes": "Human review passed: the CI test-strategy request selected only python-test-architecture.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "negative-package-layout",
+        "notes": "Human review passed under the canonical negative-owner contract: python-test-architecture stayed absent and the appropriate installed python-project-layout neighbor was selected.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "negative-single-cli-contract",
+        "notes": "Human review passed: the focused CLI subprocess contract selected only python-cli-testing in the pair-isolated fixture.",
+        "passed": true,
+        "skill": "python-test-architecture"
+      },
+      {
+        "id": "explicit-positive",
+        "notes": "Human review passed: the explicit domain-exception request selected only python-domain-exception-policy.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      },
+      {
+        "id": "implicit-positive-broad-catches",
+        "notes": "Human review passed: the broad-catch review selected only python-domain-exception-policy.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      },
+      {
+        "id": "implicit-positive-retry",
+        "notes": "Human review passed: the retry and cancellation policy request selected only python-domain-exception-policy.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      },
+      {
+        "id": "contextual-positive-warning",
+        "notes": "Human review passed: the warning-to-exception transition selected only python-domain-exception-policy.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      },
+      {
+        "id": "negative-cli-stderr",
+        "notes": "Human review passed: the CLI stderr contract selected only python-cli-error-output in the pair-isolated fixture.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      },
+      {
+        "id": "negative-http-errors",
+        "notes": "Human review passed: HTTP transport errors selected no skill, so the domain-exception owner correctly stayed absent.",
+        "passed": true,
+        "skill": "python-domain-exception-policy"
+      }
+    ]
+  },
+  "client": {
+    "model": "gpt-5.6-sol",
+    "name": "codex",
+    "version": "codex-cli 0.145.0-alpha.30"
+  },
+  "effects": {
+    "filesystem": [
+      "Trusted lifecycle controls created and removed marketplace and plugin cache state only under the isolated CODEX_HOME.",
+      "Native cases did not mutate the repository or source; final installed paths, plugin inventory, and marketplace inventory were empty."
+    ],
+    "network": [
+      "Network traffic was limited to required Codex and OpenAI model inference; case shell commands used no network tool or syntax."
+    ]
+  },
+  "environment": {
+    "operatingSystem": "macOS 26.5.2 (25F84), arm64",
+    "shell": "zsh 5.9"
+  },
+  "installation": {
+    "discoveredSkills": [
+      "python-project-layout",
+      "python-test-architecture",
+      "python-domain-exception-policy"
+    ],
+    "method": "Codex CLI 0.145.0-alpha.30 installed, refreshed, and removed frozen local marketplace fixtures in an isolated CODEX_HOME. All 124 lifecycle records verified; 10 fixture transitions each completed installation, refresh, and removal; final plugin and marketplace inventories were empty.",
+    "permissions": [
+      "Native cases were read-only against the frozen fixtures and exact installed skill and resource paths.",
+      "The runner inherited only its fixed PATH and used 36 unique ephemeral sessions."
+    ]
+  },
+  "pack": {
+    "expectedSkills": [
+      "python-project-layout",
+      "python-test-architecture",
+      "python-domain-exception-policy"
+    ],
+    "id": "python-best-practices",
+    "sourceSha": "a7560ebc742c9ea5ad99d8da207f6e64e10d40bd",
+    "tag": "python-best-practices-v1.0.0",
+    "version": "1.0.0"
+  },
+  "reviewer": {
+    "github": "jecsand838",
+    "githubId": 170039284,
+    "verdict": "passed"
+  },
+  "schemaVersion": 2,
+  "testedAt": "2026-07-26T14:36:05Z",
+  "verdict": {
+    "notes": "Human review passed all 36 Codex CLI cases, including every behavior assertion and all 12 exact boundary selections. Lifecycle, installation, refresh, removal, isolation, tree integrity, session uniqueness, command policy, effects, residue, secret scanning, capture binding, and independent telemetry reparse also passed.",
+    "status": "passed"
+  }
+}
