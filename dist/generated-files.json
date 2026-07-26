@@ -513,8 +513,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
-      "sha256": "1381f2c699c0cffcaf06bd3bf40d95915c80c1ba16f42f352371b4b27369c421",
-      "size": 7552,
+      "sha256": "1b0ca90e54ab612343959ce578ef9efebbcbe927f490630598cde3daf791edd4",
+      "size": 7640,
       "mode": "0644"
     },
     {
@@ -1827,8 +1827,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
-      "sha256": "1381f2c699c0cffcaf06bd3bf40d95915c80c1ba16f42f352371b4b27369c421",
-      "size": 7552,
+      "sha256": "1b0ca90e54ab612343959ce578ef9efebbcbe927f490630598cde3daf791edd4",
+      "size": 7640,
       "mode": "0644"
     },
     {
@@ -2871,8 +2871,8 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-test-architecture/SKILL.md",
-      "sha256": "1381f2c699c0cffcaf06bd3bf40d95915c80c1ba16f42f352371b4b27369c421",
-      "size": 7552,
+      "sha256": "1b0ca90e54ab612343959ce578ef9efebbcbe927f490630598cde3daf791edd4",
+      "size": 7640,
       "mode": "0644"
     },
     {
@@ -4389,8 +4389,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
-      "sha256": "1381f2c699c0cffcaf06bd3bf40d95915c80c1ba16f42f352371b4b27369c421",
-      "size": 7552,
+      "sha256": "1b0ca90e54ab612343959ce578ef9efebbcbe927f490630598cde3daf791edd4",
+      "size": 7640,
       "mode": "0644"
     },
     {
@@ -5565,8 +5565,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-test-architecture/SKILL.md",
-      "sha256": "1381f2c699c0cffcaf06bd3bf40d95915c80c1ba16f42f352371b4b27369c421",
-      "size": 7552,
+      "sha256": "1b0ca90e54ab612343959ce578ef9efebbcbe927f490630598cde3daf791edd4",
+      "size": 7640,
       "mode": "0644"
     },
     {
@@ -6597,8 +6597,8 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-test-architecture/SKILL.md",
-      "sha256": "1381f2c699c0cffcaf06bd3bf40d95915c80c1ba16f42f352371b4b27369c421",
-      "size": 7552,
+      "sha256": "1b0ca90e54ab612343959ce578ef9efebbcbe927f490630598cde3daf791edd4",
+      "size": 7640,
       "mode": "0644"
     },
     {

@@ -204,7 +204,10 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
         "strategy, multi-level test architecture, suite-wide fixture ownership, global "
         "determinism, coverage policy, flake elimination, CI selection, or runtime budgets."
     )
-    assert "Do not use this skill merely because you plan to add tests" in testing_strategy
+    assert "Do not use this skill unless the requested result is repository-wide" in (
+        testing_strategy
+    )
+    assert "one focused behavior contract" in testing_strategy
     assert all(
         phrase not in testing_strategy.lower()
         for phrase in (
@@ -315,7 +318,7 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
         )
     )
     assert "another feature can fail" in error_description
-    assert "merely because you plan to add tests" in str(
+    assert "one focused behavior contract" in str(
         parse_skill(
             next(path for path in SKILL_FILES if path.parent.name == "python-test-architecture")
         )[0]["description"]
