@@ -27,7 +27,7 @@
       ]
     },
     {
-      "name": "python-exception-architecture",
+      "name": "python-domain-exception-policy",
       "version": "1.0.0",
       "files": [
         "SKILL.md",

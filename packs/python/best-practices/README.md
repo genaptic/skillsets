@@ -14,7 +14,7 @@ deployment topology. Use `python-cli-apps` for command-line interface behavior.
 |---|---|
 | [`python-project-layout`](skills/python-project-layout/SKILL.md) | Packaging layout, import boundaries, project metadata, data files, typing markers, and entry points. |
 | [`python-test-architecture`](skills/python-test-architecture/SKILL.md) | Risk-based test architecture, determinism, fixtures, CI selection, coverage, and flake control. |
-| [`python-exception-architecture`](skills/python-exception-architecture/SKILL.md) | Exception contracts, translation boundaries, chaining, cleanup, logging ownership, and bounded retries. |
+| [`python-domain-exception-policy`](skills/python-domain-exception-policy/SKILL.md) | Domain exception hierarchies, translation boundaries, chaining, cleanup, logging ownership, and bounded retries. |
 
 ## Prerequisites
 

@@ -7,7 +7,7 @@
 ### Added
 
 - Prepared the `1.0.0` release contents with `python-project-layout`,
-  `python-test-architecture`, and `python-exception-architecture`.
+  `python-test-architecture`, and `python-domain-exception-policy`.
 - Clarified coordinated routing with Python CLI layout, testing, and error-output workflows
   while preserving exclusive and neither boundaries.
 - Standardized optional Python helpers as interpreter-invoked resources so installed file modes

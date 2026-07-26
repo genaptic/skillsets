@@ -491,7 +491,7 @@ def test_compatibility_report_binds_all_cases_pack_sha_and_verdict(
     boundary_cases = data["cases"]["boundaries"]
     assert len(boundary_cases) == 12
     assert {case["boundaryId"] for case in boundary_cases} == {
-        "python-cli-error-output-vs-python-exception-architecture",
+        "python-cli-error-output-vs-python-domain-exception-policy",
         "python-cli-testing-vs-python-test-architecture",
         "python-project-layout-vs-python-test-architecture",
     }

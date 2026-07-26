@@ -1,10 +1,10 @@
 ---
 name: python-test-architecture
 description: >-
-  Use when—and only when—the request explicitly asks for repository-wide test strategy,
-  multi-level test architecture, suite-wide fixture ownership, global determinism, coverage policy,
-  flake elimination, CI selection, or runtime budgets. Do not use unless at least one listed
-  repository-wide or multi-layer outcome is an explicit deliverable.
+  Use when—and only when—the requested deliverable explicitly concerns repository-wide Python
+  test strategy, multi-level test architecture, suite-wide fixture ownership, global determinism,
+  coverage policy, flake elimination, CI selection, or runtime budgets. Do not use when no
+  repository-wide or multi-layer Python-test design outcome is requested.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

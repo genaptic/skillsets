@@ -20,15 +20,15 @@ interface:
     prompt: Use $python-project-layout to review this repository and recommend a maintainable Python layout.
   - skill: python-test-architecture
     prompt: Use $python-test-architecture to design a risk-based test strategy for this Python project.
-  - skill: python-exception-architecture
-    prompt: Use $python-exception-architecture to review this exception design and propose a safe failure contract.
+  - skill: python-domain-exception-policy
+    prompt: Use $python-domain-exception-policy to review this exception design and propose a safe failure contract.
 license: Apache-2.0
 maintainers:
 - github: jecsand838
 skills:
 - python-project-layout
 - python-test-architecture
-- python-exception-architecture
+- python-domain-exception-policy
 targets:
 - claude-code
 - codex

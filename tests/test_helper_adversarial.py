@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = {
     "audit-exceptions": ROOT
-    / "packs/python/best-practices/skills/python-exception-architecture/scripts"
+    / "packs/python/best-practices/skills/python-domain-exception-policy/scripts"
     / "audit_exception_handlers.py",
     "inspect-layout": ROOT
     / "packs/python/best-practices/skills/python-project-layout/scripts"

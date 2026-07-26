@@ -117,16 +117,16 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
         for skill in (
             "python-cli-error-output",
             "python-cli-testing",
-            "python-exception-architecture",
+            "python-domain-exception-policy",
             "python-project-layout",
             "python-test-architecture",
         )
     }
     assert all(len(description) <= 500 for description in descriptions.values())
     required_prefix_terms = {
-        "python-cli-error-output": ("python-exception-architecture",),
+        "python-cli-error-output": ("python-domain-exception-policy",),
         "python-cli-testing": ("python-test-architecture",),
-        "python-exception-architecture": (),
+        "python-domain-exception-policy": (),
         "python-project-layout": (),
         "python-test-architecture": (),
     }
@@ -141,7 +141,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
             assert description.index(partner) < 350, (skill, partner)
 
     for skill in (
-        "python-exception-architecture",
+        "python-domain-exception-policy",
         "python-project-layout",
         "python-test-architecture",
     ):
@@ -161,42 +161,32 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "Do not use for broad strategy without a CLI deliverable" in cli_testing
     assert "or running an existing smoke command." in cli_testing
 
-    error_handling = descriptions["python-exception-architecture"]
+    error_handling = descriptions["python-domain-exception-policy"]
     assert error_handling.startswith(
-        "Use when—and only when—the request explicitly asks for a Python exception hierarchy, "
-        "dependency-to-domain exception translation, exception chaining or propagation, "
-        "cleanup/cancellation ownership, exception logging or warnings, or retry policy."
+        "Design Python domain exception hierarchies, dependency-to-domain translations, and "
+        "their internal recovery policy. Use when—and only when—the request explicitly requires "
+        "exception classes, translation or chaining, or an internal exception policy for cleanup, "
+        "retries, or logging."
     )
-    assert "Do not use unless at least one listed exception-architecture or recovery-policy" in (
-        error_handling
+    assert (
+        "Do not use for external process or transport error-presentation contracts"
+        in error_handling
     )
-    assert all(
-        phrase not in error_handling.lower()
-        for phrase in (
-            "cli",
-            "streams",
-            "exit status",
-            "http",
-            "rpc",
-            "message error",
-        )
-    )
+    assert "generic failure handling alone do not qualify" in error_handling
 
     error_handling_body = next(
-        path for path in SKILL_FILES if path.parent.name == "python-exception-architecture"
+        path for path in SKILL_FILES if path.parent.name == "python-domain-exception-policy"
     ).read_text(encoding="utf-8")
     assert "exclusively user-facing CLI messages" in error_handling_body
     assert "without internal exception-taxonomy or translation work" in error_handling_body
 
     project_layout = descriptions["python-project-layout"]
     assert project_layout.startswith(
-        "Use when—and only when—the request explicitly asks for package layout, import isolation, "
-        "package discovery, namespace-package boundaries, distribution build metadata, packaged "
-        "resources/typing metadata, or wheel/sdist contents."
+        "Use when—and only when—the requested deliverable explicitly concerns Python package "
+        "layout, import isolation, package discovery, namespace-package boundaries, distribution "
+        "build metadata, packaged resources/typing metadata, or wheel/sdist contents."
     )
-    assert "Do not use unless at least one listed packaging, import, or artifact outcome" in (
-        project_layout
-    )
+    assert "Do not use when the requested outcome leaves Python packaging" in project_layout
     assert all(
         phrase not in project_layout.lower()
         for phrase in (
@@ -211,13 +201,12 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
 
     testing_strategy = descriptions["python-test-architecture"]
     assert testing_strategy.startswith(
-        "Use when—and only when—the request explicitly asks for repository-wide test strategy, "
-        "multi-level test architecture, suite-wide fixture ownership, global determinism, "
-        "coverage policy, flake elimination, CI selection, or runtime budgets."
+        "Use when—and only when—the requested deliverable explicitly concerns repository-wide "
+        "Python test strategy, multi-level test architecture, suite-wide fixture ownership, "
+        "global determinism, coverage policy, flake elimination, CI selection, or runtime budgets."
     )
-    assert (
-        "Do not use unless at least one listed repository-wide or multi-layer outcome"
-        in testing_strategy
+    assert "Do not use when no repository-wide or multi-layer Python-test design outcome" in (
+        testing_strategy
     )
     assert all(
         phrase not in testing_strategy.lower()
@@ -234,7 +223,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     generated_roots = {
         "python-cli-error-output": "python-cli-apps",
         "python-cli-testing": "python-cli-apps",
-        "python-exception-architecture": "python-best-practices",
+        "python-domain-exception-policy": "python-best-practices",
         "python-project-layout": "python-best-practices",
         "python-test-architecture": "python-best-practices",
     }
@@ -274,19 +263,20 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             "negative-cli-command-tree",
             "Design subcommands, global options, help text, and configuration precedence for our "
             "Python executable.",
-            "Use when—and only when—the request explicitly asks for package layout, import "
-            "isolation, package discovery,",
+            "Use when—and only when—the requested deliverable explicitly concerns Python package "
+            "layout, import isolation, package discovery,",
         ),
         "python-test-architecture": (
             "negative-single-cli-contract",
             "Write subprocess assertions for one CLI command's stderr and exit code contract.",
-            "Use when—and only when—the request explicitly asks for repository-wide test strategy,",
+            "Use when—and only when—the requested deliverable explicitly concerns repository-wide "
+            "Python test strategy,",
         ),
-        "python-exception-architecture": (
+        "python-domain-exception-policy": (
             "negative-cli-stderr",
             "Map command failures to stable exit codes and ensure human diagnostics go to stderr "
             "while JSON remains on stdout.",
-            "Use when—and only when—the request explicitly asks for a Python exception hierarchy,",
+            "Design Python domain exception hierarchies, dependency-to-domain translations,",
         ),
     }
 
@@ -302,7 +292,7 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
         assert case["shouldTrigger"] is False
 
     error_path = next(
-        path for path in SKILL_FILES if path.parent.name == "python-exception-architecture"
+        path for path in SKILL_FILES if path.parent.name == "python-domain-exception-policy"
     )
     error_evals = json.loads((error_path.parent / "evals/evals.json").read_text(encoding="utf-8"))
     http_case = next(
@@ -323,7 +313,7 @@ def test_python_release_guidance_rejects_unverified_commands() -> None:
     bodies = {
         skill: parse_skill(next(path for path in SKILL_FILES if path.parent.name == skill))[1]
         for skill in (
-            "python-exception-architecture",
+            "python-domain-exception-policy",
             "python-project-layout",
             "python-test-architecture",
         )
