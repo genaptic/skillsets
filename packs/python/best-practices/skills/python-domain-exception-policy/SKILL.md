@@ -4,7 +4,8 @@ description: >-
   Use when, and only when, the user explicitly requests Python exception classes or hierarchies,
   raise/catch boundaries, exception translation or chaining, traceback preservation, or an
   internal exception taxonomy or bounded retry classification for internal failures. Do not use
-  this skill merely because another feature can fail or needs user-facing failure behavior.
+  this skill merely because another feature can fail or needs user-facing failure behavior. Do
+  not use for transport-layer error documents or protocol status mapping.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

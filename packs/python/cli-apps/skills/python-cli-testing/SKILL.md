@@ -1,11 +1,11 @@
 ---
 name: python-cli-testing
 description: >
-  Design Python CLI tests: invocation, entry points, parsing/help, status, streams, stdin,
-  isolation, TTY, signals, pipes, quoting, and platform CI. Use when changing command-interface
-  tests. A comprehensive CLI-only matrix uses this skill alone. Add python-test-architecture only
-  when explicitly combining it with repository-wide test architecture or CI policy. Do not use
-  for broad strategy without a CLI deliverable, choosing the failure contract, or running an
+  Design Python CLI tests for invocation, entry points, parsing/help, status, streams, isolation,
+  and platform CI. Use when writing focused subprocess assertions for one command's exit status
+  and stderr. A comprehensive CLI-only matrix uses this skill alone. Add python-test-architecture
+  only when explicitly combining it with repository-wide test architecture or CI policy. Do not
+  use for broad strategy without a CLI deliverable, choosing the failure contract, or running an
   existing smoke command.
 license: Apache-2.0
 metadata:

@@ -329,9 +329,9 @@
         {
           "id": "python-cli-error-output-vs-python-domain-exception-policy-neither",
           "outcome": "neither",
-          "prompt": "Review a static HTML color palette for accessibility without changing Python code or a command-line interface.",
+          "prompt": "Check whether foreground #777777 on background #ffffff meets WCAG AA contrast requirements for normal text.",
           "expectedSkills": [],
-          "reason": "Visual design has no Python exception or CLI failure-output boundary."
+          "reason": "Color-contrast review has no exception-policy or CLI failure-output boundary."
         }
       ]
     },
