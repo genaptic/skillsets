@@ -15,7 +15,7 @@ EXPECTED_PACKS = {
     "python-best-practices": [
         "python-project-layout",
         "python-test-architecture",
-        "python-error-handling",
+        "python-exception-architecture",
     ],
     "python-cli-apps": [
         "python-cli-command-design",

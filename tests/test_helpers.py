@@ -75,7 +75,7 @@ def test_python_helper_happy_paths(tmp_path: Path) -> None:
     )
     audit = (
         ROOT
-        / "packs/python/best-practices/skills/python-error-handling/scripts/audit_exception_handlers.py"
+        / "packs/python/best-practices/skills/python-exception-architecture/scripts/audit_exception_handlers.py"
     )
     report = run_helper(audit, safe_source, "--json")
     assert json.loads(report.stdout)["parseErrors"] == []

@@ -254,9 +254,9 @@ def test_opencode_v1_18_3_protocol_and_self_contained_marketplaces() -> None:
             assert entry["files"][0] == protocol["requiredSkillFile"]
             assert entry["files"][1:] == sorted(entry["files"][1:])
             for relative in entry["files"]:
-                assert f"{base}/{entry['name']}/{relative}" in generated
-                if pack.id == "python-best-practices" and relative.startswith("scripts/"):
-                    assert generated.modes[f"{base}/{entry['name']}/{relative}"] == 0o644
+                generated_path = f"{base}/{entry['name']}/{relative}"
+                assert generated_path in generated
+                assert generated.modes[generated_path] == 0o644
             assert not any(relative.endswith(f"{entry['name']}.md") for relative in entry["files"])
             if pack.id == "rust-best-practices" and entry["name"] == "rust-project-architecture":
                 root_manifest = "assets/templates/workspace-root/Cargo.toml"

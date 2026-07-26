@@ -276,13 +276,27 @@ def test_generation_is_byte_safe_filtered_mode_aware_and_target_aware(
         generated.modes[
             "dist/dev/opencode/python/best-practices/python-project-layout/assets/fixture-tool"
         ]
-        == 0o755
+        == 0o644
     )
     assert (
         generated.modes[
             "dist/dev/opencode/python/best-practices/python-project-layout/scripts/data.json"
         ]
         == 0o644
+    )
+    assert (
+        generated.modes[
+            "dist/dev/claude/plugins/python-best-practices/skills/"
+            "python-project-layout/assets/fixture-tool"
+        ]
+        == 0o755
+    )
+    assert (
+        generated.modes[
+            "dist/dev/codex/plugins/python-best-practices/skills/"
+            "python-project-layout/assets/fixture-tool"
+        ]
+        == 0o755
     )
 
     apply_generated_files(repo_copy)
@@ -477,7 +491,7 @@ def test_compatibility_report_binds_all_cases_pack_sha_and_verdict(
     boundary_cases = data["cases"]["boundaries"]
     assert len(boundary_cases) == 12
     assert {case["boundaryId"] for case in boundary_cases} == {
-        "python-cli-error-output-vs-python-error-handling",
+        "python-cli-error-output-vs-python-exception-architecture",
         "python-cli-testing-vs-python-test-architecture",
         "python-project-layout-vs-python-test-architecture",
     }

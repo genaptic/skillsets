@@ -27,7 +27,7 @@
       ]
     },
     {
-      "name": "python-error-handling",
+      "name": "python-exception-architecture",
       "version": "1.0.0",
       "files": [
         "SKILL.md",
