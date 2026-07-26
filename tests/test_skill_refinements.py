@@ -180,22 +180,17 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
 
     project_layout = descriptions["python-project-layout"]
     assert project_layout.startswith(
-        "Use when, and only when, the user explicitly requests a Python packaging, "
-        "import-boundary, package discovery, namespace-package, build-metadata, packaged-resource, "
-        "typing-metadata, wheel, or sdist outcome."
+        "Do not use for CLI command trees, subcommands, options or flags, help text, or "
+        "configuration precedence."
     )
-    assert "Do not use this skill merely to inspect a Python repository" in project_layout
-    assert "implementing an unrelated application feature" in project_layout
+    assert (
+        "Use when, and only when, the requested deliverable changes or verifies Python package "
+        "structure, "
+        "import boundaries, package-discovery rules,"
+    ) in project_layout
     assert all(
-        phrase not in project_layout.lower()
-        for phrase in (
-            "cli interface",
-            "subcommands",
-            "global options",
-            "flags",
-            "help text",
-            "configuration precedence",
-        )
+        phrase in project_layout.lower()
+        for phrase in ("cli command trees", "subcommands", "flags", "help text", "configuration")
     )
 
     testing_strategy = descriptions["python-test-architecture"]
@@ -263,8 +258,8 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             "negative-cli-command-tree",
             "Design subcommands, global options, help text, and configuration precedence for our "
             "Python executable.",
-            "Use when, and only when, the user explicitly requests a Python packaging, "
-            "import-boundary, package discovery,",
+            "Do not use for CLI command trees, subcommands, options or flags, help text, or "
+            "configuration precedence.",
         ),
         "python-test-architecture": (
             "negative-single-cli-contract",
@@ -323,10 +318,13 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             next(path for path in SKILL_FILES if path.parent.name == "python-test-architecture")
         )[0]["description"]
     )
-    assert "implementing an unrelated application feature" in str(
+    project_description = str(
         parse_skill(
             next(path for path in SKILL_FILES if path.parent.name == "python-project-layout")
         )[0]["description"]
+    )
+    assert "Use when, and only when, the requested deliverable changes or verifies" in (
+        project_description
     )
 
 

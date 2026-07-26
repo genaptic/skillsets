@@ -1,10 +1,10 @@
 ---
 name: python-project-layout
 description: >-
-  Use when, and only when, the user explicitly requests a Python packaging, import-boundary,
-  package discovery, namespace-package, build-metadata, packaged-resource, typing-metadata, wheel,
-  or sdist outcome. Do not use this skill merely to inspect a Python repository or while
-  implementing an unrelated application feature.
+  Do not use for CLI command trees, subcommands, options or flags, help text, or configuration
+  precedence. Use when, and only when, the requested deliverable changes or verifies Python package
+  structure, import boundaries, package-discovery rules, namespace packages, build metadata,
+  packaged resources, typing metadata, wheel contents, or sdist contents.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
