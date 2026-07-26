@@ -1,12 +1,10 @@
 ---
 name: python-domain-exception-policy
 description: >-
-  Design Python domain exception hierarchies, dependency-to-domain translations, and their
-  internal recovery policy. Use when—and only when—the requested deliverable explicitly includes
-  Python exception classes, translation or chaining, or an internal failure taxonomy/recovery
-  policy. Do not use this skill by inferring or introducing internal exception work to support an
-  external process or wire-facing error contract; cleanup, retries, logging, or generic
-  failure handling alone do not qualify.
+  Use when, and only when, the user explicitly requests Python exception classes or hierarchies,
+  raise/catch boundaries, exception translation or chaining, traceback preservation, or an
+  internal exception taxonomy or bounded retry classification for internal failures. Do not use
+  this skill merely because another feature can fail or needs user-facing failure behavior.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

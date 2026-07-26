@@ -163,16 +163,14 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
 
     error_handling = descriptions["python-domain-exception-policy"]
     assert error_handling.startswith(
-        "Design Python domain exception hierarchies, dependency-to-domain translations, and "
-        "their internal recovery policy. Use when—and only when—the requested deliverable "
-        "explicitly includes Python exception classes, translation or chaining, or an internal "
-        "failure taxonomy/recovery policy."
+        "Use when, and only when, the user explicitly requests Python exception classes or "
+        "hierarchies, raise/catch boundaries, exception translation or chaining, traceback "
+        "preservation, or an internal exception taxonomy or bounded retry classification for "
+        "internal failures."
     )
-    assert "Do not use this skill by inferring or introducing internal exception work" in (
-        error_handling
-    )
-    assert "external process or wire-facing error contract" in error_handling
-    assert "generic failure handling alone do not qualify" in error_handling
+    assert "bounded retry classification for internal failures" in error_handling
+    assert "Do not use this skill merely because another feature can fail" in error_handling
+    assert "needs user-facing failure behavior" in error_handling
 
     error_handling_body = next(
         path for path in SKILL_FILES if path.parent.name == "python-domain-exception-policy"
@@ -182,12 +180,12 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
 
     project_layout = descriptions["python-project-layout"]
     assert project_layout.startswith(
-        "Use when—and only when—the requested deliverable explicitly changes or verifies Python package "
-        "layout, import isolation, package discovery, namespace-package boundaries, distribution "
-        "build metadata, packaged resources/typing metadata, or wheel/sdist contents."
+        "Use when, and only when, the user explicitly requests a Python packaging, "
+        "import-boundary, package discovery, namespace-package, build-metadata, packaged-resource, "
+        "typing-metadata, wheel, or sdist outcome."
     )
-    assert "Do not use this skill merely to classify an unrelated request" in project_layout
-    assert "answer without this skill" in project_layout
+    assert "Do not use this skill merely to inspect a Python repository" in project_layout
+    assert "implementing an unrelated application feature" in project_layout
     assert all(
         phrase not in project_layout.lower()
         for phrase in (
@@ -202,13 +200,11 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
 
     testing_strategy = descriptions["python-test-architecture"]
     assert testing_strategy.startswith(
-        "Use when—and only when—the requested deliverable explicitly concerns repository-wide "
-        "Python test strategy, multi-level test architecture, suite-wide fixture ownership, "
-        "global determinism, coverage policy, flake elimination, CI selection, or runtime budgets."
+        "Use when, and only when, the user explicitly requests repository-wide Python test "
+        "strategy, multi-level test architecture, suite-wide fixture ownership, global "
+        "determinism, coverage policy, flake elimination, CI selection, or runtime budgets."
     )
-    assert "Do not use when no repository-wide or multi-layer Python-test design outcome" in (
-        testing_strategy
-    )
+    assert "Do not use this skill merely because you plan to add tests" in testing_strategy
     assert all(
         phrase not in testing_strategy.lower()
         for phrase in (
@@ -264,20 +260,21 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             "negative-cli-command-tree",
             "Design subcommands, global options, help text, and configuration precedence for our "
             "Python executable.",
-            "Use when—and only when—the requested deliverable explicitly changes or verifies Python package "
-            "layout, import isolation, package discovery,",
+            "Use when, and only when, the user explicitly requests a Python packaging, "
+            "import-boundary, package discovery,",
         ),
         "python-test-architecture": (
             "negative-single-cli-contract",
             "Write subprocess assertions for one CLI command's stderr and exit code contract.",
-            "Use when—and only when—the requested deliverable explicitly concerns repository-wide "
-            "Python test strategy,",
+            "Use when, and only when, the user explicitly requests repository-wide Python test "
+            "strategy,",
         ),
         "python-domain-exception-policy": (
             "negative-cli-stderr",
             "Map command failures to stable exit codes and ensure human diagnostics go to stderr "
             "while JSON remains on stdout.",
-            "Design Python domain exception hierarchies, dependency-to-domain translations,",
+            "Use when, and only when, the user explicitly requests Python exception classes or "
+            "hierarchies,",
         ),
     }
 
@@ -306,7 +303,27 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
     )
     error_description = str(parse_skill(error_path)[0]["description"])
     assert all(
-        phrase not in error_description.lower() for phrase in ("http", "rpc", "message error")
+        phrase not in error_description.lower()
+        for phrase in (
+            "fastapi",
+            "http",
+            "message error",
+            "response body",
+            "rpc",
+            "status code",
+            "status-code",
+        )
+    )
+    assert "another feature can fail" in error_description
+    assert "merely because you plan to add tests" in str(
+        parse_skill(
+            next(path for path in SKILL_FILES if path.parent.name == "python-test-architecture")
+        )[0]["description"]
+    )
+    assert "implementing an unrelated application feature" in str(
+        parse_skill(
+            next(path for path in SKILL_FILES if path.parent.name == "python-project-layout")
+        )[0]["description"]
     )
 
 
