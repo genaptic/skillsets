@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Domain Exception Policy"
+  short_description: "Design reliable Python failure contracts"
+  default_prompt: "Use $python-domain-exception-policy to review this exception design and propose a safe failure contract."

@@ -69,13 +69,13 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
         for boundary in document["boundaries"]
         if boundary["id"]
         in {
-            "python-cli-error-output-vs-python-exception-architecture",
+            "python-cli-error-output-vs-python-domain-exception-policy",
             "python-cli-testing-vs-python-test-architecture",
             "python-project-layout-vs-python-test-architecture",
         }
     }
     assert selected == {
-        "python-cli-error-output-vs-python-exception-architecture": [
+        "python-cli-error-output-vs-python-domain-exception-policy": [
             (
                 "a-only",
                 "Review a Python command's messages, debug mode, stderr routing, and process "
@@ -86,14 +86,14 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
                 "b-only",
                 "Refactor internal exceptions, context-manager cleanup, retries, and logging "
                 "before any CLI mapping is considered.",
-                ["python-exception-architecture"],
+                ["python-domain-exception-policy"],
             ),
             (
                 "both",
                 "Define this Python library's exception taxonomy and translation boundaries, "
                 "then map them to safe CLI diagnostics, traceback policy, streams, and exit "
                 "statuses.",
-                ["python-cli-error-output", "python-exception-architecture"],
+                ["python-cli-error-output", "python-domain-exception-policy"],
             ),
             (
                 "neither",

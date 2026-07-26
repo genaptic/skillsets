@@ -1,10 +1,10 @@
 ---
 name: python-project-layout
 description: >-
-  Use when—and only when—the request explicitly asks for package layout, import isolation, package
-  discovery, namespace-package boundaries, distribution build metadata, packaged resources/typing
-  metadata, or wheel/sdist contents. Do not use unless at least one listed packaging, import, or
-  artifact outcome is an explicit deliverable.
+  Use when—and only when—the requested deliverable explicitly concerns Python package layout,
+  import isolation, package discovery, namespace-package boundaries, distribution build metadata,
+  packaged resources/typing metadata, or wheel/sdist contents. Do not use when the requested
+  outcome leaves Python packaging, imports, and artifacts outside scope.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

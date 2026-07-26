@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "skill": "python-exception-architecture",
+  "skill": "python-domain-exception-policy",
   "routing": [
     {
       "id": "explicit-positive",
       "kind": "explicit-positive",
-      "prompt": "Use python-exception-architecture to define the exception hierarchy and translation boundaries for this library.",
+      "prompt": "Use python-domain-exception-policy to define the exception hierarchy and translation boundaries for this library.",
       "shouldTrigger": true,
       "reason": "The skill and exception-contract outcome are explicit."
     },

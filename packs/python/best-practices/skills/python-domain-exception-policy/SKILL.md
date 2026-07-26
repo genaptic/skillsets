@@ -1,11 +1,12 @@
 ---
-name: python-exception-architecture
+name: python-domain-exception-policy
 description: >-
-  Use when—and only when—the request explicitly asks for a Python exception hierarchy,
-  dependency-to-domain exception translation, exception chaining or propagation,
-  cleanup/cancellation ownership, exception logging or warnings, or retry policy. Do not use
-  unless at least one listed exception-architecture or recovery-policy outcome is an explicit
-  deliverable.
+  Design Python domain exception hierarchies, dependency-to-domain translations, and their
+  internal recovery policy. Use when—and only when—the request explicitly requires exception
+  classes, translation or chaining, or an internal exception policy for cleanup, retries, or
+  logging. Do not use for external process or transport error-presentation contracts
+  unless that internal exception policy is also explicit; logging, warnings, cleanup, retries, or
+  generic failure handling alone do not qualify.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

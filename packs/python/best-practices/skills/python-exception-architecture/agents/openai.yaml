@@ -1,4 +1,0 @@
-interface:
-  display_name: "Python Exception Architecture"
-  short_description: "Design reliable Python failure contracts"
-  default_prompt: "Use $python-exception-architecture to review this exception design and propose a safe failure contract."
