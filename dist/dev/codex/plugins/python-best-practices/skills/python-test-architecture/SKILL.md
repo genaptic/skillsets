@@ -3,8 +3,9 @@ name: python-test-architecture
 description: >-
   Use when, and only when, the user explicitly requests repository-wide Python test strategy,
   multi-level test architecture, suite-wide fixture ownership, global determinism, coverage
-  policy, flake elimination, CI selection, or runtime budgets. Do not use this skill merely
-  because you plan to add tests while implementing another feature.
+  policy, flake elimination, CI selection, or runtime budgets. Do not use this skill unless the
+  requested result is repository-wide or multi-layer; one focused behavior contract or tests
+  added while implementing another feature do not qualify.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
