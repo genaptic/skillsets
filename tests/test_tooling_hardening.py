@@ -740,6 +740,10 @@ def test_release_workflow_protects_and_binds_the_neutral_verified_source(repo_co
     assert 'requires_rust == "true" and rust != "success"' in gate_job
     assert 'requires_rust == "false" and rust != "skipped"' in gate_job
 
+    assert (
+        "    if: ${{ always() && needs.source.result == 'success' "
+        "&& needs.release-gates.result == 'success' }}\n"
+    ) in release_build_job
     assert f"          ref: {verified_sha}\n" in release_build_job
     assert f"          VERIFIED_SOURCE_SHA: {verified_sha}\n" in release_build_job
     assert "if head != verified_source:" in release_build_job
@@ -749,6 +753,11 @@ def test_release_workflow_protects_and_binds_the_neutral_verified_source(repo_co
     # The write-capable publisher consumes the sealed read-only build. It may inspect the
     # tag as inert data, but all Python policy code comes from protected main.
     assert "      - release-build\n" in release_job
+    assert (
+        "    if: ${{ always() && needs.source.result == 'success' "
+        "&& needs.release-gates.result == 'success' "
+        "&& needs.release-build.result == 'success' }}\n"
+    ) in release_job
     assert "Check out protected publication policy without credentials" in release_job
     assert "Check out the exact tag as inert release data" in release_job
     assert "Download and digest-verify the exact release-build artifact" in release_job
