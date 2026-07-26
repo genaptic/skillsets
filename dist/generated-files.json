@@ -471,8 +471,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "14d29004776ef987677f20e2af923036141ef3a32472374efd681b520c145677",
-      "size": 7581,
+      "sha256": "ed297a20f467345b673790208b0ca7ee7528ee696d5eced28238f96f570c9210",
+      "size": 7613,
       "mode": "0644"
     },
     {
@@ -1779,8 +1779,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "14d29004776ef987677f20e2af923036141ef3a32472374efd681b520c145677",
-      "size": 7581,
+      "sha256": "ed297a20f467345b673790208b0ca7ee7528ee696d5eced28238f96f570c9210",
+      "size": 7613,
       "mode": "0644"
     },
     {
@@ -2829,8 +2829,8 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-project-layout/SKILL.md",
-      "sha256": "14d29004776ef987677f20e2af923036141ef3a32472374efd681b520c145677",
-      "size": 7581,
+      "sha256": "ed297a20f467345b673790208b0ca7ee7528ee696d5eced28238f96f570c9210",
+      "size": 7613,
       "mode": "0644"
     },
     {
@@ -4347,8 +4347,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "14d29004776ef987677f20e2af923036141ef3a32472374efd681b520c145677",
-      "size": 7581,
+      "sha256": "ed297a20f467345b673790208b0ca7ee7528ee696d5eced28238f96f570c9210",
+      "size": 7613,
       "mode": "0644"
     },
     {
@@ -5517,8 +5517,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-project-layout/SKILL.md",
-      "sha256": "14d29004776ef987677f20e2af923036141ef3a32472374efd681b520c145677",
-      "size": 7581,
+      "sha256": "ed297a20f467345b673790208b0ca7ee7528ee696d5eced28238f96f570c9210",
+      "size": 7613,
       "mode": "0644"
     },
     {
@@ -6555,8 +6555,8 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-project-layout/SKILL.md",
-      "sha256": "14d29004776ef987677f20e2af923036141ef3a32472374efd681b520c145677",
-      "size": 7581,
+      "sha256": "ed297a20f467345b673790208b0ca7ee7528ee696d5eced28238f96f570c9210",
+      "size": 7613,
       "mode": "0644"
     },
     {
