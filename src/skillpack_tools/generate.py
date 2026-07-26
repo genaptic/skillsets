@@ -1608,12 +1608,15 @@ def _add_opencode_catalogs(
                     ],
                 ]
             listed_files: list[str] = []
-            for relative, content, mode in inputs:
+            for relative, content, _source_mode in inputs:
                 listed_files.append(relative.as_posix())
                 files.add(
                     (target_prefix / relative).as_posix(),
                     content,
-                    mode=mode,
+                    # OpenCode v1.18.3's HTTP skill downloader writes bytes without
+                    # accepting transport metadata for source modes. Normalize the
+                    # host tree to that exact portable installed-file contract.
+                    mode=0o644,
                 )
             catalog_skills.append(
                 {

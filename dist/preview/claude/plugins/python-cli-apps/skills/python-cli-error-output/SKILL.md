@@ -4,7 +4,7 @@ description: >
   Design Python CLI failure behavior: messages, debug display, streams, status codes, machine
   errors, redaction, interrupts, broken pipes, and exception mapping. Use when defining CLI-facing
   failures. Do not use when the request excludes Python or CLI changes. Add
-  python-error-handling only for explicit internal taxonomy or translation work; an exception
+  python-exception-architecture only for explicit internal taxonomy or translation work; an exception
   merely causing CLI output keeps this skill alone. Do not use for internal exception work or
   command-tree design.
 license: Apache-2.0
@@ -29,7 +29,7 @@ arrays locally without a shell and never uses the network itself.
 
 - A CLI needs a stable mapping from domain failures to process behavior.
 - Internal exception taxonomy or translation boundaries and their CLI process mapping must be
-  designed together; also use `python-error-handling`.
+  designed together; also use `python-exception-architecture`.
 - Diagnostics, results, progress, or tracebacks are written to the wrong stream.
 - Exit statuses are inconsistent or too coarse for automation.
 - Human and machine-readable error modes, debug output, interrupts, or broken pipes need a contract.
@@ -37,7 +37,7 @@ arrays locally without a shell and never uses the network itself.
 ## Do not use this skill when
 
 - The task is exclusively internal exception taxonomy, cleanup, retries, and logging without a
-  CLI process mapping; use `python-error-handling`.
+  CLI process mapping; use `python-exception-architecture`.
 - The task is command names, options, configuration precedence, or help structure; use `python-cli-command-design`.
 - The task is only to implement tests for an already agreed contract; use `python-cli-testing`.
 

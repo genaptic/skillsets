@@ -90,7 +90,7 @@ fi
 skills=(
   "python-project-layout"
   "python-test-architecture"
-  "python-error-handling"
+  "python-exception-architecture"
 )
 
 for skill in "${skills[@]}"; do

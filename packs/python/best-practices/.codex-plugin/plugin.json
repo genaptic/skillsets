@@ -31,7 +31,7 @@
     "defaultPrompt": [
       "Use $python-project-layout to review this repository and recommend a maintainable Python layout.",
       "Use $python-test-architecture to design a risk-based test strategy for this Python project.",
-      "Use $python-error-handling to review this exception design and propose a safe failure contract."
+      "Use $python-exception-architecture to review this exception design and propose a safe failure contract."
     ]
   }
 }

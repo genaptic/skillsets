@@ -117,16 +117,16 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
         for skill in (
             "python-cli-error-output",
             "python-cli-testing",
-            "python-error-handling",
+            "python-exception-architecture",
             "python-project-layout",
             "python-test-architecture",
         )
     }
     assert all(len(description) <= 500 for description in descriptions.values())
     required_prefix_terms = {
-        "python-cli-error-output": ("python-error-handling",),
+        "python-cli-error-output": ("python-exception-architecture",),
         "python-cli-testing": ("python-test-architecture",),
-        "python-error-handling": (),
+        "python-exception-architecture": (),
         "python-project-layout": (),
         "python-test-architecture": (),
     }
@@ -141,7 +141,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
             assert description.index(partner) < 350, (skill, partner)
 
     for skill in (
-        "python-error-handling",
+        "python-exception-architecture",
         "python-project-layout",
         "python-test-architecture",
     ):
@@ -161,13 +161,13 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "Do not use for broad strategy without a CLI deliverable" in cli_testing
     assert "or running an existing smoke command." in cli_testing
 
-    error_handling = descriptions["python-error-handling"]
+    error_handling = descriptions["python-exception-architecture"]
     assert error_handling.startswith(
-        "Use when—and only when—the request explicitly asks for internal exception taxonomy, "
-        "translation boundaries, chaining, propagation, cleanup ownership, exception "
-        "logging/warnings, or retry policy."
+        "Use when—and only when—the request explicitly asks for a Python exception hierarchy, "
+        "dependency-to-domain exception translation, exception chaining or propagation, "
+        "cleanup/cancellation ownership, exception logging or warnings, or retry policy."
     )
-    assert "Do not use unless at least one listed internal exception or recovery-policy" in (
+    assert "Do not use unless at least one listed exception-architecture or recovery-policy" in (
         error_handling
     )
     assert all(
@@ -183,7 +183,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     )
 
     error_handling_body = next(
-        path for path in SKILL_FILES if path.parent.name == "python-error-handling"
+        path for path in SKILL_FILES if path.parent.name == "python-exception-architecture"
     ).read_text(encoding="utf-8")
     assert "exclusively user-facing CLI messages" in error_handling_body
     assert "without internal exception-taxonomy or translation work" in error_handling_body
@@ -234,7 +234,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     generated_roots = {
         "python-cli-error-output": "python-cli-apps",
         "python-cli-testing": "python-cli-apps",
-        "python-error-handling": "python-best-practices",
+        "python-exception-architecture": "python-best-practices",
         "python-project-layout": "python-best-practices",
         "python-test-architecture": "python-best-practices",
     }
@@ -282,11 +282,11 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             "Write subprocess assertions for one CLI command's stderr and exit code contract.",
             "Use when—and only when—the request explicitly asks for repository-wide test strategy,",
         ),
-        "python-error-handling": (
+        "python-exception-architecture": (
             "negative-cli-stderr",
             "Map command failures to stable exit codes and ensure human diagnostics go to stderr "
             "while JSON remains on stdout.",
-            "Use when—and only when—the request explicitly asks for internal exception taxonomy,",
+            "Use when—and only when—the request explicitly asks for a Python exception hierarchy,",
         ),
     }
 
@@ -301,7 +301,9 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
         assert case["prompt"] == prompt
         assert case["shouldTrigger"] is False
 
-    error_path = next(path for path in SKILL_FILES if path.parent.name == "python-error-handling")
+    error_path = next(
+        path for path in SKILL_FILES if path.parent.name == "python-exception-architecture"
+    )
     error_evals = json.loads((error_path.parent / "evals/evals.json").read_text(encoding="utf-8"))
     http_case = next(
         item for item in error_evals["routing"] if item["id"] == "negative-http-errors"
@@ -321,7 +323,7 @@ def test_python_release_guidance_rejects_unverified_commands() -> None:
     bodies = {
         skill: parse_skill(next(path for path in SKILL_FILES if path.parent.name == skill))[1]
         for skill in (
-            "python-error-handling",
+            "python-exception-architecture",
             "python-project-layout",
             "python-test-architecture",
         )

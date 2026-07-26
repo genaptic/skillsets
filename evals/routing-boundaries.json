@@ -295,8 +295,8 @@
       ]
     },
     {
-      "id": "python-cli-error-output-vs-python-error-handling",
-      "skills": ["python-cli-error-output", "python-error-handling"],
+      "id": "python-cli-error-output-vs-python-exception-architecture",
+      "skills": ["python-cli-error-output", "python-exception-architecture"],
       "sharedVocabulary": ["exceptions", "failure contract", "logging"],
       "outcomeExplanations": {
         "a-only": "The user-visible process contract for diagnostics, streams, tracebacks, and status codes dominates.",
@@ -306,28 +306,28 @@
       },
       "cases": [
         {
-          "id": "python-cli-error-output-vs-python-error-handling-a-only",
+          "id": "python-cli-error-output-vs-python-exception-architecture-a-only",
           "outcome": "a-only",
           "prompt": "Review a Python command's messages, debug mode, stderr routing, and process exit status when exceptions occur.",
           "expectedSkills": ["python-cli-error-output"],
           "reason": "The CLI error-output skill owns the user-visible process contract."
         },
         {
-          "id": "python-cli-error-output-vs-python-error-handling-b-only",
+          "id": "python-cli-error-output-vs-python-exception-architecture-b-only",
           "outcome": "b-only",
           "prompt": "Refactor internal exceptions, context-manager cleanup, retries, and logging before any CLI mapping is considered.",
-          "expectedSkills": ["python-error-handling"],
+          "expectedSkills": ["python-exception-architecture"],
           "reason": "The task is internal exception policy rather than process output."
         },
         {
-          "id": "python-cli-error-output-vs-python-error-handling-both",
+          "id": "python-cli-error-output-vs-python-exception-architecture-both",
           "outcome": "both",
           "prompt": "Define this Python library's exception taxonomy and translation boundaries, then map them to safe CLI diagnostics, traceback policy, streams, and exit statuses.",
-          "expectedSkills": ["python-cli-error-output", "python-error-handling"],
+          "expectedSkills": ["python-cli-error-output", "python-exception-architecture"],
           "reason": "The request spans internal exception semantics and the external process contract."
         },
         {
-          "id": "python-cli-error-output-vs-python-error-handling-neither",
+          "id": "python-cli-error-output-vs-python-exception-architecture-neither",
           "outcome": "neither",
           "prompt": "Review a static HTML color palette for accessibility without changing Python code or a command-line interface.",
           "expectedSkills": [],

@@ -55,7 +55,7 @@ if (-not $DryRun) {
 $skills = @(
     "python-project-layout",
     "python-test-architecture",
-    "python-error-handling"
+    "python-exception-architecture"
 )
 
 $GhEnvironment = [ordered]@{

@@ -1,10 +1,11 @@
 ---
-name: python-error-handling
+name: python-exception-architecture
 description: >-
-  Use when—and only when—the request explicitly asks for internal exception taxonomy, translation
-  boundaries, chaining, propagation, cleanup ownership, exception logging/warnings, or retry
-  policy. Do not use unless at least one listed internal exception or recovery-policy outcome is an
-  explicit deliverable.
+  Use when—and only when—the request explicitly asks for a Python exception hierarchy,
+  dependency-to-domain exception translation, exception chaining or propagation,
+  cleanup/cancellation ownership, exception logging or warnings, or retry policy. Do not use
+  unless at least one listed exception-architecture or recovery-policy outcome is an explicit
+  deliverable.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices

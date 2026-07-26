@@ -27,8 +27,8 @@
     },
     {
       "path": "dist/dev/catalog.json",
-      "sha256": "2f56c321e89e38e606e50d8d1fe4f68f6272d94dfbcc013f1e6f8f1c536d1b2a",
-      "size": 10245,
+      "sha256": "e5344c2bbcc7b01580eb1cfa5de2dad245ad393af0fd10151c2b2e7076a1b979",
+      "size": 10253,
       "mode": "0644"
     },
     {
@@ -428,43 +428,43 @@
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
-      "size": 6741,
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-exception-architecture/SKILL.md",
+      "sha256": "6a3e0c384f41bcf1d13ab175d6ed30b6eee590775e714ad2bc99b540985335d5",
+      "size": 6804,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/assets/exception-hierarchy.example.py",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-hierarchy.example.py",
       "sha256": "8a31770691d95140f17efb02efe29191ec921feb6b8901a1ce50bdd34fd9d2f3",
       "size": 703,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/assets/exception-policy-template.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-policy-template.md",
       "sha256": "055199d3d1b40510e6e571869a7d6a18740cf6dc333a9d3a0d14bee35ffa309e",
       "size": 1234,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/references/checklist.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-exception-architecture/references/checklist.md",
       "sha256": "0cc9dd237e8423493b654259bcf46b03a48ba8d26e2baa05073cf12d65fc6588",
       "size": 2107,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/references/guide.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-exception-architecture/references/guide.md",
       "sha256": "4998166cf6256166642d9c96f09e32a4cb1fa087bc6f61cea3e1a727f5ed282b",
       "size": 5057,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/references/sources.md",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-exception-architecture/references/sources.md",
       "sha256": "fc42cc54c0856f74fbee1189ceed958caea6872eed09d00a401549b621421aa0",
       "size": 545,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-error-handling/scripts/audit_exception_handlers.py",
+      "path": "dist/dev/claude/plugins/python-best-practices/skills/python-exception-architecture/scripts/audit_exception_handlers.py",
       "sha256": "8f2d7b47c59beb544215ba0b03874c0e9f9ba36944bef438450cd28a4703c82b",
       "size": 6442,
       "mode": "0644"
@@ -603,8 +603,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-cli-apps/skills/python-cli-error-output/SKILL.md",
-      "sha256": "6d6c72dca8ccbdf3347dad9a45b4b6bf8532b4fafee63a406647c2a9b33a72c5",
-      "size": 6635,
+      "sha256": "983fadd8faec88e0e5199d238757d0e593107dd53053b9470c48364b7da00c5a",
+      "size": 6659,
       "mode": "0644"
     },
     {
@@ -1725,54 +1725,54 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/.codex-plugin/plugin.json",
-      "sha256": "c9d62012aa8033f2076165fa1864b05ece0140a0a6001a466b500dd1b6b287b8",
-      "size": 1429,
+      "sha256": "0173183dd8a006a60e544dd3429de61d7820a2963e171dc55a5dbf7b1ebbf52e",
+      "size": 1437,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
-      "size": 6741,
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/SKILL.md",
+      "sha256": "6a3e0c384f41bcf1d13ab175d6ed30b6eee590775e714ad2bc99b540985335d5",
+      "size": 6804,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/agents/openai.yaml",
-      "sha256": "22e884f4cf4a37270c87c28a029b43b28fe065b3f740877c834afeb99c3d7ea6",
-      "size": 231,
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/agents/openai.yaml",
+      "sha256": "f2cb8eee0fe4cf423b0cd9f575392cc3603419c11c2d493cfc469d4663ed12c9",
+      "size": 247,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/assets/exception-hierarchy.example.py",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-hierarchy.example.py",
       "sha256": "8a31770691d95140f17efb02efe29191ec921feb6b8901a1ce50bdd34fd9d2f3",
       "size": 703,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/assets/exception-policy-template.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-policy-template.md",
       "sha256": "055199d3d1b40510e6e571869a7d6a18740cf6dc333a9d3a0d14bee35ffa309e",
       "size": 1234,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/references/checklist.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/references/checklist.md",
       "sha256": "0cc9dd237e8423493b654259bcf46b03a48ba8d26e2baa05073cf12d65fc6588",
       "size": 2107,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/references/guide.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/references/guide.md",
       "sha256": "4998166cf6256166642d9c96f09e32a4cb1fa087bc6f61cea3e1a727f5ed282b",
       "size": 5057,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/references/sources.md",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/references/sources.md",
       "sha256": "fc42cc54c0856f74fbee1189ceed958caea6872eed09d00a401549b621421aa0",
       "size": 545,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-error-handling/scripts/audit_exception_handlers.py",
+      "path": "dist/dev/codex/plugins/python-best-practices/skills/python-exception-architecture/scripts/audit_exception_handlers.py",
       "sha256": "8f2d7b47c59beb544215ba0b03874c0e9f9ba36944bef438450cd28a4703c82b",
       "size": 6442,
       "mode": "0644"
@@ -1929,8 +1929,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-cli-apps/skills/python-cli-error-output/SKILL.md",
-      "sha256": "6d6c72dca8ccbdf3347dad9a45b4b6bf8532b4fafee63a406647c2a9b33a72c5",
-      "size": 6635,
+      "sha256": "983fadd8faec88e0e5199d238757d0e593107dd53053b9470c48364b7da00c5a",
+      "size": 6659,
       "mode": "0644"
     },
     {
@@ -2727,14 +2727,14 @@
     },
     {
       "path": "dist/dev/install/python-best-practices.ps1",
-      "sha256": "9e0a0f9bdb482aba89cad5840875393e80cfa556e7508940b9af2cce327226b9",
-      "size": 3990,
+      "sha256": "8ce8ecaeb67f758bef7d9f986d3c8bae598365ce9fefb2ce9f5a697f9c19de45",
+      "size": 3998,
       "mode": "0644"
     },
     {
       "path": "dist/dev/install/python-best-practices.sh",
-      "sha256": "2534ae2dde3dae64489e473a1aa7258dbc1a1051578dc5db1bc1f17e3e7e0ab6",
-      "size": 3719,
+      "sha256": "a70f0194e2a8ef545c94d252c76a90e780d9f274eabeda56916ae26a2c4a2170",
+      "size": 3727,
       "mode": "0755"
     },
     {
@@ -2781,48 +2781,48 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/index.json",
-      "sha256": "90748d38fcfd50da9d203fda75ba78e6103545830f8791c312cf931879275d77",
-      "size": 1090,
+      "sha256": "04a647b105a80e70a65b4064d3c6e69b561854397ef2cbb14d40bbc8d5db366f",
+      "size": 1098,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-error-handling/SKILL.md",
-      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
-      "size": 6741,
+      "path": "dist/dev/opencode/python/best-practices/python-exception-architecture/SKILL.md",
+      "sha256": "6a3e0c384f41bcf1d13ab175d6ed30b6eee590775e714ad2bc99b540985335d5",
+      "size": 6804,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-error-handling/assets/exception-hierarchy.example.py",
+      "path": "dist/dev/opencode/python/best-practices/python-exception-architecture/assets/exception-hierarchy.example.py",
       "sha256": "8a31770691d95140f17efb02efe29191ec921feb6b8901a1ce50bdd34fd9d2f3",
       "size": 703,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-error-handling/assets/exception-policy-template.md",
+      "path": "dist/dev/opencode/python/best-practices/python-exception-architecture/assets/exception-policy-template.md",
       "sha256": "055199d3d1b40510e6e571869a7d6a18740cf6dc333a9d3a0d14bee35ffa309e",
       "size": 1234,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-error-handling/references/checklist.md",
+      "path": "dist/dev/opencode/python/best-practices/python-exception-architecture/references/checklist.md",
       "sha256": "0cc9dd237e8423493b654259bcf46b03a48ba8d26e2baa05073cf12d65fc6588",
       "size": 2107,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-error-handling/references/guide.md",
+      "path": "dist/dev/opencode/python/best-practices/python-exception-architecture/references/guide.md",
       "sha256": "4998166cf6256166642d9c96f09e32a4cb1fa087bc6f61cea3e1a727f5ed282b",
       "size": 5057,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-error-handling/references/sources.md",
+      "path": "dist/dev/opencode/python/best-practices/python-exception-architecture/references/sources.md",
       "sha256": "fc42cc54c0856f74fbee1189ceed958caea6872eed09d00a401549b621421aa0",
       "size": 545,
       "mode": "0644"
     },
     {
-      "path": "dist/dev/opencode/python/best-practices/python-error-handling/scripts/audit_exception_handlers.py",
+      "path": "dist/dev/opencode/python/best-practices/python-exception-architecture/scripts/audit_exception_handlers.py",
       "sha256": "8f2d7b47c59beb544215ba0b03874c0e9f9ba36944bef438450cd28a4703c82b",
       "size": 6442,
       "mode": "0644"
@@ -2957,12 +2957,12 @@
       "path": "dist/dev/opencode/python/cli-apps/python-cli-command-design/scripts/validate_command_spec.py",
       "sha256": "82d0fc9c19d36210d9b2439b8ced9b3e1ac6b08ffac8324dfb2927b1a57dac89",
       "size": 8229,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/python/cli-apps/python-cli-error-output/SKILL.md",
-      "sha256": "6d6c72dca8ccbdf3347dad9a45b4b6bf8532b4fafee63a406647c2a9b33a72c5",
-      "size": 6635,
+      "sha256": "983fadd8faec88e0e5199d238757d0e593107dd53053b9470c48364b7da00c5a",
+      "size": 6659,
       "mode": "0644"
     },
     {
@@ -2999,7 +2999,7 @@
       "path": "dist/dev/opencode/python/cli-apps/python-cli-error-output/scripts/check_cli_contract.py",
       "sha256": "5b89091e0c24e161ada1f961300e983ac2a7665af058cac40a1d340984786580",
       "size": 8604,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/python/cli-apps/python-cli-testing/SKILL.md",
@@ -3041,7 +3041,7 @@
       "path": "dist/dev/opencode/python/cli-apps/python-cli-testing/scripts/generate_cli_test_matrix.py",
       "sha256": "45b592c7f99dbd8630a479cf8d664e5a9893c7f3c41bd99a5ce6c1a86f20f06b",
       "size": 6581,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/rust/best-practices/index.json",
@@ -3701,7 +3701,7 @@
       "path": "dist/dev/opencode/shared/genaptic-skillsets-development/genaptic-skillsets-create-skill/scripts/scaffold_skill.py",
       "sha256": "74ab9cd28f288abbf0e6b2d8d6cbede2d4d5aba55278e3ac65c35996503809a9",
       "size": 35966,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/shared/genaptic-skillsets-development/genaptic-skillsets-create-skillpack/SKILL.md",
@@ -3761,7 +3761,7 @@
       "path": "dist/dev/opencode/shared/genaptic-skillsets-development/genaptic-skillsets-create-skillpack/scripts/scaffold_skillpack.py",
       "sha256": "0ca747af6bef7d442436e14cdf89bf5167e60ef1ed49b1793682d7e615724049",
       "size": 48670,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/shared/genaptic-skillsets-development/index.json",
@@ -3815,7 +3815,7 @@
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-backup-recovery/scripts/build_recovery_drill.py",
       "sha256": "eb71d1cd086fafb9ef7436da6a2b952f2f58a64f29366dd724c37043f2659fa0",
       "size": 7281,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-index-design/SKILL.md",
@@ -3857,7 +3857,7 @@
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-index-design/scripts/review_index_inventory.py",
       "sha256": "372dcaaa87165af8c8db16acc8b6485d5c35a4d912fc404c59d86cda13e51409",
       "size": 8114,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-migration-safety/SKILL.md",
@@ -3899,7 +3899,7 @@
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-migration-safety/scripts/audit_migration_sql.py",
       "sha256": "feb50ee766f582d434950ad6995243476a34286c81be2cd8c147359c0a16f70e",
       "size": 7970,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-query-performance-review/SKILL.md",
@@ -3941,7 +3941,7 @@
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-query-performance-review/scripts/summarize_explain_json.py",
       "sha256": "8d07685f4e85594f0c865cfb581acf2677882ef423166994227dc218b3a41ed8",
       "size": 7419,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-schema-design/SKILL.md",
@@ -3983,7 +3983,7 @@
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-schema-design/scripts/audit_schema_sql.py",
       "sha256": "684acafe867e25bf3050d1858cfb94dd023e1897fd584b67bed217d3a5018f79",
       "size": 5202,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-schema-review/SKILL.md",
@@ -4025,12 +4025,12 @@
       "path": "dist/dev/opencode/shared/postgres-databases/postgres-schema-review/scripts/render_review_queries.py",
       "sha256": "28aeb0c28c0a6d522ccc8d8fe7c79ae79231f15387cf756ccf7da6bf779af450",
       "size": 7815,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/catalog.json",
-      "sha256": "fd0483e11d6d3cbe47a03bd8dc19b153b1ab6e1b60b833c3390ed3e015468472",
-      "size": 8532,
+      "sha256": "992c0dc7d9c247b271a76fba206b22b3bf5fe877d383dc3a353970e99417d265",
+      "size": 8540,
       "mode": "0644"
     },
     {
@@ -4304,43 +4304,43 @@
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
-      "size": 6741,
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-exception-architecture/SKILL.md",
+      "sha256": "6a3e0c384f41bcf1d13ab175d6ed30b6eee590775e714ad2bc99b540985335d5",
+      "size": 6804,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/assets/exception-hierarchy.example.py",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-hierarchy.example.py",
       "sha256": "8a31770691d95140f17efb02efe29191ec921feb6b8901a1ce50bdd34fd9d2f3",
       "size": 703,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/assets/exception-policy-template.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-policy-template.md",
       "sha256": "055199d3d1b40510e6e571869a7d6a18740cf6dc333a9d3a0d14bee35ffa309e",
       "size": 1234,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/references/checklist.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-exception-architecture/references/checklist.md",
       "sha256": "0cc9dd237e8423493b654259bcf46b03a48ba8d26e2baa05073cf12d65fc6588",
       "size": 2107,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/references/guide.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-exception-architecture/references/guide.md",
       "sha256": "4998166cf6256166642d9c96f09e32a4cb1fa087bc6f61cea3e1a727f5ed282b",
       "size": 5057,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/references/sources.md",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-exception-architecture/references/sources.md",
       "sha256": "fc42cc54c0856f74fbee1189ceed958caea6872eed09d00a401549b621421aa0",
       "size": 545,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-error-handling/scripts/audit_exception_handlers.py",
+      "path": "dist/preview/claude/plugins/python-best-practices/skills/python-exception-architecture/scripts/audit_exception_handlers.py",
       "sha256": "8f2d7b47c59beb544215ba0b03874c0e9f9ba36944bef438450cd28a4703c82b",
       "size": 6442,
       "mode": "0644"
@@ -4479,8 +4479,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-cli-apps/skills/python-cli-error-output/SKILL.md",
-      "sha256": "6d6c72dca8ccbdf3347dad9a45b4b6bf8532b4fafee63a406647c2a9b33a72c5",
-      "size": 6635,
+      "sha256": "983fadd8faec88e0e5199d238757d0e593107dd53053b9470c48364b7da00c5a",
+      "size": 6659,
       "mode": "0644"
     },
     {
@@ -5463,54 +5463,54 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/.codex-plugin/plugin.json",
-      "sha256": "c9d62012aa8033f2076165fa1864b05ece0140a0a6001a466b500dd1b6b287b8",
-      "size": 1429,
+      "sha256": "0173183dd8a006a60e544dd3429de61d7820a2963e171dc55a5dbf7b1ebbf52e",
+      "size": 1437,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/SKILL.md",
-      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
-      "size": 6741,
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/SKILL.md",
+      "sha256": "6a3e0c384f41bcf1d13ab175d6ed30b6eee590775e714ad2bc99b540985335d5",
+      "size": 6804,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/agents/openai.yaml",
-      "sha256": "22e884f4cf4a37270c87c28a029b43b28fe065b3f740877c834afeb99c3d7ea6",
-      "size": 231,
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/agents/openai.yaml",
+      "sha256": "f2cb8eee0fe4cf423b0cd9f575392cc3603419c11c2d493cfc469d4663ed12c9",
+      "size": 247,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/assets/exception-hierarchy.example.py",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-hierarchy.example.py",
       "sha256": "8a31770691d95140f17efb02efe29191ec921feb6b8901a1ce50bdd34fd9d2f3",
       "size": 703,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/assets/exception-policy-template.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/assets/exception-policy-template.md",
       "sha256": "055199d3d1b40510e6e571869a7d6a18740cf6dc333a9d3a0d14bee35ffa309e",
       "size": 1234,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/references/checklist.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/references/checklist.md",
       "sha256": "0cc9dd237e8423493b654259bcf46b03a48ba8d26e2baa05073cf12d65fc6588",
       "size": 2107,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/references/guide.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/references/guide.md",
       "sha256": "4998166cf6256166642d9c96f09e32a4cb1fa087bc6f61cea3e1a727f5ed282b",
       "size": 5057,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/references/sources.md",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/references/sources.md",
       "sha256": "fc42cc54c0856f74fbee1189ceed958caea6872eed09d00a401549b621421aa0",
       "size": 545,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-error-handling/scripts/audit_exception_handlers.py",
+      "path": "dist/preview/codex/plugins/python-best-practices/skills/python-exception-architecture/scripts/audit_exception_handlers.py",
       "sha256": "8f2d7b47c59beb544215ba0b03874c0e9f9ba36944bef438450cd28a4703c82b",
       "size": 6442,
       "mode": "0644"
@@ -5667,8 +5667,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-cli-apps/skills/python-cli-error-output/SKILL.md",
-      "sha256": "6d6c72dca8ccbdf3347dad9a45b4b6bf8532b4fafee63a406647c2a9b33a72c5",
-      "size": 6635,
+      "sha256": "983fadd8faec88e0e5199d238757d0e593107dd53053b9470c48364b7da00c5a",
+      "size": 6659,
       "mode": "0644"
     },
     {
@@ -6453,14 +6453,14 @@
     },
     {
       "path": "dist/preview/install/python-best-practices.ps1",
-      "sha256": "9e0a0f9bdb482aba89cad5840875393e80cfa556e7508940b9af2cce327226b9",
-      "size": 3990,
+      "sha256": "8ce8ecaeb67f758bef7d9f986d3c8bae598365ce9fefb2ce9f5a697f9c19de45",
+      "size": 3998,
       "mode": "0644"
     },
     {
       "path": "dist/preview/install/python-best-practices.sh",
-      "sha256": "2534ae2dde3dae64489e473a1aa7258dbc1a1051578dc5db1bc1f17e3e7e0ab6",
-      "size": 3719,
+      "sha256": "a70f0194e2a8ef545c94d252c76a90e780d9f274eabeda56916ae26a2c4a2170",
+      "size": 3727,
       "mode": "0755"
     },
     {
@@ -6507,48 +6507,48 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/index.json",
-      "sha256": "90748d38fcfd50da9d203fda75ba78e6103545830f8791c312cf931879275d77",
-      "size": 1090,
+      "sha256": "04a647b105a80e70a65b4064d3c6e69b561854397ef2cbb14d40bbc8d5db366f",
+      "size": 1098,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-error-handling/SKILL.md",
-      "sha256": "6ebcbcb4f94221b3bfd1be366c6decdeea50c31373b0b8e8d92ca5e799d5e09c",
-      "size": 6741,
+      "path": "dist/preview/opencode/python/best-practices/python-exception-architecture/SKILL.md",
+      "sha256": "6a3e0c384f41bcf1d13ab175d6ed30b6eee590775e714ad2bc99b540985335d5",
+      "size": 6804,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-error-handling/assets/exception-hierarchy.example.py",
+      "path": "dist/preview/opencode/python/best-practices/python-exception-architecture/assets/exception-hierarchy.example.py",
       "sha256": "8a31770691d95140f17efb02efe29191ec921feb6b8901a1ce50bdd34fd9d2f3",
       "size": 703,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-error-handling/assets/exception-policy-template.md",
+      "path": "dist/preview/opencode/python/best-practices/python-exception-architecture/assets/exception-policy-template.md",
       "sha256": "055199d3d1b40510e6e571869a7d6a18740cf6dc333a9d3a0d14bee35ffa309e",
       "size": 1234,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-error-handling/references/checklist.md",
+      "path": "dist/preview/opencode/python/best-practices/python-exception-architecture/references/checklist.md",
       "sha256": "0cc9dd237e8423493b654259bcf46b03a48ba8d26e2baa05073cf12d65fc6588",
       "size": 2107,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-error-handling/references/guide.md",
+      "path": "dist/preview/opencode/python/best-practices/python-exception-architecture/references/guide.md",
       "sha256": "4998166cf6256166642d9c96f09e32a4cb1fa087bc6f61cea3e1a727f5ed282b",
       "size": 5057,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-error-handling/references/sources.md",
+      "path": "dist/preview/opencode/python/best-practices/python-exception-architecture/references/sources.md",
       "sha256": "fc42cc54c0856f74fbee1189ceed958caea6872eed09d00a401549b621421aa0",
       "size": 545,
       "mode": "0644"
     },
     {
-      "path": "dist/preview/opencode/python/best-practices/python-error-handling/scripts/audit_exception_handlers.py",
+      "path": "dist/preview/opencode/python/best-practices/python-exception-architecture/scripts/audit_exception_handlers.py",
       "sha256": "8f2d7b47c59beb544215ba0b03874c0e9f9ba36944bef438450cd28a4703c82b",
       "size": 6442,
       "mode": "0644"
@@ -6683,12 +6683,12 @@
       "path": "dist/preview/opencode/python/cli-apps/python-cli-command-design/scripts/validate_command_spec.py",
       "sha256": "82d0fc9c19d36210d9b2439b8ced9b3e1ac6b08ffac8324dfb2927b1a57dac89",
       "size": 8229,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/python/cli-apps/python-cli-error-output/SKILL.md",
-      "sha256": "6d6c72dca8ccbdf3347dad9a45b4b6bf8532b4fafee63a406647c2a9b33a72c5",
-      "size": 6635,
+      "sha256": "983fadd8faec88e0e5199d238757d0e593107dd53053b9470c48364b7da00c5a",
+      "size": 6659,
       "mode": "0644"
     },
     {
@@ -6725,7 +6725,7 @@
       "path": "dist/preview/opencode/python/cli-apps/python-cli-error-output/scripts/check_cli_contract.py",
       "sha256": "5b89091e0c24e161ada1f961300e983ac2a7665af058cac40a1d340984786580",
       "size": 8604,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/python/cli-apps/python-cli-testing/SKILL.md",
@@ -6767,7 +6767,7 @@
       "path": "dist/preview/opencode/python/cli-apps/python-cli-testing/scripts/generate_cli_test_matrix.py",
       "sha256": "45b592c7f99dbd8630a479cf8d664e5a9893c7f3c41bd99a5ce6c1a86f20f06b",
       "size": 6581,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/rust/best-practices/index.json",
@@ -7415,7 +7415,7 @@
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-backup-recovery/scripts/build_recovery_drill.py",
       "sha256": "eb71d1cd086fafb9ef7436da6a2b952f2f58a64f29366dd724c37043f2659fa0",
       "size": 7281,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-index-design/SKILL.md",
@@ -7457,7 +7457,7 @@
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-index-design/scripts/review_index_inventory.py",
       "sha256": "372dcaaa87165af8c8db16acc8b6485d5c35a4d912fc404c59d86cda13e51409",
       "size": 8114,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-migration-safety/SKILL.md",
@@ -7499,7 +7499,7 @@
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-migration-safety/scripts/audit_migration_sql.py",
       "sha256": "feb50ee766f582d434950ad6995243476a34286c81be2cd8c147359c0a16f70e",
       "size": 7970,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-query-performance-review/SKILL.md",
@@ -7541,7 +7541,7 @@
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-query-performance-review/scripts/summarize_explain_json.py",
       "sha256": "8d07685f4e85594f0c865cfb581acf2677882ef423166994227dc218b3a41ed8",
       "size": 7419,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-schema-design/SKILL.md",
@@ -7583,7 +7583,7 @@
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-schema-design/scripts/audit_schema_sql.py",
       "sha256": "684acafe867e25bf3050d1858cfb94dd023e1897fd584b67bed217d3a5018f79",
       "size": 5202,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-schema-review/SKILL.md",
@@ -7625,7 +7625,7 @@
       "path": "dist/preview/opencode/shared/postgres-databases/postgres-schema-review/scripts/render_review_queries.py",
       "sha256": "28aeb0c28c0a6d522ccc8d8fe7c79ae79231f15387cf756ccf7da6bf779af450",
       "size": 7815,
-      "mode": "0755"
+      "mode": "0644"
     },
     {
       "path": "dist/public/index.html",
@@ -7635,8 +7635,8 @@
     },
     {
       "path": "docs/evals.md",
-      "sha256": "dcc9ee2f162c0da20a9f32fecaed74cba4d4a5b0701e9774db244ea2d6bfef24",
-      "size": 10831,
+      "sha256": "8a376ff13351d69e184f4a8db0ef3982d2dfb88226934d7a27663ee99b6f88ce",
+      "size": 10855,
       "mode": "0644"
     },
     {
@@ -7647,14 +7647,14 @@
     },
     {
       "path": "packs/python/best-practices/.codex-plugin/plugin.json",
-      "sha256": "c9d62012aa8033f2076165fa1864b05ece0140a0a6001a466b500dd1b6b287b8",
-      "size": 1429,
+      "sha256": "0173183dd8a006a60e544dd3429de61d7820a2963e171dc55a5dbf7b1ebbf52e",
+      "size": 1437,
       "mode": "0644"
     },
     {
       "path": "packs/python/best-practices/README.md",
-      "sha256": "c71e515d1c70c217a178617a5fd3914590b5a1aab492a6c0a6e01f16e8e750e3",
-      "size": 4583,
+      "sha256": "7272f43e75ec26969a303a6c7173026104d1f3bb54a0aa159ab4111b60f0a544",
+      "size": 4599,
       "mode": "0644"
     },
     {
