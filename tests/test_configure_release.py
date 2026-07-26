@@ -14,8 +14,8 @@ from skillpack_tools.validate import validate_repository
 
 
 @pytest.fixture()
-def configured_repo(generated_repo_copy: Path) -> Path:
-    target = generated_repo_copy
+def configured_repo(generated_repo_without_compatibility_reports: Path) -> Path:
+    target = generated_repo_without_compatibility_reports
     configure_repository(
         target,
         project_name="Example Skillsets",

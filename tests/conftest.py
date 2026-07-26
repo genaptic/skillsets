@@ -596,3 +596,49 @@ def generated_repo_copy(
 
     _restore_reusable_repository(reusable_generated_repository)
     return reusable_generated_repository.root
+
+
+@pytest.fixture()
+def generated_repo_without_compatibility_reports(
+    generated_repo_copy: Path,
+) -> Path:
+    """Return a clean synthetic repository without live, source-bound evidence."""
+
+    root = generated_repo_copy
+    reports = sorted((root / "compatibility/reports").glob("*.json"))
+    if not reports:
+        return root
+    for report in reports:
+        report.unlink()
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(root),
+            "add",
+            "-u",
+            "--",
+            "compatibility/reports",
+        ],
+        check=True,
+        env=_isolated_git_environment(),
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.longpaths=true",
+            "-C",
+            str(root),
+            "commit",
+            "-q",
+            "--no-gpg-sign",
+            "-m",
+            "remove live compatibility evidence from synthetic fixture",
+        ],
+        check=True,
+        env=_isolated_git_environment(),
+    )
+    return root

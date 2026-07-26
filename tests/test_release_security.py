@@ -249,9 +249,9 @@ def test_full_index_patch_includes_untracked_binary_without_mutating_index(
     ),
 )
 def test_publication_preview_uses_exact_base_and_preserves_newer_candidate(
-    generated_repo_copy: Path,
+    generated_repo_without_compatibility_reports: Path,
 ) -> None:
-    repository = generated_repo_copy
+    repository = generated_repo_without_compatibility_reports
     manifest = repository / "packs/python/best-practices/skillpack.yaml"
 
     def set_lifecycle(version: str, maturity: str) -> None:
