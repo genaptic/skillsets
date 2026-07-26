@@ -164,14 +164,14 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     error_handling = descriptions["python-domain-exception-policy"]
     assert error_handling.startswith(
         "Design Python domain exception hierarchies, dependency-to-domain translations, and "
-        "their internal recovery policy. Use when—and only when—the request explicitly requires "
-        "exception classes, translation or chaining, or an internal exception policy for cleanup, "
-        "retries, or logging."
+        "their internal recovery policy. Use when—and only when—the requested deliverable "
+        "explicitly includes Python exception classes, translation or chaining, or an internal "
+        "failure taxonomy/recovery policy."
     )
-    assert (
-        "Do not use for external process or transport error-presentation contracts"
-        in error_handling
+    assert "Do not use this skill by inferring or introducing internal exception work" in (
+        error_handling
     )
+    assert "external process or wire-facing error contract" in error_handling
     assert "generic failure handling alone do not qualify" in error_handling
 
     error_handling_body = next(
@@ -182,11 +182,12 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
 
     project_layout = descriptions["python-project-layout"]
     assert project_layout.startswith(
-        "Use when—and only when—the requested deliverable explicitly concerns Python package "
+        "Use when—and only when—the requested deliverable explicitly changes or verifies Python package "
         "layout, import isolation, package discovery, namespace-package boundaries, distribution "
         "build metadata, packaged resources/typing metadata, or wheel/sdist contents."
     )
-    assert "Do not use when the requested outcome leaves Python packaging" in project_layout
+    assert "Do not use this skill merely to classify an unrelated request" in project_layout
+    assert "answer without this skill" in project_layout
     assert all(
         phrase not in project_layout.lower()
         for phrase in (
@@ -263,7 +264,7 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             "negative-cli-command-tree",
             "Design subcommands, global options, help text, and configuration precedence for our "
             "Python executable.",
-            "Use when—and only when—the requested deliverable explicitly concerns Python package "
+            "Use when—and only when—the requested deliverable explicitly changes or verifies Python package "
             "layout, import isolation, package discovery,",
         ),
         "python-test-architecture": (
