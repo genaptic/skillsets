@@ -1,11 +1,10 @@
 ---
 name: python-project-layout
 description: >-
-  Use when—and only when—the requested deliverable explicitly changes or verifies Python package
-  layout, import isolation, package discovery, namespace-package boundaries, distribution build
-  metadata, packaged resources/typing metadata, or wheel/sdist contents. Do not use this skill
-  merely to classify an unrelated request; without a requested packaging, import, or artifact
-  outcome, answer without this skill.
+  Use when, and only when, the user explicitly requests a Python packaging, import-boundary,
+  package discovery, namespace-package, build-metadata, packaged-resource, typing-metadata, wheel,
+  or sdist outcome. Do not use this skill merely to inspect a Python repository or while
+  implementing an unrelated application feature.
 license: Apache-2.0
 metadata:
   skillpack: python-best-practices
