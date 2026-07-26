@@ -429,8 +429,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-best-practices/skills/python-domain-exception-policy/SKILL.md",
-      "sha256": "759511fc3f850ee49decc7a5ac72708ebe8f26e990b681002627d59cd3c1579c",
-      "size": 6807,
+      "sha256": "73eb9c26fce9962d233e6b46e5ac3868d1a37c16438c9c8fd5b284dd963862e3",
+      "size": 6884,
       "mode": "0644"
     },
     {
@@ -645,8 +645,8 @@
     },
     {
       "path": "dist/dev/claude/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
-      "size": 6785,
+      "sha256": "e7abb253e6c455f79b2dd08d88de0daadf81c9f0a79fe9fd1edb0f0832c1ed4b",
+      "size": 6797,
       "mode": "0644"
     },
     {
@@ -1731,8 +1731,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-best-practices/skills/python-domain-exception-policy/SKILL.md",
-      "sha256": "759511fc3f850ee49decc7a5ac72708ebe8f26e990b681002627d59cd3c1579c",
-      "size": 6807,
+      "sha256": "73eb9c26fce9962d233e6b46e5ac3868d1a37c16438c9c8fd5b284dd963862e3",
+      "size": 6884,
       "mode": "0644"
     },
     {
@@ -1977,8 +1977,8 @@
     },
     {
       "path": "dist/dev/codex/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
-      "size": 6785,
+      "sha256": "e7abb253e6c455f79b2dd08d88de0daadf81c9f0a79fe9fd1edb0f0832c1ed4b",
+      "size": 6797,
       "mode": "0644"
     },
     {
@@ -2787,8 +2787,8 @@
     },
     {
       "path": "dist/dev/opencode/python/best-practices/python-domain-exception-policy/SKILL.md",
-      "sha256": "759511fc3f850ee49decc7a5ac72708ebe8f26e990b681002627d59cd3c1579c",
-      "size": 6807,
+      "sha256": "73eb9c26fce9962d233e6b46e5ac3868d1a37c16438c9c8fd5b284dd963862e3",
+      "size": 6884,
       "mode": "0644"
     },
     {
@@ -3003,8 +3003,8 @@
     },
     {
       "path": "dist/dev/opencode/python/cli-apps/python-cli-testing/SKILL.md",
-      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
-      "size": 6785,
+      "sha256": "e7abb253e6c455f79b2dd08d88de0daadf81c9f0a79fe9fd1edb0f0832c1ed4b",
+      "size": 6797,
       "mode": "0644"
     },
     {
@@ -4305,8 +4305,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-best-practices/skills/python-domain-exception-policy/SKILL.md",
-      "sha256": "759511fc3f850ee49decc7a5ac72708ebe8f26e990b681002627d59cd3c1579c",
-      "size": 6807,
+      "sha256": "73eb9c26fce9962d233e6b46e5ac3868d1a37c16438c9c8fd5b284dd963862e3",
+      "size": 6884,
       "mode": "0644"
     },
     {
@@ -4521,8 +4521,8 @@
     },
     {
       "path": "dist/preview/claude/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
-      "size": 6785,
+      "sha256": "e7abb253e6c455f79b2dd08d88de0daadf81c9f0a79fe9fd1edb0f0832c1ed4b",
+      "size": 6797,
       "mode": "0644"
     },
     {
@@ -5469,8 +5469,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-best-practices/skills/python-domain-exception-policy/SKILL.md",
-      "sha256": "759511fc3f850ee49decc7a5ac72708ebe8f26e990b681002627d59cd3c1579c",
-      "size": 6807,
+      "sha256": "73eb9c26fce9962d233e6b46e5ac3868d1a37c16438c9c8fd5b284dd963862e3",
+      "size": 6884,
       "mode": "0644"
     },
     {
@@ -5715,8 +5715,8 @@
     },
     {
       "path": "dist/preview/codex/plugins/python-cli-apps/skills/python-cli-testing/SKILL.md",
-      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
-      "size": 6785,
+      "sha256": "e7abb253e6c455f79b2dd08d88de0daadf81c9f0a79fe9fd1edb0f0832c1ed4b",
+      "size": 6797,
       "mode": "0644"
     },
     {
@@ -6513,8 +6513,8 @@
     },
     {
       "path": "dist/preview/opencode/python/best-practices/python-domain-exception-policy/SKILL.md",
-      "sha256": "759511fc3f850ee49decc7a5ac72708ebe8f26e990b681002627d59cd3c1579c",
-      "size": 6807,
+      "sha256": "73eb9c26fce9962d233e6b46e5ac3868d1a37c16438c9c8fd5b284dd963862e3",
+      "size": 6884,
       "mode": "0644"
     },
     {
@@ -6729,8 +6729,8 @@
     },
     {
       "path": "dist/preview/opencode/python/cli-apps/python-cli-testing/SKILL.md",
-      "sha256": "6e7567ffc537e94234563d8f7a067df98d98231beb3156a9558b84b329c409e5",
-      "size": 6785,
+      "sha256": "e7abb253e6c455f79b2dd08d88de0daadf81c9f0a79fe9fd1edb0f0832c1ed4b",
+      "size": 6797,
       "mode": "0644"
     },
     {

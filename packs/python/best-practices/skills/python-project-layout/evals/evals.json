@@ -26,9 +26,9 @@
     {
       "id": "contextual-positive-tree",
       "kind": "contextual-positive",
-      "prompt": "Review this repository tree and pyproject.toml before we publish the library; verify package data and console entry points are included.",
+      "prompt": "Plan a pre-publication review of a Python library's repository tree and pyproject.toml, covering package data and console entry points. No repository is attached, so identify the exact inputs you need before inspecting files.",
       "shouldTrigger": true,
-      "reason": "The supplied tree and packaging artifact make project layout the controlling concern."
+      "reason": "The requested packaging artifacts make project layout the controlling concern, while the missing repository requires an input request instead of filesystem inspection."
     },
     {
       "id": "negative-test-fixtures",

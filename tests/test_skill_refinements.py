@@ -156,6 +156,7 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "Do not use for internal exception work or command-tree design." in error_output
 
     cli_testing = descriptions["python-cli-testing"]
+    assert "focused subprocess assertions for one command's exit status and stderr" in cli_testing
     assert "A comprehensive CLI-only matrix uses this skill alone." in cli_testing
     assert "only when explicitly combining it with repository-wide test architecture" in cli_testing
     assert "Do not use for broad strategy without a CLI deliverable" in cli_testing
@@ -171,6 +172,9 @@ def test_python_boundary_routing_descriptions_coordinate_only_explicit_joint_wor
     assert "bounded retry classification for internal failures" in error_handling
     assert "Do not use this skill merely because another feature can fail" in error_handling
     assert "needs user-facing failure behavior" in error_handling
+    assert "Do not use for transport-layer error documents or protocol status mapping." in (
+        error_handling
+    )
 
     error_handling_body = next(
         path for path in SKILL_FILES if path.parent.name == "python-domain-exception-policy"
@@ -318,13 +322,22 @@ def test_python_release_routing_guards_match_existing_negative_evals() -> None:
             next(path for path in SKILL_FILES if path.parent.name == "python-test-architecture")
         )[0]["description"]
     )
-    project_description = str(
-        parse_skill(
-            next(path for path in SKILL_FILES if path.parent.name == "python-project-layout")
-        )[0]["description"]
-    )
+    project_path = next(path for path in SKILL_FILES if path.parent.name == "python-project-layout")
+    project_description = str(parse_skill(project_path)[0]["description"])
     assert "Use when, and only when, the requested deliverable changes or verifies" in (
         project_description
+    )
+    project_evals = json.loads(
+        (project_path.parent / "evals/evals.json").read_text(encoding="utf-8")
+    )
+    contextual_case = next(
+        item for item in project_evals["routing"] if item["id"] == "contextual-positive-tree"
+    )
+    assert contextual_case["shouldTrigger"] is True
+    assert contextual_case["prompt"] == (
+        "Plan a pre-publication review of a Python library's repository tree and pyproject.toml, "
+        "covering package data and console entry points. No repository is attached, so identify "
+        "the exact inputs you need before inspecting files."
     )
 
 

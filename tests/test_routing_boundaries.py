@@ -97,8 +97,8 @@ def test_first_canary_release_blocker_boundaries_keep_exact_four_way_contracts()
             ),
             (
                 "neither",
-                "Review a static HTML color palette for accessibility without changing Python "
-                "code or a command-line interface.",
+                "Check whether foreground #777777 on background #ffffff meets WCAG AA contrast "
+                "requirements for normal text.",
                 [],
             ),
         ],
