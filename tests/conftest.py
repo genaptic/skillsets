@@ -296,13 +296,10 @@ def _restore_reusable_repository(repository: _ReusableRepository) -> None:
 
 @contextmanager
 def _exclusive_file_lock(path: Path, *, timeout_seconds: float = 120.0) -> Iterator[None]:
-    """Hold a cross-platform advisory lock for cross-worker fixture setup."""
+    """Hold a cross-platform advisory lock without writing into the locked byte range."""
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a+b") as stream:
-        if os.fstat(stream.fileno()).st_size == 0:
-            stream.write(b"\0")
-            stream.flush()
         stream.seek(0)
         deadline = time.monotonic() + timeout_seconds
         if os.name == "nt":
