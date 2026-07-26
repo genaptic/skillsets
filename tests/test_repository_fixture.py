@@ -7,6 +7,7 @@ import pytest
 from conftest import (
     _clone_clean_generated_source,
     _configure_fixture_repository,
+    _exclusive_file_lock,
     _isolated_git_environment,
     _require_ready_generated_template,
     _restore_reusable_repository,
@@ -14,6 +15,15 @@ from conftest import (
 )
 
 GIT = ("git", "-c", "core.longpaths=true")
+
+
+def test_exclusive_file_lock_does_not_mutate_the_coordination_file(tmp_path: Path) -> None:
+    lock_path = tmp_path / "fixture.lock"
+
+    with _exclusive_file_lock(lock_path):
+        assert lock_path.stat().st_size == 0
+
+    assert lock_path.read_bytes() == b""
 
 
 def _git(repository: _ReusableRepository, *arguments: str) -> str:
