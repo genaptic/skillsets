@@ -74,13 +74,13 @@ jobs:
           if not re.fullmatch(re.escape(pack) + r"-v" + semver, tag):
               raise SystemExit("tag must be the requested pack ID plus a Semantic Version")
       - name: Check out protected recovery tooling without credentials
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Check out the exact tag as inert inspection source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ inputs.tag }}
           path: release-source
@@ -282,14 +282,14 @@ jobs:
               if not re.fullmatch(r"[1-9][0-9]*", os.environ[variable]):
                   raise SystemExit(f"{variable} must be a positive evidence run ID")
       - name: Check out protected recovery policy without credentials
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           path: policy-source
           fetch-depth: 0
           persist-credentials: false
       - name: Check out the exact existing tag as inert release source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ inputs.tag }}
           path: release-source
@@ -784,14 +784,14 @@ jobs:
           if not re.fullmatch(re.escape(pack) + r"-v" + semver, os.environ["RELEASE_TAG"]):
               raise SystemExit("tag must be the requested pack ID followed by a valid SemVer")
       - name: Check out protected recovery policy without credentials
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           path: policy-source
           fetch-depth: 0
           persist-credentials: false
       - name: Check out the exact tag as inert release data
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ inputs.tag }}
           path: release-source
